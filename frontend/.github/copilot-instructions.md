@@ -2,6 +2,30 @@
 
 ## 🎯 Core Principles (NON-NEGOTIABLE)
 
+### 0. 📱 MOBILE-ONLY PROJECT (EN ÖNEMLİ KURAL!)
+**BU PROJE TAMAMEN MOBILE ODAKLIDIR. WEB DESTEĞİ YOKTUR!**
+
+#### ❌ ASLA YAPILMAMASI GEREKENLER:
+- Web browser'da test etme (`npm start` sonrası `w` tuşuna BASMA!)
+- Web için responsive design düşünme
+- Web-specific code yazma (DOM manipülasyonu, window, document vs.)
+- CSS media queries kullanma
+- Web framework pattern'leri (Next.js, Vite vs.)
+- `<div>`, `<span>`, `<img>` gibi HTML elementleri kullanma
+
+#### ✅ SADECE BUNLAR YAPILACAK:
+- **iOS Simulator ile test** (`npm start` → `i` tuşu)
+- **Android Emulator ile test** (`npm start` → `a` tuşu)
+- React Native component'leri (`<View>`, `<Text>`, `<Image>`, `<ScrollView>`)
+- Mobile-native patterns (TouchableOpacity, FlatList, SafeAreaView)
+- StyleSheet.create (React Native'in native styling API'si)
+- Mobile gestures (swipe, long-press, pull-to-refresh)
+- Mobile-specific hooks (Dimensions, Platform, Keyboard)
+
+#### 🚨 HATIRLATMA:
+Her kod yazmadan önce sor: "Bu kod mobile'da çalışır mı?"
+Eğer cevap "web'de de çalışır" ise, YENİDEN DÜŞÜN!
+
 ### 1. KISS (Keep It Simple, Stupid)
 - ❌ NO state management libraries (Redux/Zustand/MobX)
 - ❌ NO complex abstractions or design patterns
@@ -92,16 +116,32 @@ if (userType === 'employee') redirect('/(employee)/home')
 
 ---
 
-## 💅 Styling Rules (NativeWind)
+## 💅 Styling Rules (StyleSheet ONLY)
 
-**ALWAYS use className, NEVER StyleSheet.create:**
+**ALWAYS use StyleSheet.create, NEVER NativeWind/className:**
 ```typescript
-// ✅ CORRECT
-<View className="bg-white dark:bg-[#1a2a33] p-4 rounded-lg">
-
-// ❌ WRONG
+// ✅ CORRECT (Mobile-Native)
 <View style={styles.container}>
-const styles = StyleSheet.create({ container: { ... }})
+  <Text style={styles.title}>Hello</Text>
+</View>
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111618',
+  },
+});
+
+// ❌ WRONG (Web approach)
+<View className="bg-white p-4 rounded-lg">
+  <Text className="text-2xl font-bold">Hello</Text>
+</View>
 ```
 
 **Color Palette (from HTML):**
@@ -140,9 +180,9 @@ export const colors = {
 ## 📝 Component Template (ENFORCE THIS STRUCTURE)
 
 ```typescript
-// 1. Imports (grouped)
+// 1. Imports (grouped - MOBILE ONLY!)
 import { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // 2. Types (component-specific only)
@@ -164,19 +204,51 @@ export function EmployeeCard({ employee, onPress }: Props) {
   
   // 6. Render helpers (render* prefix)
   const renderBadge = () => (
-    <View className={employee.status === 'active' ? 'bg-success' : 'bg-gray-400'}>
-      <Text className="text-white text-xs">{employee.status}</Text>
+    <View style={[
+      styles.badge, 
+      employee.status === 'active' ? styles.badgeActive : styles.badgeInactive
+    ]}>
+      <Text style={styles.badgeText}>{employee.status}</Text>
     </View>
   );
   
-  // 7. Return JSX
+  // 7. Return JSX (MOBILE COMPONENTS ONLY!)
   return (
-    <TouchableOpacity onPress={handlePress} className="p-4 bg-white dark:bg-[#1a2a33] rounded-lg">
-      <Text className="text-lg font-bold">{employee.full_name}</Text>
+    <TouchableOpacity onPress={handlePress} style={styles.container}>
+      <Text style={styles.name}>{employee.full_name}</Text>
       {renderBadge()}
     </TouchableOpacity>
   );
 }
+
+// 8. StyleSheet (ALWAYS at bottom)
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111618',
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  badgeActive: {
+    backgroundColor: '#078836',
+  },
+  badgeInactive: {
+    backgroundColor: '#9ca3af',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+  },
+});
 ```
 
 **If file hits 250 lines → Extract component immediately**
@@ -253,17 +325,32 @@ const handleCellPress = (day: string, time: string) => {
 };
 ```
 
-**Color mapping:**
+**Color mapping (StyleSheet kullanarak):**
 ```typescript
-const cellColor = (status: SlotStatus) => {
-  if (status === 'available') return 'bg-[#078836]'; // Green
-  if (status === 'unavailable') return 'bg-[#D9534F]'; // Red
-  if (status === 'off_request') return 'bg-gray-400'; // Gray
-  return 'bg-gray-100 dark:bg-gray-700'; // Empty
+const getCellStyle = (status: SlotStatus) => {
+  if (status === 'available') return styles.cellAvailable;
+  if (status === 'unavailable') return styles.cellUnavailable;
+  if (status === 'off_request') return styles.cellOffRequest;
+  return styles.cellEmpty;
 };
+
+const styles = StyleSheet.create({
+  cellAvailable: {
+    backgroundColor: '#078836', // Green
+  },
+  cellUnavailable: {
+    backgroundColor: '#D9534F', // Red
+  },
+  cellOffRequest: {
+    backgroundColor: '#9ca3af', // Gray
+  },
+  cellEmpty: {
+    backgroundColor: '#f3f4f6', // Light gray
+  },
+});
 ```
 
-**Performance: Use FlatList with getItemLayout (NOT ScrollView)**
+**Performance: Use FlatList with getItemLayout (NOT ScrollView for 336 cells!)**
 
 ---
 
@@ -303,17 +390,25 @@ const handleSubmit = () => {
 
 ## 🚫 Common Mistakes (DON'T DO THESE)
 
-1. **NO StyleSheet.create** → Use NativeWind className
-2. **NO business logic in _layout.tsx** → Only navigation config
-3. **NO fetching in _layout.tsx** → Fetch in screen components
-4. **NO `as any`** → Define proper type in `types/index.ts`
-5. **NO services before duplication** → Inline first, extract at 3rd use
-6. **NO generic components** → Build for exact use case, generalize later
+1. **NO className/NativeWind** → Use StyleSheet.create (mobile-native)
+2. **NO web elements** → `<div>` yerine `<View>`, `<span>` yerine `<Text>`
+3. **NO business logic in _layout.tsx** → Only navigation config
+4. **NO fetching in _layout.tsx** → Fetch in screen components
+5. **NO `as any`** → Define proper type in `types/index.ts`
+6. **NO services before duplication** → Inline first, extract at 3rd use
+7. **NO generic components** → Build for exact use case, generalize later
+8. **NO web testing** → iOS/Android simulators ONLY
 
 ---
 
 ## 🧪 Testing Checklist (Before "Commit Zamanı")
 
+**MOBILE SIMULATORS ONLY:**
+- [ ] iOS Simulator test (`npm start` → press `i`)
+- [ ] Android Emulator test (`npm start` → press `a`)
+- [ ] ❌ ASLA web browser test etme (`w` tuşuna basma!)
+
+**Functionality:**
 - [ ] Dark mode works (toggle on screen)
 - [ ] Navigation back/forward (no crashes)
 - [ ] Form validation (empty, invalid, too long)
@@ -347,9 +442,9 @@ const handleSubmit = () => {
 2. Check ROADMAP.md for current phase
 3. Create screen in correct route group
 4. Use mock data (add to same file)
-5. Build UI with NativeWind
+5. Build UI with StyleSheet.create (MOBILE-NATIVE)
 6. Add form validation if needed
-7. Test dark mode + loading + errors
+7. Test iOS/Android + dark mode + loading + errors
 8. **Tell user: "✅ Commit zamanı geldi"**
 
 ---
@@ -363,6 +458,36 @@ npm run ios        # iOS simulator
 npm run lint       # TypeScript + ESLint check
 ```
 
+**❌ ASLA KULLANMA:**
+- `npm run web` → Web devre dışı!
+- Browser test → MOBILE ONLY!
+
 ---
 
-**Remember:** Simple > Clever | Working > Perfect | Delete > Abstract
+## 🎯 ÖZET: MOBILE-ONLY Hatırlatma
+
+Bu proje **SADECE MOBILE** için geliştirilmektedir:
+
+### ✅ YAPILACAKLAR:
+- React Native component'leri (`View`, `Text`, `Image`, `ScrollView`, `FlatList`)
+- `StyleSheet.create` ile styling
+- `TouchableOpacity` / `Pressable` ile interaction
+- iOS Simulator + Android Emulator ile test
+- Mobile-native patterns (SafeAreaView, KeyboardAvoidingView)
+- Platform-specific code (`Platform.OS === 'ios'`)
+
+### ❌ YAPILMAYACAKLAR:
+- Web browser'da test (`npm start` → `w`)
+- HTML elementleri (`<div>`, `<span>`, `<button>`)
+- CSS / className / NativeWind
+- Web-specific API'ler (window, document, localStorage)
+- Responsive web design düşüncesi
+- Media queries
+
+### 🚨 HER ZAMAN KONTROL ET:
+"Bu kod native mobile'da çalışır mı?"
+Eğer "web'de de çalışır" ise → YANLIŞ YOLDASIN!
+
+---
+
+**Remember:** Simple > Clever | Working > Perfect | Delete > Abstract | **MOBILE-ONLY!**

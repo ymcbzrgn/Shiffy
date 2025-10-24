@@ -2,7 +2,8 @@
 
 > **Proje Yaklaşımı:** KISS (Keep It Simple, Stupid) + Clean Code  
 > **Geliştirme Modeli:** Adım adım onay bazlı ilerleyiş  
-> **Teknoloji:** Expo SDK 54 + TypeScript + React Native
+> **Teknoloji:** Expo SDK 54 + TypeScript + React Native  
+> **Platform:** 📱 **SADECE MOBILE (iOS + Android)** - Web DEVRE DIŞI
 
 ---
 
@@ -17,10 +18,11 @@ HTML prototiplerinde oluşturulmuş 15 sayfalık vardiya yönetim sistemini Reac
 - ✅ Dark mode desteği HTML'de mevcut
 
 **Hedef:**
-- Responsive, native-feeling mobil uygulama
+- Native mobile uygulama (iOS + Android)
 - Manager ve Employee rolleri için ayrı akışlar
 - Offline-ready shift tercihleri
 - Clean, maintainable kod
+- **Web desteği YOK - sadece mobile focus**
 
 ---
 
@@ -106,48 +108,62 @@ types/
 ```
 
 ### Teknoloji Seçimleri
-- **Styling:** NativeWind (Tailwind for React Native) - HTML'den kolay geçiş
-- **Navigation:** Expo Router (zaten var)
-- **State:** useState + useContext (şimdilik)
+- **Platform:** iOS + Android ONLY (Expo Go ile test, production'da standalone build)
+- **Styling:** StyleSheet.create (React Native native approach - NativeWind web'de sorunlu)
+- **Navigation:** Expo Router (file-based routing)
+- **State:** useState + useContext (şimdilik, Redux gibi library YOK)
 - **Storage:** AsyncStorage (SecureStore auth tokenları için)
 - **Icons:** @expo/vector-icons (Material Icons)
-- **Animations:** Reanimated (sadece gerekli yerlerde)
+- **Animations:** React Native Animated API (sadece gerekli yerlerde)
+- **Testing:** iOS Simulator + Android Emulator (Web browser test YOK)
 
 ---
 
 ## 🚀 ADIMLAR (10 Aşama)
 
-### **AŞAMA 1: Proje Temelleri & Setup** ⚙️
+### **AŞAMA 1: Proje Temelleri & Setup** ✅ **TAMAMLANDI**
 **Süre:** ~30-45 dakika  
 **Hedef:** Geliştirme ortamını hazırla, temel kütüphaneleri kur
 
 **Yapılacaklar:**
-- [ ] NativeWind kurulumu ve konfigürasyonu
-- [ ] Dosya yapısı oluşturma (boş klasörler/dosyalar)
-- [ ] TypeScript types tanımları (User, Employee, Shift, vb.)
-- [ ] Theme sistemi (colors, dark mode)
-- [ ] Temel UI componentleri (Button, Input, Card)
+- [x] ~~NativeWind kurulumu~~ → StyleSheet.create kullanılacak (mobile-native)
+- [x] Dosya yapısı oluşturma (types, components, utils, services)
+- [x] TypeScript types tanımları (Manager, Employee, Shift, vb.)
+- [x] Theme sistemi (colors constant)
+- [x] Temel UI componentleri (Button, Input, Card, Loading)
 
 **Test Kriterleri:**
-- App açılıyor mu?
-- Dark mode toggle çalışıyor mu?
-- Sample button/card görüntüleniyor mu?
+- ✅ App açılıyor (iOS/Android)
+- ✅ UI componentleri render oluyor
+- ✅ TypeScript hatası yok
 
 **Çıktılar:**
-- `types/index.ts` (tüm type'lar)
-- `constants/colors.ts`
-- `components/ui/button.tsx, input.tsx, card.tsx`
-- `hooks/use-theme.ts`
+- ✅ `types/index.ts` (tüm type'lar)
+- ✅ `constants/theme.ts`
+- ✅ `components/ui/Button.tsx, Input.tsx, Card.tsx, Loading.tsx`
 
 ---
 
-### **AŞAMA 2: Auth Flow - Kullanıcı Seçimi** 🔐
+### **AŞAMA 2: Auth Flow - Kullanıcı Seçimi** ✅ **TAMAMLANDI**
 **Süre:** ~45 dakika  
 **Hedef:** İlk ekran - Yönetici/Çalışan seçim sayfası
 
 **Yapılacaklar:**
-- [ ] `app/(auth)/user-select.tsx` oluştur
-- [ ] Animated Shiffy logo component
+- [x] `app/(auth)/user-select.tsx` oluştur
+- [x] Shiffy logo (Material Icons kullanarak)
+- [x] "Yönetici" ve "Çalışan" butonları
+- [x] Navigation setup (auth route group)
+- [x] Dummy login pages (placeholder)
+
+**Test Kriterleri:**
+- ✅ User-select ekranı görünüyor (iOS/Android)
+- ✅ Butonlar çalışıyor
+- ✅ Navigation doğru sayfaya yönlendiriyor
+
+**Çıktılar:**
+- ✅ `app/(auth)/user-select.tsx`
+- ✅ `app/(auth)/manager-login.tsx` (placeholder)
+- ✅ `app/(auth)/employee-login.tsx` (placeholder)
 - [ ] İki büyük buton (Manager/Employee)
 - [ ] Navigation setup (auth stack)
 - [ ] Theme toggle butonu
@@ -162,31 +178,32 @@ types/
 
 ---
 
-### **AŞAMA 3: Manager Auth - Kayıt & Giriş** 👔
+### **AŞAMA 3: Manager Auth - Kayıt & Giriş** � **DEVAM EDİYOR**
 **Süre:** ~60 dakika  
-**Hedef:** Yönetici kayıt ve giriş ekranları
+**Hedef:** Yönetici kayıt ve giriş ekranları (MOBILE NATIVE)
 
 **Yapılacaklar:**
-- [ ] `app/(auth)/manager-register.tsx`
-  - Form: storeName, email, password, confirmPassword
-  - Şifre güç göstergesi (4 seviye)
-  - Gerçek zamanlı validasyon
-- [ ] `app/(auth)/manager-login.tsx`
-  - Email/şifre girişi
-  - "Beni hatırla" checkbox
-  - Hata animasyonu (shake effect)
-- [ ] Form validation utils (`utils/validation.ts`)
-- [ ] Mock auth service (API hazır olana kadar)
+- [x] `utils/validation.ts` - Email, password, required validators + strength calculator
+- [x] `services/auth.ts` - Mock login/register (USE_MOCK = true)
+- [x] `components/ui/PasswordStrengthIndicator.tsx` - Renkli bar component
+- [x] `app/(auth)/manager-login.tsx` - Email + Password + "Beni Hatırla" checkbox
+- [x] `app/(auth)/manager-register.tsx` - Store name + Email + Password + Confirm + Strength indicator
+- [x] `types/index.ts` - Manager'a subscription fields eklendi
 
-**Test Kriterleri:**
-- Form validasyonları çalışıyor mu?
-- Şifre göster/gizle toggle var mı?
-- Başarılı kayıt sonrası dashboard'a yönleniyor mu?
+**⚠️ Manuel İşlem Gerekiyor:**
+1. Eski `manager-login.tsx` dosyasını SİL (bozuk)
+2. `manager-login-new.tsx` dosyasını `manager-login.tsx` olarak RENAME et
+
+**Test Kriterleri (iOS/Android Simulator):**
+- [ ] npm start → "a" (Android) veya "i" (iOS) - WEB YOK!
+- [ ] User-select → "Yönetici" → Login ekranı görünmeli
+- [ ] "Kayıt Ol" → Register formu (password strength bar değişmeli)
+- [ ] Login: yonetici@test.com / 123456 → Alert: "Hoş geldin Kahve Dükkanı!"
 
 **Çıktılar:**
-- Manager register & login screens
-- `utils/validation.ts`
-- `hooks/use-auth.ts` (mock)
+- ✅ Manager register & login screens (StyleSheet ile)
+- ✅ Validation utilities
+- ✅ Mock auth service
 
 ---
 
@@ -518,7 +535,7 @@ Her aşama tamamlandığında burayı güncelleyeceğim:
 
 - [x] **AŞAMA 1:** Proje Temelleri & Setup ✅ **TAMAMLANDI**
 - [x] **AŞAMA 2:** Auth Flow - Kullanıcı Seçimi ✅ **TAMAMLANDI**
-- [ ] **AŞAMA 3:** Manager Auth - Kayıt & Giriş
+- [ ] **AŞAMA 3:** Manager Auth - Kayıt & Giriş → 🔄 **DEVAM EDİYOR**
 - [ ] **AŞAMA 4:** Manager Dashboard
 - [ ] **AŞAMA 5:** Çalışan Yönetimi - Liste & Arama
 - [ ] **AŞAMA 6:** Çalışan Detayı & Notları

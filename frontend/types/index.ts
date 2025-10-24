@@ -9,6 +9,8 @@ export interface Manager {
   email: string;
   store_name: string;
   created_at: string;
+  subscription_status: 'trial' | 'active' | 'expired';
+  subscription_tier: 'basic' | 'premium';
 }
 
 export interface Employee {
