@@ -1,0 +1,382 @@
+cat >/tmp/schedule_input.txt <<'DATA'
+STORE: Kurukahveci Mehmet Efendi - Beyoğlu Şubesi
+WEEK: 2025-10-28 to 2025-11-03
+OPERATING HOURS: 08:00-22:00 (14 hours/day)
+
+EMPLOYEE 1: Ayşe Yılmaz (ID: e1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c)
+Manager Notes: Experienced barista, great with espresso machine, prefers morning shifts
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: preferred
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: available
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: preferred
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: preferred
+  friday 13:00-18:00: preferred
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: unavailable
+  saturday 13:00-18:00: unavailable
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: available
+  sunday 13:00-18:00: available
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 2: Mehmet Kaya (ID: f2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d)
+Manager Notes: Student, only available evenings and weekends, good cashier
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: unavailable
+  monday 18:00-22:00: preferred
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: unavailable
+  tuesday 18:00-22:00: preferred
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: unavailable
+  wednesday 18:00-22:00: preferred
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: unavailable
+  thursday 18:00-22:00: preferred
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: unavailable
+  friday 18:00-22:00: available
+  saturday 08:00-13:00: preferred
+  saturday 13:00-18:00: preferred
+  saturday 18:00-22:00: preferred
+  sunday 08:00-13:00: preferred
+  sunday 13:00-18:00: preferred
+  sunday 18:00-22:00: available
+
+EMPLOYEE 3: Zeynep Şahin (ID: a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d)
+Manager Notes: Part-time, university student, reliable
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: available
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: unavailable
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: preferred
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: unavailable
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: available
+  saturday 13:00-18:00: preferred
+  saturday 18:00-22:00: available
+  sunday 08:00-13:00: available
+  sunday 13:00-18:00: available
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 4: Can Demir (ID: b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e)
+Manager Notes: Full-time shift supervisor, can open/close store
+Availability:
+  monday 08:00-13:00: preferred
+  monday 13:00-18:00: available
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: preferred
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: preferred
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: available
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: unavailable
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: preferred
+  friday 13:00-18:00: available
+  friday 18:00-22:00: available
+  saturday 08:00-13:00: available
+  saturday 13:00-18:00: available
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: unavailable
+  sunday 13:00-18:00: unavailable
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 5: Elif Arslan (ID: c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f)
+Manager Notes: Experienced with Turkish coffee preparation, customer favorite
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: preferred
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: available
+  tuesday 13:00-18:00: preferred
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: unavailable
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: preferred
+  thursday 18:00-22:00: available
+  friday 08:00-13:00: available
+  friday 13:00-18:00: available
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: preferred
+  saturday 13:00-18:00: preferred
+  saturday 18:00-22:00: preferred
+  sunday 08:00-13:00: available
+  sunday 13:00-18:00: available
+  sunday 18:00-22:00: available
+
+EMPLOYEE 6: Burak Yıldız (ID: d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a)
+Manager Notes: New hire, training on register and basic coffee prep
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: available
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: available
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: available
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: available
+  friday 18:00-22:00: preferred
+  saturday 08:00-13:00: unavailable
+  saturday 13:00-18:00: unavailable
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: preferred
+  sunday 13:00-18:00: preferred
+  sunday 18:00-22:00: available
+
+EMPLOYEE 7: Selin Öztürk (ID: e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b)
+Manager Notes: Weekend specialist, excellent with rush hour management
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: unavailable
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: unavailable
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: unavailable
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: available
+  friday 13:00-18:00: available
+  friday 18:00-22:00: preferred
+  saturday 08:00-13:00: preferred
+  saturday 13:00-18:00: preferred
+  saturday 18:00-22:00: preferred
+  sunday 08:00-13:00: preferred
+  sunday 13:00-18:00: preferred
+  sunday 18:00-22:00: preferred
+
+EMPLOYEE 8: Emre Çelik (ID: f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c)
+Manager Notes: Barista trainer, handles inventory well
+Availability:
+  monday 08:00-13:00: preferred
+  monday 13:00-18:00: preferred
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: preferred
+  tuesday 13:00-18:00: preferred
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: preferred
+  wednesday 13:00-18:00: preferred
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: preferred
+  thursday 13:00-18:00: preferred
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: preferred
+  friday 13:00-18:00: available
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: unavailable
+  saturday 13:00-18:00: unavailable
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: unavailable
+  sunday 13:00-18:00: unavailable
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 9: Deniz Aydın (ID: a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d)
+Manager Notes: Strong closer, handles late evening cleanup efficiently
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: available
+  monday 18:00-22:00: preferred
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: preferred
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: preferred
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: preferred
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: available
+  friday 18:00-22:00: preferred
+  saturday 08:00-13:00: available
+  saturday 13:00-18:00: available
+  saturday 18:00-22:00: preferred
+  sunday 08:00-13:00: unavailable
+  sunday 13:00-18:00: unavailable
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 10: Merve Koç (ID: b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e)
+Manager Notes: Bilingual (Turkish/English), great with tourist customers
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: available
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: available
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: preferred
+  wednesday 13:00-18:00: preferred
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: unavailable
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: preferred
+  saturday 13:00-18:00: preferred
+  saturday 18:00-22:00: available
+  sunday 08:00-13:00: preferred
+  sunday 13:00-18:00: preferred
+  sunday 18:00-22:00: available
+
+EMPLOYEE 11: Onur Tekin (ID: c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f)
+Manager Notes: Part-time, flexible schedule, reliable backup
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: available
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: available
+  wednesday 13:00-18:00: unavailable
+  wednesday 18:00-22:00: available
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: available
+  friday 13:00-18:00: available
+  friday 18:00-22:00: available
+  saturday 08:00-13:00: available
+  saturday 13:00-18:00: available
+  saturday 18:00-22:00: available
+  sunday 08:00-13:00: unavailable
+  sunday 13:00-18:00: unavailable
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 12: Gizem Yalçın (ID: d2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a)
+Manager Notes: Morning person, opens store 3x/week, pastry expert
+Availability:
+  monday 08:00-13:00: preferred
+  monday 13:00-18:00: available
+  monday 18:00-22:00: unavailable
+  tuesday 08:00-13:00: preferred
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: unavailable
+  wednesday 08:00-13:00: preferred
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: unavailable
+  thursday 18:00-22:00: unavailable
+  friday 08:00-13:00: preferred
+  friday 13:00-18:00: available
+  friday 18:00-22:00: unavailable
+  saturday 08:00-13:00: preferred
+  saturday 13:00-18:00: unavailable
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: preferred
+  sunday 13:00-18:00: unavailable
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 13: Kaan Öz (ID: e3f4a5b6-c7d8-4e9f-0a1b-2c3d4e5f6a7b)
+Manager Notes: Night owl, prefers closing shifts, fast learner
+Availability:
+  monday 08:00-13:00: unavailable
+  monday 13:00-18:00: unavailable
+  monday 18:00-22:00: preferred
+  tuesday 08:00-13:00: unavailable
+  tuesday 13:00-18:00: unavailable
+  tuesday 18:00-22:00: preferred
+  wednesday 08:00-13:00: unavailable
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: preferred
+  thursday 08:00-13:00: unavailable
+  thursday 13:00-18:00: unavailable
+  thursday 18:00-22:00: preferred
+  friday 08:00-13:00: unavailable
+  friday 13:00-18:00: unavailable
+  friday 18:00-22:00: preferred
+  saturday 08:00-13:00: unavailable
+  saturday 13:00-18:00: available
+  saturday 18:00-22:00: preferred
+  sunday 08:00-13:00: unavailable
+  sunday 13:00-18:00: available
+  sunday 18:00-22:00: preferred
+
+EMPLOYEE 14: Pınar Avcı (ID: f4a5b6c7-d8e9-4f0a-1b2c-3d4e5f6a7b8c)
+Manager Notes: Midday specialist, handles lunch rush perfectly
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: preferred
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: available
+  tuesday 13:00-18:00: preferred
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: available
+  wednesday 13:00-18:00: preferred
+  wednesday 18:00-22:00: unavailable
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: preferred
+  thursday 18:00-22:00: available
+  friday 08:00-13:00: available
+  friday 13:00-18:00: preferred
+  friday 18:00-22:00: available
+  saturday 08:00-13:00: unavailable
+  saturday 13:00-18:00: unavailable
+  saturday 18:00-22:00: unavailable
+  sunday 08:00-13:00: available
+  sunday 13:00-18:00: preferred
+  sunday 18:00-22:00: unavailable
+
+EMPLOYEE 15: Cem Bulut (ID: a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d)
+Manager Notes: Jack of all trades, can cover any position, manager's favorite
+Availability:
+  monday 08:00-13:00: available
+  monday 13:00-18:00: available
+  monday 18:00-22:00: available
+  tuesday 08:00-13:00: available
+  tuesday 13:00-18:00: available
+  tuesday 18:00-22:00: available
+  wednesday 08:00-13:00: available
+  wednesday 13:00-18:00: available
+  wednesday 18:00-22:00: available
+  thursday 08:00-13:00: available
+  thursday 13:00-18:00: available
+  thursday 18:00-22:00: available
+  friday 08:00-13:00: available
+  friday 13:00-18:00: available
+  friday 18:00-22:00: available
+  saturday 08:00-13:00: available
+  saturday 13:00-18:00: available
+  saturday 18:00-22:00: available
+  sunday 08:00-13:00: available
+  sunday 13:00-18:00: available
+  sunday 18:00-22:00: available
+
+Generate optimal weekly schedule as JSON.
+DATA
