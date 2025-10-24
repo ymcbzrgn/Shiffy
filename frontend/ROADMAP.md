@@ -516,8 +516,8 @@ Bu özellikler şimdilik **YAPILMAYACAK**, ama yapı esnek olacak:
 
 Her aşama tamamlandığında burayı güncelleyeceğim:
 
-- [ ] **AŞAMA 1:** Proje Temelleri & Setup
-- [ ] **AŞAMA 2:** Auth Flow - Kullanıcı Seçimi
+- [x] **AŞAMA 1:** Proje Temelleri & Setup ✅ **TAMAMLANDI**
+- [x] **AŞAMA 2:** Auth Flow - Kullanıcı Seçimi ✅ **TAMAMLANDI**
 - [ ] **AŞAMA 3:** Manager Auth - Kayıt & Giriş
 - [ ] **AŞAMA 4:** Manager Dashboard
 - [ ] **AŞAMA 5:** Çalışan Yönetimi - Liste & Arama
