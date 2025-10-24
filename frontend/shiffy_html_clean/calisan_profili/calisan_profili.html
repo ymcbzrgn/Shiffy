@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim - Shiffy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        * {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-slideUp {
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .profile-picture-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .profile-picture {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #1193d4;
+            box-shadow: 0 4px 12px rgba(17, 147, 212, 0.2);
+        }
+
+        .edit-picture-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #1193d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .edit-picture-btn:hover {
+            background: #0d7ab8;
+            transform: scale(1.1);
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .info-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .info-card {
+            background: #1a2a33;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .info-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .action-button:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .dark .action-button {
+            background: #1a2a33;
+            color: #f0f3f4;
+        }
+
+        .dark .action-button:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .logout-button {
+            background: linear-gradient(135deg, #D9534F 0%, #C9302C 100%);
+            color: white;
+        }
+
+        .logout-button:hover {
+            background: linear-gradient(135deg, #C9302C 0%, #AC2925 100%);
+        }
+    </style>
+</head>
+<body class="bg-[#f6f7f8] dark:bg-[#101c22] min-h-screen">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white p-6 shadow-lg">
+        <div class="flex items-center justify-between max-w-md mx-auto">
+            <button onclick="goBack()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 class="text-xl font-bold">Profilim</h1>
+            <button onclick="toggleTheme()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 pb-24 space-y-6">
+        <!-- Profile Picture Section -->
+        <div class="flex flex-col items-center space-y-4 animate-fadeIn">
+            <div class="profile-picture-wrapper">
+                <img 
+                    id="profilePicture"
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%231193d4' width='120' height='120'/%3E%3Ctext x='50%25' y='50%25' font-size='48' fill='white' text-anchor='middle' dy='.3em' font-family='Manrope'%3EAE%3C/text%3E%3C/svg%3E" 
+                    alt="Profile Picture"
+                    class="profile-picture"
+                />
+                <div class="edit-picture-btn" onclick="openPictureModal()">
+                    <span class="material-symbols-outlined text-white text-xl">photo_camera</span>
+                </div>
+            </div>
+            <div class="text-center">
+                <h2 class="text-2xl font-bold text-[#111618] dark:text-[#f0f3f4]" id="displayName">Ahmet Ergün</h2>
+                <p class="text-[#617c89] dark:text-[#a0b8c4] text-sm">@ahmet.ergun</p>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="space-y-3">
+            <h3 class="text-sm font-semibold text-[#617c89] dark:text-[#a0b8c4] uppercase tracking-wide px-1">Kişisel Bilgiler</h3>
+            
+            <div class="info-card">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#1193d4]/10 dark:bg-[#1193d4]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#1193d4]">person</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Ad Soyad</p>
+                        <p class="font-semibold text-[#111618] dark:text-[#f0f3f4]" id="fullName">Ahmet Ergün</p>
+                    </div>
+                    <button onclick="editName()" class="p-2 hover:bg-[#f6f7f8] dark:hover:bg-[#101c22] rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-[#617c89]">edit</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#1193d4]/10 dark:bg-[#1193d4]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#1193d4]">badge</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Kullanıcı Adı</p>
+                        <p class="font-semibold text-[#111618] dark:text-[#f0f3f4]" id="username">ahmet.ergun</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[#617c89] opacity-40">lock</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#1193d4]/10 dark:bg-[#1193d4]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#1193d4]">mail</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-[#617c89] dark:text-[#a0b8c4]">E-posta</p>
+                        <p class="font-semibold text-[#111618] dark:text-[#f0f3f4]" id="email">ahmet.ergun@email.com</p>
+                    </div>
+                    <button onclick="editEmail()" class="p-2 hover:bg-[#f6f7f8] dark:hover:bg-[#101c22] rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-[#617c89]">edit</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#1193d4]/10 dark:bg-[#1193d4]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#1193d4]">work</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Çalıştığım Yer</p>
+                        <p class="font-semibold text-[#111618] dark:text-[#f0f3f4]" id="workplace">Starbucks Şişli</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[#617c89] opacity-40">lock</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-3">
+            <h3 class="text-sm font-semibold text-[#617c89] dark:text-[#a0b8c4] uppercase tracking-wide px-1">İşlemler</h3>
+            
+            <button onclick="changePassword()" class="action-button">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#F0AD4E]/10 dark:bg-[#F0AD4E]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#F0AD4E]">lock_reset</span>
+                    </div>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Şifre Değiştir</span>
+                </div>
+                <span class="material-symbols-outlined text-[#617c89]">chevron_right</span>
+            </button>
+
+            <button onclick="notificationSettings()" class="action-button">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#1193d4]/10 dark:bg-[#1193d4]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#1193d4]">notifications</span>
+                    </div>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Bildirim Ayarları</span>
+                </div>
+                <span class="material-symbols-outlined text-[#617c89]">chevron_right</span>
+            </button>
+
+            <button onclick="privacySettings()" class="action-button">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#617c89]/10 dark:bg-[#617c89]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#617c89]">shield</span>
+                    </div>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Gizlilik & Güvenlik</span>
+                </div>
+                <span class="material-symbols-outlined text-[#617c89]">chevron_right</span>
+            </button>
+
+            <button onclick="helpSupport()" class="action-button">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-[#078836]/10 dark:bg-[#078836]/20 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-[#078836]">help</span>
+                    </div>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Yardım & Destek</span>
+                </div>
+                <span class="material-symbols-outlined text-[#617c89]">chevron_right</span>
+            </button>
+        </div>
+
+        <!-- Logout Button -->
+        <button onclick="logout()" class="action-button logout-button w-full mt-8">
+            <div class="flex items-center space-x-3">
+                <span class="material-symbols-outlined text-white">logout</span>
+                <span class="font-bold">Çıkış Yap</span>
+            </div>
+        </button>
+
+        <!-- App Version -->
+        <div class="text-center py-4">
+            <p class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Shiffy v1.0.0</p>
+            <p class="text-xs text-[#617c89] dark:text-[#a0b8c4] mt-1">© 2025 Golden Head</p>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1a2a33] shadow-2xl border-t border-gray-200 dark:border-gray-700 z-50">
+        <div class="max-w-md mx-auto flex items-center justify-around py-3 px-4">
+            <button onclick="navigateToHome()" class="flex flex-col items-center space-y-1 p-2 transition-colors">
+                <span class="material-symbols-outlined text-[#617c89] dark:text-[#a0b8c4]">home</span>
+                <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Ana Sayfa</span>
+            </button>
+            
+            <button onclick="navigateToShifts()" class="flex flex-col items-center space-y-1 p-2 transition-colors">
+                <span class="material-symbols-outlined text-[#617c89] dark:text-[#a0b8c4]">calendar_month</span>
+                <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Shiftlerim</span>
+            </button>
+            
+            <button class="flex flex-col items-center space-y-1 p-2 transition-colors">
+                <span class="material-symbols-outlined text-[#1193d4]" style="font-variation-settings: 'FILL' 1">person</span>
+                <span class="text-xs text-[#1193d4] font-semibold">Profilim</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1a2a33] rounded-2xl max-w-md w-full p-6 shadow-2xl animate-slideUp">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-[#111618] dark:text-[#f0f3f4]">Adınızı Düzenleyin</h3>
+                <button onclick="closeEditNameModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[#617c89]">close</span>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="editFullName" class="block text-sm font-medium text-[#617c89] dark:text-[#a0b8c4] mb-2">Ad Soyad</label>
+                    <input 
+                        type="text" 
+                        id="editFullName"
+                        value="Ahmet Ergün"
+                        class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-[#1193d4] focus:outline-none transition-colors bg-white dark:bg-[#101c22] text-[#111618] dark:text-[#f0f3f4]"
+                        placeholder="Adınız Soyadınız"
+                    />
+                    <p class="text-xs text-[#617c89] dark:text-[#a0b8c4] mt-2">Minimum 2 karakter</p>
+                </div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closeEditNameModal()" class="flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg font-semibold text-[#617c89] dark:text-[#a0b8c4] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        İptal
+                    </button>
+                    <button onclick="saveName()" class="flex-1 px-6 py-3 bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Email Modal -->
+    <div id="editEmailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1a2a33] rounded-2xl max-w-md w-full p-6 shadow-2xl animate-slideUp">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-[#111618] dark:text-[#f0f3f4]">E-posta Güncelle</h3>
+                <button onclick="closeEditEmailModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[#617c89]">close</span>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="editEmailInput" class="block text-sm font-medium text-[#617c89] dark:text-[#a0b8c4] mb-2">E-posta Adresi</label>
+                    <input 
+                        type="email" 
+                        id="editEmailInput"
+                        value="ahmet.ergun@email.com"
+                        class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-[#1193d4] focus:outline-none transition-colors bg-white dark:bg-[#101c22] text-[#111618] dark:text-[#f0f3f4]"
+                        placeholder="ornek@email.com"
+                    />
+                    <p class="text-xs text-[#617c89] dark:text-[#a0b8c4] mt-2">Geçerli bir e-posta adresi girin</p>
+                </div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closeEditEmailModal()" class="flex-1 px-6 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg font-semibold text-[#617c89] dark:text-[#a0b8c4] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        İptal
+                    </button>
+                    <button onclick="saveEmail()" class="flex-1 px-6 py-3 bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Picture Upload Modal -->
+    <div id="pictureModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1a2a33] rounded-2xl max-w-md w-full p-6 shadow-2xl animate-slideUp">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-[#111618] dark:text-[#f0f3f4]">Profil Fotoğrafı</h3>
+                <button onclick="closePictureModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[#617c89]">close</span>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="uploadPicture()" class="w-full flex items-center space-x-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <span class="material-symbols-outlined text-[#1193d4]">upload</span>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Fotoğraf Yükle</span>
+                </button>
+                
+                <button onclick="takePicture()" class="w-full flex items-center space-x-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <span class="material-symbols-outlined text-[#1193d4]">photo_camera</span>
+                    <span class="text-[#111618] dark:text-[#f0f3f4] font-semibold">Fotoğraf Çek</span>
+                </button>
+                
+                <button onclick="removePicture()" class="w-full flex items-center space-x-3 p-4 border-2 border-[#D9534F] dark:border-[#D9534F] rounded-lg hover:bg-[#D9534F]/10 transition-colors">
+                    <span class="material-symbols-outlined text-[#D9534F]">delete</span>
+                    <span class="text-[#D9534F] font-semibold">Fotoğrafı Kaldır</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Initialize theme from localStorage
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').textContent = 'light_mode';
+        }
+
+        // Navigation
+        function goBack() {
+            window.location.href = '../calisan_ana_ekran/calisan_ana_ekran.html';
+        }
+
+        function navigateToHome() {
+            window.location.href = '../calisan_ana_ekran/calisan_ana_ekran.html';
+        }
+
+        function navigateToShifts() {
+            window.location.href = '../shiftlerim/shiftlerim.html';
+        }
+
+        // Edit Name Modal
+        function editName() {
+            document.getElementById('editNameModal').classList.remove('hidden');
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('editNameModal').classList.add('hidden');
+        }
+
+        function saveName() {
+            const newName = document.getElementById('editFullName').value.trim();
+            
+            if (newName.length < 2) {
+                alert('Ad soyad minimum 2 karakter olmalıdır');
+                return;
+            }
+
+            // Simulate API call
+            document.getElementById('fullName').textContent = newName;
+            document.getElementById('displayName').textContent = newName;
+            
+            // Generate initials for profile picture
+            const initials = newName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            const newPictureUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%231193d4' width='120' height='120'/%3E%3Ctext x='50%25' y='50%25' font-size='48' fill='white' text-anchor='middle' dy='.3em' font-family='Manrope'%3E${initials}%3C/text%3E%3C/svg%3E`;
+            document.getElementById('profilePicture').src = newPictureUrl;
+            
+            closeEditNameModal();
+            
+            // Show success feedback
+            alert('Adınız başarıyla güncellendi!');
+        }
+
+        // Edit Email Modal
+        function editEmail() {
+            document.getElementById('editEmailModal').classList.remove('hidden');
+        }
+
+        function closeEditEmailModal() {
+            document.getElementById('editEmailModal').classList.add('hidden');
+        }
+
+        function saveEmail() {
+            const newEmail = document.getElementById('editEmailInput').value.trim();
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(newEmail)) {
+                alert('Geçerli bir e-posta adresi girin');
+                return;
+            }
+
+            // Simulate API call
+            setTimeout(() => {
+                document.getElementById('email').textContent = newEmail;
+                closeEditEmailModal();
+                alert('E-posta adresiniz başarıyla güncellendi!');
+            }, 500);
+        }
+
+        // Picture Modal
+        function openPictureModal() {
+            document.getElementById('pictureModal').classList.remove('hidden');
+        }
+
+        function closePictureModal() {
+            document.getElementById('pictureModal').classList.add('hidden');
+        }
+
+        function uploadPicture() {
+            // In real app, this would open file picker
+            alert('Fotoğraf yükleme özelliği aktif edilecek');
+            closePictureModal();
+        }
+
+        function takePicture() {
+            // In real app, this would open camera
+            alert('Kamera özelliği aktif edilecek');
+            closePictureModal();
+        }
+
+        function removePicture() {
+            // Reset to default initials picture
+            const name = document.getElementById('fullName').textContent;
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            const defaultPictureUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%231193d4' width='120' height='120'/%3E%3Ctext x='50%25' y='50%25' font-size='48' fill='white' text-anchor='middle' dy='.3em' font-family='Manrope'%3E${initials}%3C/text%3E%3C/svg%3E`;
+            document.getElementById('profilePicture').src = defaultPictureUrl;
+            closePictureModal();
+        }
+
+        // Action Buttons
+        function changePassword() {
+            window.location.href = '../calisan_sifre_sifirlama/calisan_sifre_sifirlama.html';
+        }
+
+        function notificationSettings() {
+            alert('Bildirim ayarları sayfası yakında aktif olacak');
+        }
+
+        function privacySettings() {
+            alert('Gizlilik ayarları sayfası yakında aktif olacak');
+        }
+
+        function helpSupport() {
+            alert('Yardım & Destek sayfası yakında aktif olacak');
+        }
+
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+                // Clear any stored data
+                localStorage.removeItem('userToken');
+                // Redirect to login
+                window.location.href = '../kullanici_secimi/kullanici_secimi.html';
+            }
+        }
+
+        // Load user data on page load (simulate API call)
+        window.addEventListener('DOMContentLoaded', () => {
+            // In real app, fetch user data from API
+            console.log('Kullanıcı profili yüklendi');
+        });
+    </script>
+</body>
+</html>

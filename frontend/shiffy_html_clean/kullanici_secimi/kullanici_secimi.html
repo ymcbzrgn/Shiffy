@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiffy - Kullanıcı Seçimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        * { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#f6f7f8] to-[#e8ecef] dark:from-[#101c22] dark:to-[#0a1419] min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full text-center">
+        <img src="../Shiffy.png" alt="Shiffy Logo" class="w-40 h-40 mx-auto mb-8 drop-shadow-2xl float-animation" />
+        <h1 class="text-4xl font-bold text-[#111618] dark:text-[#f0f3f4] mb-3">Shiffy</h1>
+        <p class="text-[#617c89] dark:text-[#a0b8c4] mb-12">Akıllı Vardiya Yönetim Sistemi</p>
+        
+        <div class="space-y-4">
+            <a href="../yonetici_girisi/yonetici_girisi.html" class="block w-full bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white py-5 rounded-xl font-bold shadow-2xl hover:shadow-3xl transition-all hover:scale-105 flex items-center justify-center space-x-3">
+                <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
+                <span class="text-xl">Yönetici Girişi</span>
+            </a>
+            
+            <a href="../calisan_girisi/calisan_girisi.html" class="block w-full bg-white dark:bg-[#1a2a33] text-[#1193d4] py-5 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all hover:scale-105 flex items-center justify-center space-x-3 border-2 border-[#1193d4]">
+                <span class="material-symbols-outlined text-3xl">person</span>
+                <span class="text-xl">Çalışan Girişi</span>
+            </a>
+        </div>
+
+        <button onclick="toggleTheme()" class="mt-12 px-6 py-3 bg-white/80 dark:bg-[#1a2a33] rounded-lg shadow-md hover:shadow-lg transition-all flex items-center space-x-2 mx-auto text-[#617c89] dark:text-[#a0b8c4]">
+            <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            <span id="themeText">Karanlık Mod</span>
+        </button>
+
+        <p class="text-xs text-[#617c89] dark:text-[#a0b8c4] mt-12">© 2025 Golden Head - Shiffy v1.0</p>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+            document.getElementById('themeText').textContent = isDark ? 'Aydınlık Mod' : 'Karanlık Mod';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').textContent = 'light_mode';
+            document.getElementById('themeText').textContent = 'Aydınlık Mod';
+        }
+    </script>
+</body>
+</html>

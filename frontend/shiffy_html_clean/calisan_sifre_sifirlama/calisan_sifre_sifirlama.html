@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şifre Değiştir - Shiffy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        * {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .animate-slideUp {
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .password-strength-bar {
+            height: 6px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak {
+            width: 25%;
+            background: linear-gradient(90deg, #D9534F, #F0AD4E);
+        }
+
+        .strength-medium {
+            width: 50%;
+            background: linear-gradient(90deg, #F0AD4E, #F0AD4E);
+        }
+
+        .strength-good {
+            width: 75%;
+            background: linear-gradient(90deg, #F0AD4E, #078836);
+        }
+
+        .strength-strong {
+            width: 100%;
+            background: linear-gradient(90deg, #078836, #078836);
+        }
+
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            transition: all 0.2s;
+        }
+
+        .requirement-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .requirement-unchecked {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .requirement-checked {
+            background: #078836;
+            color: white;
+        }
+
+        .dark .requirement-unchecked {
+            background: #374151;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-[#f6f7f8] dark:bg-[#101c22] min-h-screen">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white p-6 shadow-lg">
+        <div class="flex items-center justify-between max-w-md mx-auto">
+            <button onclick="goBack()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h1 class="text-xl font-bold">Şifre Değiştir</h1>
+            <button onclick="toggleTheme()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-8 space-y-8">
+        <!-- Logo -->
+        <div class="flex justify-center">
+            <img 
+                src="../Shiffy.png" 
+                alt="Shiffy Logo" 
+                class="w-24 h-24 object-contain drop-shadow-lg"
+            />
+        </div>
+
+        <!-- Information Card -->
+        <div id="firstLoginWarning" class="hidden bg-gradient-to-r from-[#F0AD4E]/20 to-[#F0AD4E]/10 dark:from-[#F0AD4E]/30 dark:to-[#F0AD4E]/20 border-2 border-[#F0AD4E] rounded-xl p-4">
+            <div class="flex items-start space-x-3">
+                <span class="material-symbols-outlined text-[#F0AD4E] text-2xl">info</span>
+                <div>
+                    <h3 class="font-bold text-[#111618] dark:text-[#f0f3f4] mb-1">İlk Giriş Şifre Değişikliği</h3>
+                    <p class="text-sm text-[#617c89] dark:text-[#a0b8c4]">Güvenliğiniz için yöneticinizin oluşturduğu geçici şifrenizi değiştirmeniz gerekmektedir.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Change Form -->
+        <form id="passwordForm" class="space-y-6">
+            <!-- Current Password (only for non-first-login) -->
+            <div id="currentPasswordSection">
+                <label for="currentPassword" class="block text-sm font-medium text-[#617c89] dark:text-[#a0b8c4] mb-2">
+                    Mevcut Şifre
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="currentPassword"
+                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-[#1193d4] focus:outline-none transition-colors bg-white dark:bg-[#1a2a33] text-[#111618] dark:text-[#f0f3f4]"
+                        placeholder="Mevcut şifrenizi girin"
+                    />
+                    <button 
+                        type="button"
+                        onclick="togglePassword('currentPassword')"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-[#617c89] hover:text-[#1193d4] transition-colors"
+                    >
+                        <span class="material-symbols-outlined" id="currentPasswordIcon">visibility</span>
+                    </button>
+                </div>
+                <p id="currentPasswordError" class="hidden text-sm text-[#D9534F] mt-2 flex items-center space-x-1">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span>Mevcut şifre yanlış</span>
+                </p>
+            </div>
+
+            <!-- New Password -->
+            <div>
+                <label for="newPassword" class="block text-sm font-medium text-[#617c89] dark:text-[#a0b8c4] mb-2">
+                    Yeni Şifre
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="newPassword"
+                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-[#1193d4] focus:outline-none transition-colors bg-white dark:bg-[#1a2a33] text-[#111618] dark:text-[#f0f3f4]"
+                        placeholder="Yeni şifrenizi girin"
+                        oninput="checkPasswordStrength()"
+                    />
+                    <button 
+                        type="button"
+                        onclick="togglePassword('newPassword')"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-[#617c89] hover:text-[#1193d4] transition-colors"
+                    >
+                        <span class="material-symbols-outlined" id="newPasswordIcon">visibility</span>
+                    </button>
+                </div>
+
+                <!-- Password Strength Indicator -->
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">Şifre Gücü</span>
+                        <span id="strengthText" class="text-xs font-semibold text-[#617c89] dark:text-[#a0b8c4]">-</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div id="strengthBar" class="password-strength-bar bg-gray-300 dark:bg-gray-600"></div>
+                    </div>
+                </div>
+
+                <!-- Password Requirements -->
+                <div class="mt-4 space-y-2">
+                    <p class="text-xs font-semibold text-[#617c89] dark:text-[#a0b8c4] mb-2">Şifre Gereksinimleri:</p>
+                    
+                    <div id="req-length" class="requirement-item">
+                        <div class="requirement-icon requirement-unchecked">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                        </div>
+                        <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">En az 8 karakter</span>
+                    </div>
+
+                    <div id="req-uppercase" class="requirement-item">
+                        <div class="requirement-icon requirement-unchecked">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                        </div>
+                        <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">En az 1 büyük harf (A-Z)</span>
+                    </div>
+
+                    <div id="req-lowercase" class="requirement-item">
+                        <div class="requirement-icon requirement-unchecked">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                        </div>
+                        <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">En az 1 küçük harf (a-z)</span>
+                    </div>
+
+                    <div id="req-number" class="requirement-item">
+                        <div class="requirement-icon requirement-unchecked">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                        </div>
+                        <span class="text-xs text-[#617c89] dark:text-[#a0b8c4]">En az 1 rakam (0-9)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-[#617c89] dark:text-[#a0b8c4] mb-2">
+                    Yeni Şifre Tekrar
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="confirmPassword"
+                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-[#1193d4] focus:outline-none transition-colors bg-white dark:bg-[#1a2a33] text-[#111618] dark:text-[#f0f3f4]"
+                        placeholder="Yeni şifrenizi tekrar girin"
+                        oninput="checkPasswordMatch()"
+                    />
+                    <button 
+                        type="button"
+                        onclick="togglePassword('confirmPassword')"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-[#617c89] hover:text-[#1193d4] transition-colors"
+                    >
+                        <span class="material-symbols-outlined" id="confirmPasswordIcon">visibility</span>
+                    </button>
+                </div>
+                <p id="passwordMatchError" class="hidden text-sm text-[#D9534F] mt-2 flex items-center space-x-1">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span>Şifreler eşleşmiyor</span>
+                </p>
+                <p id="passwordMatchSuccess" class="hidden text-sm text-[#078836] mt-2 flex items-center space-x-1">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    <span>Şifreler eşleşiyor</span>
+                </p>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+                type="submit"
+                id="submitBtn"
+                class="w-full bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white py-4 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+                <span id="submitText">Şifreyi Değiştir</span>
+                <span id="submitLoader" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1a2a33] rounded-2xl max-w-md w-full p-8 text-center shadow-2xl animate-slideUp">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#078836] to-[#056b2a] rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="material-symbols-outlined text-white text-5xl" style="font-variation-settings: 'FILL' 1">check_circle</span>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-[#111618] dark:text-[#f0f3f4] mb-3">Şifre Değiştirildi!</h2>
+            <p class="text-[#617c89] dark:text-[#a0b8c4] mb-6">Şifreniz başarıyla değiştirildi. Yeni şifrenizle giriş yapabilirsiniz.</p>
+            
+            <button 
+                onclick="redirectToLogin()"
+                class="w-full bg-gradient-to-r from-[#1193d4] to-[#0d7ab8] text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+                Giriş Sayfasına Dön
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isFirstLogin = false;
+
+        // Theme Management
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Initialize theme from localStorage
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').textContent = 'light_mode';
+        }
+
+        // Check if first login (simulate - in real app, check from API)
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check URL parameter or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            isFirstLogin = urlParams.get('firstLogin') === 'true';
+            
+            if (isFirstLogin) {
+                document.getElementById('firstLoginWarning').classList.remove('hidden');
+                document.getElementById('currentPasswordSection').classList.add('hidden');
+            }
+        });
+
+        function goBack() {
+            if (isFirstLogin) {
+                alert('İlk giriş için şifrenizi değiştirmeniz zorunludur.');
+                return;
+            }
+            window.location.href = '../calisan_profili/calisan_profili.html';
+        }
+
+        // Toggle Password Visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + 'Icon');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                field.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Check Password Strength
+        function checkPasswordStrength() {
+            const password = document.getElementById('newPassword').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            // Reset all requirements
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            // Update requirement indicators
+            updateRequirement('req-length', requirements.length);
+            updateRequirement('req-uppercase', requirements.uppercase);
+            updateRequirement('req-lowercase', requirements.lowercase);
+            updateRequirement('req-number', requirements.number);
+
+            // Calculate strength
+            const strength = Object.values(requirements).filter(v => v).length;
+            
+            strengthBar.className = 'password-strength-bar';
+            
+            if (password.length === 0) {
+                strengthText.textContent = '-';
+                strengthBar.classList.add('bg-gray-300', 'dark:bg-gray-600');
+                strengthBar.style.width = '0%';
+            } else if (strength === 1) {
+                strengthText.textContent = 'Çok Zayıf';
+                strengthText.className = 'text-xs font-semibold text-[#D9534F]';
+                strengthBar.classList.add('strength-weak');
+            } else if (strength === 2) {
+                strengthText.textContent = 'Zayıf';
+                strengthText.className = 'text-xs font-semibold text-[#F0AD4E]';
+                strengthBar.classList.add('strength-medium');
+            } else if (strength === 3) {
+                strengthText.textContent = 'Orta';
+                strengthText.className = 'text-xs font-semibold text-[#F0AD4E]';
+                strengthBar.classList.add('strength-good');
+            } else if (strength === 4) {
+                strengthText.textContent = 'Güçlü';
+                strengthText.className = 'text-xs font-semibold text-[#078836]';
+                strengthBar.classList.add('strength-strong');
+            }
+
+            // Also check password match when typing new password
+            checkPasswordMatch();
+        }
+
+        function updateRequirement(id, met) {
+            const element = document.getElementById(id);
+            const icon = element.querySelector('.requirement-icon');
+            const iconSymbol = icon.querySelector('.material-symbols-outlined');
+            
+            if (met) {
+                icon.classList.remove('requirement-unchecked');
+                icon.classList.add('requirement-checked');
+                iconSymbol.textContent = 'check';
+            } else {
+                icon.classList.remove('requirement-checked');
+                icon.classList.add('requirement-unchecked');
+                iconSymbol.textContent = 'close';
+            }
+        }
+
+        // Check Password Match
+        function checkPasswordMatch() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorMsg = document.getElementById('passwordMatchError');
+            const successMsg = document.getElementById('passwordMatchSuccess');
+            
+            if (confirmPassword.length === 0) {
+                errorMsg.classList.add('hidden');
+                successMsg.classList.add('hidden');
+                return;
+            }
+            
+            if (newPassword === confirmPassword) {
+                errorMsg.classList.add('hidden');
+                successMsg.classList.remove('hidden');
+            } else {
+                errorMsg.classList.remove('hidden');
+                successMsg.classList.add('hidden');
+            }
+        }
+
+        // Form Submission
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate current password (only if not first login)
+            if (!isFirstLogin && currentPassword.length === 0) {
+                const form = document.getElementById('passwordForm');
+                form.classList.add('animate-shake');
+                setTimeout(() => form.classList.remove('animate-shake'), 300);
+                document.getElementById('currentPasswordError').classList.remove('hidden');
+                return;
+            }
+
+            // Check all requirements
+            const requirements = {
+                length: newPassword.length >= 8,
+                uppercase: /[A-Z]/.test(newPassword),
+                lowercase: /[a-z]/.test(newPassword),
+                number: /[0-9]/.test(newPassword)
+            };
+
+            if (!Object.values(requirements).every(v => v)) {
+                const form = document.getElementById('passwordForm');
+                form.classList.add('animate-shake');
+                setTimeout(() => form.classList.remove('animate-shake'), 300);
+                alert('Lütfen tüm şifre gereksinimlerini karşılayın');
+                return;
+            }
+
+            // Check password match
+            if (newPassword !== confirmPassword) {
+                const form = document.getElementById('passwordForm');
+                form.classList.add('animate-shake');
+                setTimeout(() => form.classList.remove('animate-shake'), 300);
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitLoader = document.getElementById('submitLoader');
+            
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitLoader.classList.remove('hidden');
+
+            // Simulate API call
+            setTimeout(() => {
+                // In real app: POST /api/auth/change-password
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                submitLoader.classList.add('hidden');
+
+                // Show success modal
+                document.getElementById('successModal').classList.remove('hidden');
+            }, 1500);
+        });
+
+        function redirectToLogin() {
+            // Clear any stored tokens
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('firstLogin');
+            
+            // Redirect to login
+            window.location.href = '../calisan_girisi/calisan_girisi.html';
+        }
+    </script>
+</body>
+</html>
