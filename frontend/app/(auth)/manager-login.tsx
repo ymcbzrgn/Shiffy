@@ -40,9 +40,8 @@ export default function ManagerLoginScreen() {
       // Store token
       await storeAuthToken(token, 'manager');
       
-      // Navigate to manager dashboard (Phase 4)
-      Alert.alert('Başarılı', `Hoş geldin ${manager.store_name}!`);
-      // router.push('/(manager)/dashboard');
+      // Navigate to manager dashboard
+      router.replace('/(manager)/dashboard' as any);
     } catch (error) {
       Alert.alert('Hata', error instanceof Error ? error.message : 'Giriş başarısız');
     } finally {

@@ -58,12 +58,8 @@ export default function ManagerRegisterScreen() {
       // Store token
       await storeAuthToken(token, 'manager');
       
-      // Navigate to manager dashboard (Phase 4)
-      Alert.alert(
-        'Hoş Geldiniz!', 
-        `${manager.store_name} hesabınız başarıyla oluşturuldu. ${manager.subscription_tier === 'basic' ? '30 günlük deneme süreniz başladı.' : ''}`
-      );
-      // router.push('/(manager)/dashboard');
+      // Navigate to manager dashboard
+      router.replace('/(manager)/dashboard' as any);
     } catch (error) {
       Alert.alert('Hata', error instanceof Error ? error.message : 'Kayıt başarısız');
     } finally {
