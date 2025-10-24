@@ -245,41 +245,94 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 }
 ```
 
-### 5. Llama API Integration
+### 5. Llama API Integration (RunPod Ollama)
 ```typescript
 // services/llama.service.ts
-export const llamaService = {
-  async generateSchedule(employeePreferences: any[], managerNotes: any[]) {
-    const prompt = buildSchedulePrompt(employeePreferences, managerNotes);
+import { config } from '../config/env.config';
 
-    const response = await fetch(`${process.env.RUNPOD_API_URL}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'meta-llama/Llama-3.2-70B-Instruct',
-        messages: [
-          { role: 'system', content: 'You are a shift scheduling AI. Output ONLY valid JSON.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
-      signal: AbortSignal.timeout(60000), // 60s timeout
-    });
+export const llamaService = {
+  async generateSchedule(
+    storeName: string,
+    weekStart: string,
+    employees: any[]
+  ) {
+    const prompt = buildSchedulePrompt(storeName, weekStart, employees);
+
+    const response = await fetch(
+      `${config.runpod.apiUrl}/api/generate-with-system`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.runpod.apiKey,
+        },
+        body: JSON.stringify({
+          system_prompt_key: 'shift_scheduler', // Proxy injects system prompt
+          prompt,
+          model: 'llama3.1:8b-instruct-q6_K',
+          stream: false,
+          validate: true, // Proxy validates JSON schema
+          options: {
+            temperature: 0.5,
+            num_ctx: 16384,
+            num_predict: 3000,
+          },
+        }),
+        signal: AbortSignal.timeout(30000), // 30s timeout
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`Llama API error: ${response.status}`);
+      throw new Error(`RunPod API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
 
-    // Parse JSON (remove markdown if present)
-    const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleanedContent);
+    // Check validation (proxy validates against schema)
+    if (!data.validation?.ok) {
+      throw new Error('Schedule validation failed');
+    }
+
+    // Return parsed JSON (proxy already parsed it)
+    return data.parsed; // { shifts: [...], summary: {...} }
   },
 };
+
+function buildSchedulePrompt(
+  storeName: string,
+  weekStart: string,
+  employees: any[]
+): string {
+  const lines = [
+    `STORE: ${storeName}`,
+    `WEEK: ${weekStart} to ...`,
+    `OPERATING HOURS: 08:00-22:00`,
+    '',
+  ];
+
+  for (const emp of employees) {
+    lines.push(`EMPLOYEE ${emp.id}: ${emp.full_name}`);
+    lines.push(`Manager Notes: ${emp.notes || 'None'}`);
+    lines.push(`Availability:`);
+
+    for (const slot of emp.shift_preferences.slots) {
+      lines.push(`  ${slot.day} ${slot.time}: ${slot.status}`);
+    }
+
+    lines.push('');
+  }
+
+  lines.push('Generate optimal weekly schedule as JSON.');
+  return lines.join('\n');
+}
 ```
+
+**Key differences from standard Llama API:**
+- ✅ Custom endpoint: `/api/generate-with-system` (not OpenAI-compatible)
+- ✅ Authentication: `x-api-key` header (not Bearer token)
+- ✅ System prompt: Injected by proxy via `system_prompt_key`
+- ✅ Validation: Proxy validates JSON schema automatically
+- ✅ Response: `data.parsed` contains ready-to-use JSON
 
 ---
 

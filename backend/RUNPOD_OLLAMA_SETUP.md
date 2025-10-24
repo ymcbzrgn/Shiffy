@@ -7,6 +7,19 @@
 
 ---
 
+## 🚀 Production Status
+
+✅ **RunPod Instance:** ACTIVE (as of Oct 24, 2025)
+✅ **Model:** `llama3.1:8b-instruct-q6_K` (deployed)
+✅ **Hardware:** RTX A4000 (16 GB VRAM)
+✅ **Endpoint:** `https://ymgoqyxl58jzfo-8888.proxy.runpod.net`
+
+**Quick Start:** See [RUNPOD_PRODUCTION.md](./RUNPOD_PRODUCTION.md) for production endpoint details and integration examples.
+
+**This document:** Detailed setup guide for reproducing the deployment or troubleshooting.
+
+---
+
 ## 📋 Table of Contents
 
 1. [Project-Specific Overview](#project-specific-overview)
@@ -69,15 +82,21 @@
 
 ### Recommended Configuration
 
-**Primary Choice:** `qwen2.5:7b-instruct-q6_K`
-- **Why?** Best JSON generation quality among 7B models
-- **Response Time:** 5-10 seconds (vs 30-60s for 70B)
-- **Sufficient for:** Shift scheduling (not creative writing)
-- **Hardware:** RTX A4000 (16 GB VRAM) - **sufficient**
+**✅ PRODUCTION CHOICE (Deployed):** `llama3.1:8b-instruct-q6_K`
+- **Why?** Excellent JSON generation + reliable instruction following
+- **Response Time:** 5-10 seconds (single day), 12-18s (full week via batch)
+- **Sufficient for:** Shift scheduling with complex constraints
+- **Hardware:** RTX A4000 (16 GB VRAM) - **confirmed fit**
+- **Status:** Currently deployed and tested with 15-employee scenarios
+
+**Alternative:** `qwen2.5:7b-instruct-q6_K`
+- Potentially better JSON quality
+- Slightly faster
+- Consider for future optimization
 
 **Fallback:** `llama3:8b-instruct-q6_K`
-- Slightly slower but very reliable
-- Better community support
+- Slightly older version than 3.1
+- Still very reliable
 
 **NOT Recommended:**
 - ❌ `llama3.2:70b` - Too slow, unnecessary for structured tasks
