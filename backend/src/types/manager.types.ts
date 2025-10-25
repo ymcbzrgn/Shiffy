@@ -13,6 +13,8 @@ import type { EmployeeResponse } from './employee.types';
 export interface CreateEmployeeRequest {
   full_name: string;
   username: string;
+  job_description?: string | null;
+  max_weekly_hours?: number | null;
 }
 
 /**

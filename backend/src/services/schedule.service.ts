@@ -47,6 +47,8 @@ export const scheduleService = {
           return {
             employee_id: emp.id,
             full_name: emp.full_name,
+            job_description: emp.job_description,
+            max_weekly_hours: emp.max_weekly_hours,
             slots: preference?.slots || [],
             notes: emp.manager_notes || undefined,
           };

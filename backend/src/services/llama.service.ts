@@ -23,6 +23,8 @@ import type { Shift, ScheduleSummary } from '../types/schedule.types';
 interface EmployeePreference {
   employee_id: string;
   full_name: string;
+  job_description: string | null;
+  max_weekly_hours: number | null;
   slots: Array<{
     day: string;
     time: string;
@@ -132,6 +134,20 @@ export const llamaService = {
     for (const emp of employees) {
       lines.push(`EMPLOYEE ${emp.employee_id}: ${emp.full_name}`);
 
+      // Job description
+      if (emp.job_description) {
+        lines.push(`Job Description: ${emp.job_description}`);
+      }
+
+      // Max weekly hours
+      if (emp.max_weekly_hours !== null) {
+        if (emp.max_weekly_hours === 0) {
+          lines.push(`Status: ON LEAVE (do not schedule)`);
+        } else {
+          lines.push(`Max Weekly Hours: ${emp.max_weekly_hours}`);
+        }
+      }
+
       if (emp.notes) {
         lines.push(`Manager Notes: ${emp.notes}`);
       }
@@ -155,6 +171,8 @@ export const llamaService = {
     lines.push('- Respect employee availability (unavailable = cannot work)');
     lines.push('- Prefer available/preferred slots');
     lines.push('- off_request = employee wants day off (use as last resort)');
+    lines.push('- Respect max_weekly_hours (soft limit, try not to exceed)');
+    lines.push('- If max_weekly_hours = 0, skip employee entirely (on leave)');
     lines.push('- Distribute hours fairly among employees');
     lines.push('- Cover all operating hours (08:00-22:00)');
 

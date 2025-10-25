@@ -36,12 +36,16 @@ export async function getEmployees(managerId: string): Promise<EmployeeResponse[
  * @param managerId - Manager UUID
  * @param fullName - Employee full name
  * @param username - Employee username (unique)
+ * @param jobDescription - Job roles/description (optional)
+ * @param maxWeeklyHours - Maximum hours per week (optional, 0-150)
  * @returns Created employee + temporary password
  */
 export async function createEmployee(
   managerId: string,
   fullName: string,
-  username: string
+  username: string,
+  jobDescription: string | null = null,
+  maxWeeklyHours: number | null = null
 ): Promise<CreateEmployeeResponse> {
   try {
     // Check if username already exists
@@ -61,6 +65,8 @@ export async function createEmployee(
       manager_id: managerId,
       full_name: fullName,
       username,
+      job_description: jobDescription,
+      max_weekly_hours: maxWeeklyHours,
       password_hash: passwordHash,
       first_login: true, // Must change password on first login
     });

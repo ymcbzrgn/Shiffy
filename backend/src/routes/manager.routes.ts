@@ -48,7 +48,7 @@ router.get('/employees', managerAuthMiddleware, async (req: Request, res: Respon
 router.post('/employees', managerAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const managerId = req.user!.user_id; // From JWT
-    const { full_name, username } = req.body as CreateEmployeeRequest;
+    const { full_name, username, job_description, max_weekly_hours } = req.body as CreateEmployeeRequest;
 
     // Validate input
     if (!full_name || !username) {
@@ -58,8 +58,24 @@ router.post('/employees', managerAuthMiddleware, async (req: Request, res: Respo
       });
     }
 
+    // Validate max_weekly_hours (if provided)
+    if (max_weekly_hours !== undefined && max_weekly_hours !== null) {
+      if (!Number.isInteger(max_weekly_hours) || max_weekly_hours < 0 || max_weekly_hours > 150) {
+        return res.status(400).json({
+          success: false,
+          error: 'max_weekly_hours 0 ile 150 arasında bir tam sayı olmalıdır',
+        });
+      }
+    }
+
     // Create employee
-    const result = await managerService.createEmployee(managerId, full_name, username);
+    const result = await managerService.createEmployee(
+      managerId,
+      full_name,
+      username,
+      job_description ?? null,
+      max_weekly_hours ?? null
+    );
 
     return res.status(201).json({
       success: true,

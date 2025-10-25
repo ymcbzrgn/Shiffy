@@ -13,6 +13,8 @@ export interface Employee {
   manager_id: string;
   username: string;
   full_name: string;
+  job_description: string | null;
+  max_weekly_hours: number | null;
   password_hash: string;
   first_login: boolean;
   manager_notes: string | null;
@@ -30,6 +32,8 @@ export interface CreateEmployeeDTO {
   manager_id: string;
   full_name: string;
   username: string;
+  job_description?: string | null;
+  max_weekly_hours?: number | null;
   password_hash: string;
   first_login?: boolean; // Default: true
 }
@@ -53,6 +57,8 @@ export interface EmployeeResponse {
   manager_id: string;
   username: string;
   full_name: string;
+  job_description: string | null;
+  max_weekly_hours: number | null;
   first_login: boolean;
   manager_notes: string | null;
   status: 'active' | 'inactive';
