@@ -25,6 +25,7 @@ const isSmallDevice = width < 375;
 export default function ManagerLoginScreen() {
   const router = useRouter();
   const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
   
   const [form, setForm] = useState({
     email: '',
@@ -34,6 +35,20 @@ export default function ManagerLoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const handleEmailChange = (text: string) => {
+    setForm(prev => ({ ...prev, email: text }));
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setForm(prev => ({ ...prev, password: text }));
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: '' }));
+    }
+  };
 
   const handleLogin = async () => {
     // Validate
@@ -124,11 +139,8 @@ export default function ManagerLoginScreen() {
               <TextInput
                 ref={emailInputRef}
                 style={[styles.input, errors.email && styles.inputError]}
-                value={form.email}
-                onChangeText={(text) => {
-                  setForm({ ...form, email: text });
-                  if (errors.email) setErrors({ ...errors, email: '' });
-                }}
+                defaultValue=""
+                onChangeText={handleEmailChange}
                 placeholder="ornek@isletme.com"
                 placeholderTextColor="#9ca3af"
                 keyboardType="email-address"
@@ -137,6 +149,7 @@ export default function ManagerLoginScreen() {
                 autoComplete="email"
                 textContentType="emailAddress"
                 returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
                 editable={!loading}
               />
               <MaterialIcons
@@ -155,9 +168,10 @@ export default function ManagerLoginScreen() {
             <Text style={styles.label}>Şifre</Text>
             <View style={styles.inputContainer}>
               <TextInput
+                ref={passwordInputRef}
                 style={[styles.input, errors.password && styles.inputError]}
-                value={form.password}
-                onChangeText={(text) => setForm({ ...form, password: text })}
+                defaultValue=""
+                onChangeText={handlePasswordChange}
                 placeholder="••••••••"
                 placeholderTextColor="#9ca3af"
                 secureTextEntry={!showPassword}
@@ -165,6 +179,8 @@ export default function ManagerLoginScreen() {
                 autoCorrect={false}
                 autoComplete="password"
                 textContentType="password"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
                 editable={!loading}
               />
               <TouchableOpacity

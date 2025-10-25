@@ -84,14 +84,6 @@ export default function EmployeeHomeScreen() {
         </TouchableOpacity>
       </LinearGradient>
 
-      {/* Logo Section */}
-      <View style={styles.logoSection}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>S</Text>
-        </View>
-        <Text style={styles.logoTitle}>Shiffy</Text>
-      </View>
-
       {/* Main Content */}
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Bu Haftanın Durumu</Text>
@@ -305,37 +297,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#D9534F',
   },
-  logoSection: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  logoCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#1193d4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-    shadowColor: '#1193d4',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  logoText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  logoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111618',
-  },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
