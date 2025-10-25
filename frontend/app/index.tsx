@@ -1,7 +1,7 @@
 // App Entry Point - Splash Screen with Logo
 
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -29,9 +29,11 @@ export default function SplashScreen() {
       style={styles.container}
     >
       <View style={styles.logoContainer}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>S</Text>
-        </View>
+        <Image 
+          source={require('@/assets/images/shiffy-logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <Text style={styles.logoTitle}>Shiffy</Text>
         <Text style={styles.logoSubtitle}>Shift Yönetim Sistemi</Text>
       </View>
@@ -48,21 +50,10 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
   },
-  logoCircle: {
+  logoImage: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 24,
-    borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  logoText: {
-    fontSize: 64,
-    fontWeight: 'bold',
-    color: '#ffffff',
   },
   logoTitle: {
     fontSize: 42,
