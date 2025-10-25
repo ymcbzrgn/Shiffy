@@ -11,9 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { employeeChangePassword } from '../../services/employee-auth';
 import { validatePassword, getPasswordStrength } from '../../utils/validation';
 
@@ -130,7 +132,12 @@ export default function EmployeePasswordResetScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#00cd81', '#004dd6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
@@ -140,15 +147,17 @@ export default function EmployeePasswordResetScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Şifre Değiştir</Text>
           <View style={{ width: 40 }} />
-        </View>
+        </LinearGradient>
 
         {/* Content */}
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>S</Text>
-            </View>
+            <Image 
+              source={require('@/assets/images/shiffy-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
 
           {/* First Login Warning */}
@@ -340,11 +349,18 @@ export default function EmployeePasswordResetScreen() {
             <TouchableOpacity
               onPress={handleChangePassword}
               disabled={loading}
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              activeOpacity={0.8}
             >
-              <Text style={styles.submitButtonText}>
-                {loading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
-              </Text>
+              <LinearGradient
+                colors={loading ? ['#9ca3af', '#9ca3af'] : ['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitButton}
+              >
+                <Text style={styles.submitButtonText}>
+                  {loading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
@@ -362,7 +378,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    backgroundColor: '#1193d4',
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 16,
@@ -385,23 +400,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  logoCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#1193d4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  logoImage: {
+    width: 120,
+    height: 120,
   },
   warningCard: {
     backgroundColor: 'rgba(240, 173, 78, 0.1)',
@@ -516,18 +517,14 @@ const styles = StyleSheet.create({
     color: '#617c89',
   },
   submitButton: {
-    backgroundColor: '#1193d4',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#1193d4',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
   },
   submitButtonText: {
     color: '#ffffff',

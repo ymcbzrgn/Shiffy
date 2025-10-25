@@ -4,6 +4,8 @@
 import { apiClient } from './api-client';
 import { ShiftPreference, TimeSlot } from '../types';
 
+const USE_MOCK = true; // Toggle for backend development
+
 /**
  * Submit Shift Preferences (Employee)
  *
@@ -18,6 +20,19 @@ export async function submitPreferences(
   weekStart: string,
   slots: TimeSlot[]
 ): Promise<ShiftPreference> {
+  if (USE_MOCK) {
+    // Mock successful submission
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    
+    return {
+      id: 'mock-preference-id',
+      employee_id: 'mock-employee-id',
+      week_start: weekStart,
+      slots,
+      submitted_at: new Date().toISOString(),
+    };
+  }
+  
   const response = await apiClient<ShiftPreference>('/api/shifts/preferences', {
     method: 'POST',
     body: JSON.stringify({
@@ -43,6 +58,12 @@ export async function submitPreferences(
  * @throws Error if fetch fails
  */
 export async function getMyPreferences(weekStart: string): Promise<ShiftPreference | null> {
+  if (USE_MOCK) {
+    // Mock: No saved preferences
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return null;
+  }
+  
   const response = await apiClient<ShiftPreference | null>(
     `/api/shifts/my-preferences?week=${weekStart}`,
     {

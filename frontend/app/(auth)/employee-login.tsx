@@ -57,6 +57,8 @@ export default function EmployeeLoginScreen() {
           status: 'active',
           created_at: '',
           last_login: null,
+          job_description: null,
+          max_weekly_hours: null,
         },
         userType: 'employee',
         accessToken: response.token,
@@ -198,13 +200,6 @@ export default function EmployeeLoginScreen() {
             <Text style={styles.backToSelectText}>Geri Dön</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Test Credentials Info */}
-        <View style={styles.testInfo}>
-          <Text style={styles.testInfoTitle}>Test Kullanıcıları:</Text>
-          <Text style={styles.testInfoText}>ahmet.ergun / Password123!</Text>
-          <Text style={styles.testInfoText}>zeynep.yilmaz / Shf9kL2pQx (İlk giriş)</Text>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -332,24 +327,5 @@ const styles = StyleSheet.create({
     color: '#617c89',
     fontSize: isSmallDevice ? 15 : 16,
     fontWeight: '600',
-  },
-  testInfo: {
-    backgroundColor: 'rgba(17, 147, 212, 0.1)',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(17, 147, 212, 0.2)',
-  },
-  testInfoTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1193d4',
-    marginBottom: 8,
-  },
-  testInfoText: {
-    fontSize: 11,
-    color: '#617c89',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginBottom: 4,
   },
 });

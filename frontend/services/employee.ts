@@ -3,6 +3,52 @@
 import { apiClient } from './api-client';
 import { Employee } from '../types';
 
+// Mock mode toggle
+const USE_MOCK = true;
+
+// Mock data
+const MOCK_EMPLOYEES: Employee[] = [
+  {
+    id: '1',
+    manager_id: 'mock-manager-id',
+    full_name: 'Ahmet Yılmaz',
+    username: 'ahmet',
+    status: 'active',
+    first_login: false,
+    manager_notes: 'Güvenilir çalışan, sabah vardiyalarında çok iyi performans gösteriyor.',
+    job_description: 'Kasiyer, Barista',
+    max_weekly_hours: 40,
+    created_at: '2025-01-15T08:00:00Z',
+    last_login: '2025-10-24T14:30:00Z',
+  },
+  {
+    id: '2',
+    manager_id: 'mock-manager-id',
+    full_name: 'Ayşe Demir',
+    username: 'ayse',
+    status: 'active',
+    first_login: true,
+    manager_notes: '',
+    job_description: 'Garson',
+    max_weekly_hours: 30,
+    created_at: '2025-10-20T10:00:00Z',
+    last_login: null,
+  },
+  {
+    id: '3',
+    manager_id: 'mock-manager-id',
+    full_name: 'Mehmet Kaya',
+    username: 'mehmet',
+    status: 'inactive',
+    first_login: false,
+    manager_notes: 'İzinde, ay sonunda dönecek.',
+    job_description: 'Aşçı Yardımcısı',
+    max_weekly_hours: 0,
+    created_at: '2024-12-01T09:00:00Z',
+    last_login: '2025-10-15T18:20:00Z',
+  },
+];
+
 /**
  * Get All Employees (Manager Only)
  *
@@ -13,6 +59,12 @@ import { Employee } from '../types';
  * @throws Error if fetch fails
  */
 export async function getEmployees(): Promise<Employee[]> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return MOCK_EMPLOYEES;
+  }
+
   const response = await apiClient<Employee[]>('/api/manager/employees', {
     method: 'GET',
   });
@@ -56,6 +108,18 @@ export async function searchEmployees(query: string): Promise<Employee[]> {
  * @throws Error if employee not found
  */
 export async function getEmployee(employeeId: string): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+    
+    return employee;
+  }
+
   const response = await apiClient<Employee>(
     `/api/manager/employees/${employeeId}`,
     {
@@ -89,6 +153,32 @@ export async function createEmployee(
   jobDescription: string | null = null,
   maxWeeklyHours: number | null = null
 ): Promise<{ employee: Employee; tempPassword: string }> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newEmployee: Employee = {
+      id: String(MOCK_EMPLOYEES.length + 1),
+      manager_id: 'mock-manager-id',
+      full_name: fullName,
+      username,
+      status: 'active',
+      first_login: true,
+      manager_notes: '',
+      job_description: jobDescription,
+      max_weekly_hours: maxWeeklyHours,
+      created_at: new Date().toISOString(),
+      last_login: null,
+    };
+    
+    MOCK_EMPLOYEES.push(newEmployee);
+    
+    return {
+      employee: newEmployee,
+      tempPassword: 'temp123456',
+    };
+  }
+
   const response = await apiClient<{ employee: Employee; temp_password: string }>(
     '/api/manager/employees',
     {
@@ -126,6 +216,19 @@ export async function updateEmployeeNotes(
   employeeId: string,
   notes: string
 ): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+    
+    employee.manager_notes = notes;
+    return employee;
+  }
+
   const response = await apiClient<Employee>(
     `/api/manager/employees/${employeeId}/notes`,
     {
@@ -151,6 +254,19 @@ export async function updateEmployeeNotes(
  * @throws Error if toggle fails
  */
 export async function toggleEmployeeStatus(employeeId: string): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+    
+    employee.status = employee.status === 'active' ? 'inactive' : 'active';
+    return employee;
+  }
+
   const response = await apiClient<Employee>(
     `/api/manager/employees/${employeeId}/toggle-status`,
     {

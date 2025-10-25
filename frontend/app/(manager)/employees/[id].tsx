@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -17,6 +19,8 @@ import { Loading } from '../../../components/ui/Loading';
 
 export default function EmployeeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  
+  const scrollViewRef = useRef<ScrollView>(null);
   
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,12 +132,23 @@ export default function EmployeeDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header with Gradient & Back Button */}
-      <LinearGradient
-        colors={['#00cd81', '#004dd6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#f6f7f8' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.container} 
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header with Gradient & Back Button */}
+        <LinearGradient
+          colors={['#00cd81', '#004dd6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
         style={styles.header}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -228,6 +243,12 @@ export default function EmployeeDetailScreen() {
           style={styles.notesInput}
           value={notes}
           onChangeText={setNotes}
+          onFocus={() => {
+            // Klavye açıldığında sayfa scroll down olsun
+            setTimeout(() => {
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }}
           placeholder="Çalışan hakkında notlarınızı buraya yazabilirsiniz..."
           placeholderTextColor="#9ca3af"
           multiline
@@ -251,6 +272,7 @@ export default function EmployeeDetailScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

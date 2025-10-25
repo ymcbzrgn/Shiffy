@@ -20,7 +20,6 @@ export default function EmployeeHomeScreen() {
   const router = useRouter();
   const [userName, setUserName] = useState('Çalışan');
   const [userInitials, setUserInitials] = useState('C');
-  const [pressedButton, setPressedButton] = useState<string | null>(null);
   const [weekStatus, setWeekStatus] = useState({
     week: '',
     daysRemaining: 0,
@@ -195,88 +194,34 @@ export default function EmployeeHomeScreen() {
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/my-shifts' as any)}
-            onPressIn={() => setPressedButton('shifts')}
-            onPressOut={() => setPressedButton(null)}
-            activeOpacity={1}
+            activeOpacity={0.7}
           >
-            {pressedButton === 'shifts' ? (
-              <LinearGradient
-                colors={['#00cd81', '#004dd6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.quickActionButtonGradient}
-              >
-                <View style={styles.quickActionIconPressed}>
-                  <MaterialIcons name="event" size={28} color="#ffffff" />
-                </View>
-                <Text style={styles.quickActionTextPressed}>Shiftlerim</Text>
-              </LinearGradient>
-            ) : (
-              <>
-                <View style={styles.quickActionIcon}>
-                  <MaterialIcons name="event" size={28} color="#1193d4" />
-                </View>
-                <Text style={styles.quickActionText}>Shiftlerim</Text>
-              </>
-            )}
+            <View style={styles.quickActionIcon}>
+              <MaterialIcons name="event" size={28} color="#1193d4" />
+            </View>
+            <Text style={styles.quickActionText}>Shiftlerim</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/preferences' as any)}
-            onPressIn={() => setPressedButton('preferences')}
-            onPressOut={() => setPressedButton(null)}
-            activeOpacity={1}
+            activeOpacity={0.7}
           >
-            {pressedButton === 'preferences' ? (
-              <LinearGradient
-                colors={['#00cd81', '#004dd6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.quickActionButtonGradient}
-              >
-                <View style={styles.quickActionIconPressed}>
-                  <MaterialIcons name="edit-calendar" size={28} color="#ffffff" />
-                </View>
-                <Text style={styles.quickActionTextPressed}>Tercihlerim</Text>
-              </LinearGradient>
-            ) : (
-              <>
-                <View style={styles.quickActionIcon}>
-                  <MaterialIcons name="edit-calendar" size={28} color="#1193d4" />
-                </View>
-                <Text style={styles.quickActionText}>Tercihlerim</Text>
-              </>
-            )}
+            <View style={styles.quickActionIcon}>
+              <MaterialIcons name="edit-calendar" size={28} color="#1193d4" />
+            </View>
+            <Text style={styles.quickActionText}>Tercihlerim</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/profile' as any)}
-            onPressIn={() => setPressedButton('profile')}
-            onPressOut={() => setPressedButton(null)}
-            activeOpacity={1}
+            activeOpacity={0.7}
           >
-            {pressedButton === 'profile' ? (
-              <LinearGradient
-                colors={['#00cd81', '#004dd6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.quickActionButtonGradient}
-              >
-                <View style={styles.quickActionIconPressed}>
-                  <MaterialIcons name="person" size={28} color="#ffffff" />
-                </View>
-                <Text style={styles.quickActionTextPressed}>Profilim</Text>
-              </LinearGradient>
-            ) : (
-              <>
-                <View style={styles.quickActionIcon}>
-                  <MaterialIcons name="person" size={28} color="#1193d4" />
-                </View>
-                <Text style={styles.quickActionText}>Profilim</Text>
-              </>
-            )}
+            <View style={styles.quickActionIcon}>
+              <MaterialIcons name="person" size={28} color="#1193d4" />
+            </View>
+            <Text style={styles.quickActionText}>Profilim</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -497,24 +442,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  quickActionButtonGradient: {
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-  },
   quickActionIcon: {
     backgroundColor: 'rgba(0, 205, 129, 0.1)',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  quickActionIconPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -526,12 +455,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#111618',
-    textAlign: 'center',
-  },
-  quickActionTextPressed: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#ffffff',
     textAlign: 'center',
   },
 });

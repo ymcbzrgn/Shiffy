@@ -36,6 +36,7 @@ export default function AddEmployeeScreen() {
     // Validate
     const fullNameError = validateRequired(form.fullName, 'Ad Soyad');
     const usernameError = validateRequired(form.username, 'Kullanıcı adı');
+    const jobDescriptionError = validateRequired(form.jobDescription, 'İş Tanımı');
     
     // Max weekly hours validation (REQUIRED)
     let maxWeeklyHoursError = '';
@@ -48,10 +49,11 @@ export default function AddEmployeeScreen() {
       }
     }
     
-    if (fullNameError || usernameError || maxWeeklyHoursError) {
+    if (fullNameError || usernameError || jobDescriptionError || maxWeeklyHoursError) {
       setErrors({
         fullName: fullNameError || '',
         username: usernameError || '',
+        jobDescription: jobDescriptionError || '',
         maxWeeklyHours: maxWeeklyHoursError || '',
       });
       return;
@@ -70,7 +72,7 @@ export default function AddEmployeeScreen() {
       const { employee, tempPassword } = await createEmployee(
         form.fullName,
         form.username,
-        form.jobDescription || null,
+        form.jobDescription, // Artık null değil, direkt gönder
         parseInt(form.maxWeeklyHours) || null
       );
 
@@ -174,13 +176,14 @@ export default function AddEmployeeScreen() {
 
           {/* Job Description Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>İş Tanımı (Opsiyonel)</Text>
+            <Text style={styles.label}>İş Tanımı</Text>
             <View style={styles.inputContainer}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, errors.jobDescription && styles.inputError]}
                 value={form.jobDescription}
                 onChangeText={(text) => {
                   setForm({ ...form, jobDescription: text });
+                  if (errors.jobDescription) setErrors({ ...errors, jobDescription: '' });
                 }}
                 placeholder="Örn: Kasiyer, Garson"
                 placeholderTextColor="#9ca3af"
@@ -194,6 +197,7 @@ export default function AddEmployeeScreen() {
                 style={styles.inputIcon}
               />
             </View>
+            {errors.jobDescription ? <Text style={styles.errorText}>{errors.jobDescription}</Text> : null}
             <Text style={styles.hintText}>
               İpucu: Birden fazla rolü virgülle ayırarak yazabilirsiniz (Örn: "Kasiyer, Garson, Aşçı")
             </Text>

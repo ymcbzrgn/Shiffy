@@ -29,6 +29,8 @@ export default function PreferencesScreen() {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
   const [hasChanges, setHasChanges] = useState(false);
   const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<SlotStatus>('available');
+  const [savedGrid, setSavedGrid] = useState<Record<string, SlotStatus>>(initializeEmptyGrid());
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Load user session on mount
@@ -50,7 +52,9 @@ export default function PreferencesScreen() {
     getMyPreferences(weekStartStr).then(saved => {
       if (saved && saved.slots) {
         // Convert backend TimeSlot[] to grid format
-        setGrid(slotsToGrid(saved.slots));
+        const loadedGrid = slotsToGrid(saved.slots);
+        setGrid(loadedGrid);
+        setSavedGrid(loadedGrid); // Save as backup
         setHasChanges(false);
         return;
       }
@@ -59,9 +63,12 @@ export default function PreferencesScreen() {
       loadDraft(employeeId, weekStartStr).then(draft => {
         if (draft) {
           setGrid(draft.grid);
+          setSavedGrid(draft.grid); // Save as backup
           setHasChanges(true);
         } else {
-          setGrid(initializeEmptyGrid());
+          const emptyGrid = initializeEmptyGrid();
+          setGrid(emptyGrid);
+          setSavedGrid(emptyGrid); // Save as backup
           setHasChanges(false);
         }
       });
@@ -71,9 +78,12 @@ export default function PreferencesScreen() {
       loadDraft(employeeId, weekStartStr).then(draft => {
         if (draft) {
           setGrid(draft.grid);
+          setSavedGrid(draft.grid); // Save as backup
           setHasChanges(true);
         } else {
-          setGrid(initializeEmptyGrid());
+          const emptyGrid = initializeEmptyGrid();
+          setGrid(emptyGrid);
+          setSavedGrid(emptyGrid); // Save as backup
           setHasChanges(false);
         }
       });
@@ -114,7 +124,16 @@ export default function PreferencesScreen() {
   const handleSlotPress = (day: DayOfWeek, time: string) => {
     const key = getSlotKey(day, time);
     const currentStatus = grid[key];
-    const nextStatus = cycleSlotStatus(currentStatus);
+    
+    // Apply selected status to the slot
+    let nextStatus: SlotStatus;
+    if (currentStatus === selectedStatus) {
+      // If clicking same status, clear it
+      nextStatus = null;
+    } else {
+      // Apply the selected status
+      nextStatus = selectedStatus;
+    }
     
     setGrid(prev => ({
       ...prev,
@@ -161,6 +180,7 @@ export default function PreferencesScreen() {
       );
 
       setHasChanges(false);
+      setSavedGrid(grid); // Update saved grid after successful save
     } catch (error) {
       Alert.alert(
         'Hata',
@@ -170,18 +190,83 @@ export default function PreferencesScreen() {
     }
   };
   
-  const handleReset = () => {
+  const handleBack = () => {
+    if (hasChanges) {
+      Alert.alert(
+        'Kaydedilmemiş Değişiklikler',
+        'Değişiklikleriniz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Çık',
+            style: 'destructive',
+            onPress: () => {
+              // Restore saved grid
+              setGrid(savedGrid);
+              setHasChanges(false);
+              router.back();
+            }
+          }
+        ]
+      );
+    } else {
+      router.back();
+    }
+  };
+  
+  const handleReset = async () => {
     Alert.alert(
       'Tercihleri Sıfırla',
-      'Bu haftanın tüm tercihlerini silmek istediğinizden emin misiniz?',
+      'Bu haftanın tüm tercihlerini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       [
         { text: 'İptal', style: 'cancel' },
         {
-          text: 'Sıfırla',
+          text: 'Evet, Sıfırla',
           style: 'destructive',
           onPress: () => {
-            setGrid(initializeEmptyGrid());
-            setHasChanges(false);
+            // Second confirmation
+            Alert.alert(
+              'Son Onay',
+              'Tüm tercihleri silmek ve kaydetmek istediğinize emin misiniz?',
+              [
+                { text: 'Vazgeç', style: 'cancel' },
+                {
+                  text: 'Eminim, Sil',
+                  style: 'destructive',
+                  onPress: async () => {
+                    if (!employeeId) return;
+                    
+                    try {
+                      const emptyGrid = initializeEmptyGrid();
+                      const weekStartStr = formatDateISO(currentWeekStart);
+                      
+                      // Convert empty grid to TimeSlot array
+                      const slots = gridToSlots(emptyGrid);
+                      
+                      // Submit empty preferences to backend
+                      await submitPreferences(weekStartStr, slots);
+                      
+                      // Update state
+                      setGrid(emptyGrid);
+                      setSavedGrid(emptyGrid);
+                      setHasChanges(false);
+                      
+                      Alert.alert(
+                        'Tercihler Sıfırlandı',
+                        'Bu haftanın tüm tercihleri temizlendi ve kaydedildi.',
+                        [{ text: 'Tamam' }]
+                      );
+                    } catch (error) {
+                      Alert.alert(
+                        'Hata',
+                        'Tercihler sıfırlanamadı. Lütfen tekrar deneyin.',
+                        [{ text: 'Tamam' }]
+                      );
+                    }
+                  }
+                }
+              ]
+            );
           }
         }
       ]
@@ -198,7 +283,7 @@ export default function PreferencesScreen() {
         style={styles.header}
       >
         <TouchableOpacity 
-          onPress={() => router.back()} 
+          onPress={handleBack} 
           style={styles.backButton}
         >
           <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
@@ -250,24 +335,56 @@ export default function PreferencesScreen() {
             Dokunarak Durum Seç:
           </Text>
           <View style={styles.legendItems}>
-            <View style={styles.legendItem}>
+            <TouchableOpacity 
+              style={[
+                styles.statusButton,
+                selectedStatus === 'available' && styles.statusButtonSelected
+              ]}
+              onPress={() => setSelectedStatus('available')}
+              activeOpacity={0.7}
+            >
               <View style={[styles.legendBox, styles.legendBoxAvailable]} />
-              <Text style={styles.legendText}>
-                Müsaitim
+              <Text style={[
+                styles.legendText,
+                selectedStatus === 'available' && styles.legendTextSelected
+              ]}>
+                Çalışabilirim
               </Text>
-            </View>
-            <View style={styles.legendItem}>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.statusButton,
+                selectedStatus === 'unavailable' && styles.statusButtonSelected
+              ]}
+              onPress={() => setSelectedStatus('unavailable')}
+              activeOpacity={0.7}
+            >
               <View style={[styles.legendBox, styles.legendBoxUnavailable]} />
-              <Text style={styles.legendText}>
-                Müsait Değilim
+              <Text style={[
+                styles.legendText,
+                selectedStatus === 'unavailable' && styles.legendTextSelected
+              ]}>
+                Çalışamam
               </Text>
-            </View>
-            <View style={styles.legendItem}>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.statusButton,
+                selectedStatus === 'off_request' && styles.statusButtonSelected
+              ]}
+              onPress={() => setSelectedStatus('off_request')}
+              activeOpacity={0.7}
+            >
               <View style={[styles.legendBox, styles.legendBoxOffRequest]} />
-              <Text style={styles.legendText}>
+              <Text style={[
+                styles.legendText,
+                selectedStatus === 'off_request' && styles.legendTextSelected
+              ]}>
                 İzin Talebi
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -377,6 +494,21 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  statusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f6f7f8',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  statusButtonSelected: {
+    backgroundColor: 'rgba(0, 205, 129, 0.1)',
+    borderColor: '#00cd81',
+  },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -399,6 +531,11 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12,
     color: '#617c89',
+  },
+  legendTextSelected: {
+    fontSize: 12,
+    color: '#111618',
+    fontWeight: '600',
   },
   gridContainer: {
     borderRadius: 12,

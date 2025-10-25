@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback, useMemo } from 'react';
 import type { SlotStatus, DayOfWeek } from '@/types';
 import { generateTimeSlots, getDayLabels, getDayKeys, getSlotKey } from '@/utils/shift-grid-helpers';
 
@@ -9,47 +9,49 @@ interface ShiftGridProps {
 }
 
 export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
-  const [isDragging, setIsDragging] = useState(false);
   const lastTouchedCellRef = useRef<string | null>(null);
-  const cellRefs = useRef<Map<string, View>>(new Map());
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  const timeSlots = generateTimeSlots();
-  const dayLabels = getDayLabels();
-  const dayKeys = getDayKeys();
+  const timeSlots = useMemo(() => generateTimeSlots(), []);
+  const dayLabels = useMemo(() => getDayLabels(), []);
+  const dayKeys = useMemo(() => getDayKeys(), []);
   
   // Get cell background color based on status
-  const getCellStyle = (status: SlotStatus) => {
+  const getCellStyle = useCallback((status: SlotStatus) => {
     if (status === 'available') return styles.cellAvailable;
     if (status === 'unavailable') return styles.cellUnavailable;
     if (status === 'off_request') return styles.cellOffRequest;
     return styles.cellEmpty;
-  };
+  }, []);
   
   // Render cell content (icon or dash)
-  const renderCellContent = (status: SlotStatus) => {
+  const renderCellContent = useCallback((status: SlotStatus) => {
     if (status === null) {
       return <Text style={styles.cellText}>-</Text>;
     }
     return null;
-  };
+  }, []);
   
-  // Handle cell touch (single tap or drag)
-  const handleCellPress = (day: DayOfWeek, time: string) => {
-    onSlotPress(day, time);
-  };
-  
-  // Handle cell touch during drag
-  const handleCellTouchMove = (day: DayOfWeek, time: string) => {
-    if (!isDragging) return;
-    
+  // Handle cell touch with debounce
+  const handleCellPress = useCallback((day: DayOfWeek, time: string) => {
     const key = getSlotKey(day, time);
     
-    // Prevent firing same cell multiple times
-    if (lastTouchedCellRef.current === key) return;
+    // Prevent double-tap
+    if (lastTouchedCellRef.current === key) {
+      return;
+    }
     
     lastTouchedCellRef.current = key;
     onSlotPress(day, time);
-  };
+    
+    // Clear after 100ms to allow next tap
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+    }
+    pressTimerRef.current = setTimeout(() => {
+      lastTouchedCellRef.current = null;
+    }, 100);
+  }, [onSlotPress]);
   
   return (
     <View>
@@ -83,58 +85,35 @@ export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
             showsVerticalScrollIndicator={true}
             style={styles.verticalScroll}
           >
-            <View
-              onStartShouldSetResponder={() => true}
-              onMoveShouldSetResponder={() => true}
-              onResponderGrant={(e) => {
-                setIsDragging(true);
-              }}
-              onResponderMove={(e) => {
-                if (isDragging) {
-                  // Find which cell was touched during drag
-                  const { locationX, locationY } = e.nativeEvent;
-                  // This will trigger re-render and select cells during drag
-                }
-              }}
-              onResponderRelease={() => {
-                setIsDragging(false);
-                lastTouchedCellRef.current = null;
-              }}
-            >
-              {timeSlots.map((time, rowIndex) => (
-                <View key={time} style={styles.gridRow}>
-                  {/* Time Label */}
-                  <View style={styles.timeCell}>
-                    <Text style={styles.timeText}>
-                      {time}
-                    </Text>
-                  </View>
-                  
-                  {/* Day Cells */}
-                  {dayKeys.map((day) => {
-                    const key = getSlotKey(day, time);
-                    const status = grid[key];
-                    
-                    return (
-                      <TouchableOpacity
-                        key={key}
-                        style={[styles.cell, getCellStyle(status)]}
-                        activeOpacity={0.7}
-                        onPress={() => handleCellPress(day, time)}
-                        onPressIn={() => {
-                          if (isDragging) {
-                            handleCellTouchMove(day, time);
-                          }
-                        }}
-                        delayPressIn={0}
-                      >
-                        {renderCellContent(status)}
-                      </TouchableOpacity>
-                    );
-                  })}
+            {timeSlots.map((time) => (
+              <View key={time} style={styles.gridRow}>
+                {/* Time Label */}
+                <View style={styles.timeCell}>
+                  <Text style={styles.timeText}>
+                    {time}
+                  </Text>
                 </View>
-              ))}
-            </View>
+                
+                {/* Day Cells */}
+                {dayKeys.map((day) => {
+                  const key = getSlotKey(day, time);
+                  const status = grid[key];
+                  
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.cell, getCellStyle(status)]}
+                      activeOpacity={0.8}
+                      onPress={() => handleCellPress(day, time)}
+                      delayPressIn={0}
+                      delayPressOut={0}
+                    >
+                      {renderCellContent(status)}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
           </ScrollView>
         </View>
       </ScrollView>
