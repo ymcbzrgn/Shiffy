@@ -190,7 +190,315 @@ and this project follows semantic versioning principles.
 
 ---
 
-### [2025-10-24 16:45] - RunPod Ollama Integration Guide
+### [2025-10-25 01:35] - Phase 3 Complete: Manager Employee CRUD
+
+#### Added
+- **Manager Types** (`manager.types.ts`): TypeScript interfaces for manager operations
+  - CreateEmployeeRequest: Request body for employee creation
+  - CreateEmployeeResponse: Response with employee + temp_password
+  - UpdateNotesRequest: Manager notes update request
+  - Files: `backend/src/types/manager.types.ts`
+
+- **Manager Service** (`manager.service.ts`): Business logic for employee management
+  - `getEmployees(managerId)` - List all employees for manager
+  - `createEmployee(managerId, fullName, username)` - Create employee with auto-generated password
+  - `getEmployeeById(employeeId)` - Get single employee details
+  - `updateEmployeeNotes(employeeId, notes)` - Update manager notes
+  - `toggleEmployeeStatus(employeeId)` - Toggle active/inactive status
+  - Auto-generates 8-character temp password for new employees
+  - Files: `backend/src/services/manager.service.ts`
+
+- **Manager Auth Middleware** (`manager-auth.middleware.ts`): Role-based authentication
+  - Verifies JWT token validity
+  - Checks user_type === 'manager' (403 if not manager)
+  - Attaches decoded JWT payload to req.user
+  - Returns 401 for invalid/expired tokens
+  - NOTE: MVP uses same JWT system as employees; production will use Supabase Auth
+  - Files: `backend/src/middleware/manager-auth.middleware.ts`
+
+- **Manager Routes** (`manager.routes.ts`): 5 CRUD endpoints
+  - GET `/api/manager/employees` - List all employees (with manager_id filter)
+  - POST `/api/manager/employees` - Create employee (returns temp_password once)
+  - GET `/api/manager/employees/:id` - Get employee by ID
+  - PATCH `/api/manager/employees/:id/notes` - Update manager notes
+  - PATCH `/api/manager/employees/:id/toggle-status` - Toggle active/inactive
+  - All routes protected with `managerAuthMiddleware`
+  - Security: Verifies employee belongs to authenticated manager
+  - Files: `backend/src/routes/manager.routes.ts`
+
+- **Manager Token Generator** (`generate-manager-token.ts`): Test utility
+  - Generates valid JWT tokens for manager testing
+  - Uses mock manager from seed data (Ahmet Yılmaz - Starbucks Kadıköy)
+  - Outputs token with usage instructions
+  - Files: `backend/src/scripts/generate-manager-token.ts`
+
+#### Changed
+- **Routes Index** (`routes/index.ts`): Mounted manager routes
+  - Added `router.use('/manager', managerRoutes)`
+  - Manager endpoints now accessible at `/api/manager/*`
+  - Files: `backend/src/routes/index.ts`
+
+#### Fixed
+- **CRITICAL BUG: JWT Secret Not Loading from Environment**
+  - **Problem**: `jwt.utils.ts` was using `process.env.JWT_SECRET` directly without importing `env.config.ts`
+    - Result: dotenv never loaded → JWT_SECRET undefined → fallback secret used
+    - Token generation and verification used different secrets → "Invalid or expired token" errors
+  - **Root Cause**: Environment variables not loaded before JWT utilities executed
+  - **Fix**: Import `config` from `env.config.ts` in jwt.utils.ts
+    - Changed: `const JWT_SECRET = process.env.JWT_SECRET || 'fallback'`
+    - To: `const JWT_SECRET = config.jwt.secret`
+  - **Impact**: All JWT tokens now use correct secret from .env.local
+  - **Files**: `backend/src/utils/jwt.utils.ts:10-13`
+
+- **Manager Token Generator Environment Loading**
+  - Fixed dotenv path resolution using `path.join(__dirname, '../../.env.local')`
+  - Ensures script loads environment variables from project root
+  - Files: `backend/src/scripts/generate-manager-token.ts:13-14`
+
+#### Tested
+- **All 5 Manager Endpoints Verified with curl**:
+  1. ✅ GET `/api/manager/employees` - Listed 4 employees successfully
+  2. ✅ POST `/api/manager/employees` - Created "Mehmet Kara" (temp_password: A3jqnlfh)
+  3. ✅ GET `/api/manager/employees/:id` - Retrieved employee details
+  4. ✅ PATCH `/api/manager/employees/:id/notes` - Updated notes to "Hafta sonları müsait değil"
+  5. ✅ PATCH `/api/manager/employees/:id/toggle-status` - Toggled status from active → inactive
+
+- **Security Verification**:
+  - ✅ Manager JWT token validation working
+  - ✅ Employee ownership verification (manager can only access own employees)
+  - ✅ 401 returned for invalid/expired tokens
+  - ✅ 403 returned when employee JWT used on manager endpoint
+
+#### Context
+- **Phase 3 Duration**: ~35 minutes (estimated 3h, actual 35min - 5x faster!)
+- **Efficiency Gains**: Service layer patterns from Phase 2 accelerated development
+- **Critical Bug Discovery**: JWT secret loading issue caught during testing
+- **Next Phase**: Phase 4 - Shift Preferences (2h)
+  - Employee shift preference submission
+  - Manager view of all preference requests
+  - JSONB slots storage for flexible scheduling
+
+#### Files Created (5 files, 527 lines)
+- `backend/src/types/manager.types.ts` (33 lines)
+- `backend/src/services/manager.service.ts` (149 lines)
+- `backend/src/middleware/manager-auth.middleware.ts` (91 lines)
+- `backend/src/routes/manager.routes.ts` (228 lines)
+- `backend/src/scripts/generate-manager-token.ts` (35 lines)
+
+#### Files Modified (2 files)
+- `backend/src/routes/index.ts` (+6 lines)
+- `backend/src/utils/jwt.utils.ts` (+3 lines, critical fix)
+
+---
+
+### [2025-10-25 01:00] - Phase 2 Complete: Employee Authentication
+
+#### Added
+- **Auth Service** (`auth.service.ts`): Business logic for employee authentication
+  - `loginEmployee(username, password)` - Validates credentials and returns JWT token
+    - Uses bcrypt for password comparison
+    - Updates last_login timestamp on successful login
+    - Returns employee data with first_login flag
+  - `changePassword(employeeId, currentPassword, newPassword, isFirstLogin)` - Password update logic
+    - Verifies current password (except for first login)
+    - Hashes new password with bcrypt
+    - Sets first_login=false after password change
+  - Files: `backend/src/services/auth.service.ts`
+
+- **Employee Routes** (`employee.routes.ts`): Authentication endpoints
+  - POST `/api/employee/login` - Public endpoint (no auth required)
+    - Body: `{ username, password }`
+    - Response: `{ success: true, data: { token, employee: {...} } }`
+  - POST `/api/employee/change-password` - Protected endpoint (requires JWT)
+    - Body: `{ current_password?, new_password, is_first_login }`
+    - Response: `{ success: true, message: "Şifre başarıyla değiştirildi" }`
+  - Mounted at `/api/employee/*`
+  - Files: `backend/src/routes/employee.routes.ts`
+
+- **API Types** (`api.types.ts`): Standardized request/response interfaces
+  - LoginRequest, LoginResponse, LoginResponseData
+  - ChangePasswordRequest
+  - Consistent error response format: `{ success: false, error: string }`
+  - Files: `backend/src/types/api.types.ts`
+
+- **Mock Data Seeding Script** (`002_seed_mock_data.sql`): Development test data
+  - 3 managers (Starbucks, Burger King, McDonald's)
+  - 10 employees across 3 stores
+  - 3 employees with shift preferences (21 slots each)
+  - 2 schedules (1 approved, 1 pending)
+  - Executed manually in 5 steps due to foreign key constraints
+  - Files: `backend/src/scripts/migrations/002_seed_mock_data.sql`
+
+#### Changed
+- **Routes Index** (`routes/index.ts`): Mounted employee routes
+  - Added `router.use('/employee', employeeRoutes)`
+  - Employee auth endpoints now accessible at `/api/employee/*`
+  - Files: `backend/src/routes/index.ts`
+
+#### Fixed
+- **First Login Flow**: Password change requirement enforcement
+  - first_login flag properly updated after password change
+  - Frontend can detect first-time users and force password change
+  - Database: `employees.first_login` boolean column
+
+- **Last Login Tracking**: Timestamp update on successful login
+  - Updated via `employeeRepository.updateLastLogin(employeeId)`
+  - Database: `employees.last_login` timestamp column
+
+- **Mock Data Insertion Errors** (during manual SQL execution):
+  - Error 1: Column "week_start_date" doesn't exist → Fixed to "week_start"
+  - Error 2: Foreign key violation on managers → Added auth.users insert first
+  - Error 3: Invalid UUID format with 'p' prefix → Changed to hexadecimal 'a', 'b'
+  - All resolved through step-by-step SQL execution strategy
+
+#### Tested
+- **Employee Authentication Flow** (End-to-End):
+  1. ✅ Login with Can Öztürk (first_login=false)
+     - Response: JWT token + employee data
+     - Password: TestPass123 (pre-set in seed data)
+  2. ✅ Login with Ayşe Şahin (first_login=true)
+     - Response: JWT token + first_login flag
+     - Frontend should redirect to password change screen
+  3. ✅ Password Change (Ayşe Şahin)
+     - New password: NewPassword456
+     - first_login flag updated to false
+  4. ✅ Login with new password (Ayşe Şahin)
+     - Response: JWT token + first_login=false
+     - Authentication successful with new credentials
+
+- **Error Handling**:
+  - ✅ 400 for missing username/password
+  - ✅ 401 for invalid credentials
+  - ✅ 401 for invalid JWT token
+  - ✅ 400 for incorrect current password (during password change)
+
+#### Context
+- **Phase 2 Duration**: ~30 minutes (estimated 3h, actual 30min - 6x faster!)
+- **Efficiency Factors**: Foundation from Phase 1 (JWT utils, employee repository, password utils)
+- **Test-Driven Approach**: Manual SQL seed data creation + curl testing before Phase 3
+- **Next Phase**: Phase 3 - Manager Employee CRUD (3h)
+  - Manager can create employees with auto-generated passwords
+  - Manager can list, view, update, delete employees
+  - Manager notes functionality
+  - Employee status management
+
+#### Test Data (Mock Users for Development)
+**Managers:**
+- Ahmet Yılmaz (Starbucks Kadıköy) - email: ahmet.yilmaz@starbucks.com
+- Zeynep Kaya (Burger King Beyoğlu) - email: zeynep.kaya@burgerking.com
+- Mehmet Demir (McDonald's Şişli) - email: mehmet.demir@mcdonalds.com
+
+**Employees (Manager 1 - Ahmet Yılmaz):**
+- Can Öztürk - username: can.ozturk, password: TestPass123, first_login: false
+- Ayşe Şahin - username: ayse.sahin, password: TestPass123, first_login: true
+- Emre Yılmaz - username: emre.yilmaz, password: TestPass123
+- Ahmet Test - username: ahmet.test, password: TestPass123, status: inactive
+
+---
+
+### [2025-10-25 00:30] - Phase 1 Complete: Foundation
+
+#### Added
+- **Employee Repository** (`employee.repository.ts`): Data access layer for employees table
+  - `findByUsername(username)` - Query employee by username (for login)
+  - `findById(id)` - Get employee by UUID
+  - `findByManager(managerId)` - List all employees for a manager
+  - `create(employeeData)` - Insert new employee
+  - `update(id, updates)` - Partial update employee fields
+  - `updatePassword(id, passwordHash)` - Update password hash
+  - `updateLastLogin(id)` - Set last_login = NOW()
+  - `deleteById(id)` - Soft delete (sets status='inactive')
+  - All functions use Supabase client with proper error handling
+  - Files: `backend/src/repositories/employee.repository.ts`
+
+- **Employee Types** (`employee.types.ts`): TypeScript interfaces for employee data
+  - `Employee` - Full database schema interface
+  - `EmployeeResponse` - Public-facing employee data (excludes password_hash)
+  - `CreateEmployeeDTO`, `UpdateEmployeeDTO` - Data transfer objects
+  - `toEmployeeResponse(employee)` - Mapper function to strip sensitive fields
+  - Files: `backend/src/types/employee.types.ts`
+
+- **Password Utilities** (`password.utils.ts`): Secure password management
+  - `hashPassword(plainPassword)` - bcrypt hash with cost factor 10
+  - `comparePassword(plainPassword, hash)` - Verify password against hash
+  - `generateRandomPassword(length)` - Cryptographically secure random password
+    - Generates alphanumeric string (A-Z, a-z, 0-9)
+    - Default length: 8 characters
+    - Used for manager-created employee accounts
+  - Files: `backend/src/utils/password.utils.ts`
+
+- **JWT Utilities** (`jwt.utils.ts`): Token generation and verification
+  - `generateToken(payload)` - Create JWT with 7-day expiry
+    - Payload: { user_id, user_type, manager_id, username }
+    - Algorithm: HS256 (HMAC with SHA-256)
+  - `verifyToken(token)` - Validate and decode JWT
+    - Returns null if token is invalid/expired
+  - `decodeToken(token)` - Decode without verification (debugging only)
+  - Files: `backend/src/utils/jwt.utils.ts`
+
+- **Auth Middleware** (`auth.middleware.ts`): JWT verification middleware
+  - Extracts Bearer token from Authorization header
+  - Verifies token signature and expiry
+  - Attaches decoded payload to `req.user`
+  - Returns 401 for missing/invalid tokens
+  - Files: `backend/src/middleware/auth.middleware.ts`
+
+- **Foundation Test Suite** (`test-foundation.ts`): Automated validation script
+  - 17 automated tests across 5 categories:
+    - Environment Variables (4 tests)
+    - JWT Utilities (4 tests) - generate, verify, decode, expiry
+    - Password Utilities (4 tests) - hash, compare, generate, strength
+    - Supabase Connection (3 tests) - connection, query, error handling
+    - Employee Repository (2 tests) - create, findByUsername
+  - All tests passed (17/17) ✅
+  - Purpose: Verify Phase 1 foundation before building Phase 2
+  - Files: `backend/src/scripts/test-foundation.ts`
+
+#### Fixed
+- **TypeScript Type Errors** (during development):
+  - Error: Implicit 'any' type in password compare function
+    - Fix: Added explicit type annotations for bcrypt functions
+  - Error: Employee interface missing optional fields
+    - Fix: Added `?` for nullable fields (manager_notes, last_login)
+
+#### Tested
+- **Automated Testing** (via test-foundation.ts):
+  - ✅ Environment variables loaded correctly (JWT_SECRET, SUPABASE_URL, etc.)
+  - ✅ JWT token generation creates valid HS256 tokens
+  - ✅ JWT token verification correctly validates signatures
+  - ✅ JWT token expiry set to 7 days
+  - ✅ Password hashing produces bcrypt hashes (cost factor 10)
+  - ✅ Password comparison validates correct passwords
+  - ✅ Random password generation creates 8-character alphanumeric strings
+  - ✅ Supabase connection established successfully
+  - ✅ Supabase can execute SELECT queries
+  - ✅ Employee repository can create employees
+  - ✅ Employee repository can find by username
+
+- **Manual Testing**:
+  - npm run build → TypeScript compilation clean
+  - Server starts without errors
+  - All utilities functional in isolation
+
+#### Context
+- **Phase 1 Duration**: ~30 minutes (estimated 1.5h, actual 30min)
+- **Efficiency Factors**: Phase 0 provided solid TypeScript foundation
+- **Test-First Approach**: Created test suite before proceeding to Phase 2
+- **Next Phase**: Phase 2 - Employee Authentication (3h)
+  - Employee login endpoint
+  - Password change endpoint
+  - Auth middleware integration
+  - End-to-end authentication flow
+
+#### Dependencies (No New Packages)
+All utilities use packages already installed in Phase 0:
+- `bcrypt@5.1.1` - Password hashing
+- `jsonwebtoken@9.0.2` - JWT generation/verification
+- `@supabase/supabase-js@2.39.1` - Database client
+
+---
+
+### [2025-10-24 20:12] - Phase 0 Complete: Backend Project Structure
 
 #### Added
 - **RUNPOD_OLLAMA_SETUP.md**: Comprehensive production-ready Ollama deployment guide
