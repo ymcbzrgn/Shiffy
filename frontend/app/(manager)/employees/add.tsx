@@ -161,7 +161,7 @@ export default function AddEmployeeScreen() {
 
           {/* Job Description Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Job Description (Optional)</Text>
+            <Text style={styles.label}>İş Tanımı (Opsiyonel)</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
@@ -169,7 +169,7 @@ export default function AddEmployeeScreen() {
                 onChangeText={(text) => {
                   setForm({ ...form, jobDescription: text });
                 }}
-                placeholder="e.g., Cashier, Server"
+                placeholder="Örn: Kasiyer, Garson"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"
                 editable={!loading}
@@ -182,7 +182,7 @@ export default function AddEmployeeScreen() {
               />
             </View>
             <Text style={styles.hintText}>
-              Tip: Separate multiple roles with commas (e.g., "Cashier, Server, Cook")
+              İpucu: Birden fazla rolü virgülle ayırarak yazabilirsiniz (Örn: "Kasiyer, Garson, Aşçı")
             </Text>
           </View>
 
