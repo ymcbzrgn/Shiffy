@@ -81,7 +81,7 @@ export interface CreateEmployeeRequest {
 - [ ] **Update `src/routes/manager.routes.ts`**
   - Extract `job_description` from `req.body` (line ~51)
   - Extract `max_weekly_hours` from `req.body` (line ~51)
-  - Add validation for `max_weekly_hours` (0-60 range, integer only)
+  - Add validation for `max_weekly_hours` (0-150 range, integer only)
   - Pass both fields to `managerService.createEmployee()`
 
 **File to modify:**
@@ -106,10 +106,10 @@ router.post('/employees', managerAuthMiddleware, async (req: Request, res: Respo
 
 +   // Validate max_weekly_hours (if provided)
 +   if (max_weekly_hours !== undefined && max_weekly_hours !== null) {
-+     if (!Number.isInteger(max_weekly_hours) || max_weekly_hours < 0 || max_weekly_hours > 60) {
++     if (!Number.isInteger(max_weekly_hours) || max_weekly_hours < 0 || max_weekly_hours > 150) {
 +       return res.status(400).json({
 +         success: false,
-+         error: 'max_weekly_hours 0 ile 60 arasında bir tam sayı olmalıdır',
++         error: 'max_weekly_hours 0 ile 150 arasında bir tam sayı olmalıdır',
 +       });
 +     }
 +   }
@@ -453,7 +453,7 @@ If API breaks:
 1. **Backend:**
    - Migration runs successfully
    - API accepts `job_description` and `max_weekly_hours`
-   - API validates `max_weekly_hours` (0-60 range)
+   - API validates `max_weekly_hours` (0-150 range)
    - New employees have these fields in database
 
 2. **Integration:**
@@ -472,7 +472,7 @@ If API breaks:
 
 ### Frontend Team Must:
 1. Add "İş Tanımı" field (text input, optional, max 255 chars)
-2. Add "Maksimum Haftalık Saat" field (number input, optional, 0-60 range)
+2. Add "Maksimum Haftalık Saat" field (number input, optional, 0-150 range)
 3. Show warning when max_weekly_hours=0 ("Bu çalışan çizelgeye dahil edilmeyecek")
 4. Update `services/employee.ts` to include new fields in API call
 5. Set `USE_MOCK = false` for testing with real backend

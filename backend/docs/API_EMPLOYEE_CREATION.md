@@ -88,8 +88,8 @@ Content-Type: application/json
 - **Validation:**
   - Must be an integer (no decimals)
   - Minimum: `0` (zero allowed - means "on leave this week")
-  - Maximum: `60` (enforced by API)
-  - Backend validation: `max_weekly_hours >= 0 && max_weekly_hours <= 60`
+  - Maximum: `150` (enforced by API)
+  - Backend validation: `max_weekly_hours >= 0 && max_weekly_hours <= 150`
 - **Purpose:**
   - **Primary:** Used by AI scheduler as a soft limit
   - AI will try to respect this limit but may slightly exceed if necessary
@@ -151,7 +151,7 @@ Content-Type: application/json
 ```json
 {
   "success": false,
-  "error": "max_weekly_hours 0 ile 60 arasında olmalıdır"
+  "error": "max_weekly_hours 0 ile 150 arasında olmalıdır"
 }
 ```
 
@@ -211,7 +211,7 @@ const handleSubmit = async () => {
 - Hint: `"Çalışanın haftada maksimum çalışabileceği saat (boş bırakılırsa sınır yok)"`
 - Validation:
   - Must be integer
-  - 0-60 range
+  - 0-150 range
   - Show warning if 0 ("Bu çalışan bu hafta çizelgeye dahil edilmeyecek")
 
 ---
@@ -224,7 +224,7 @@ const handleSubmit = async () => {
 -- Add new columns to employees table
 ALTER TABLE employees
 ADD COLUMN job_description VARCHAR(255),
-ADD COLUMN max_weekly_hours INTEGER CHECK (max_weekly_hours >= 0 AND max_weekly_hours <= 60);
+ADD COLUMN max_weekly_hours INTEGER CHECK (max_weekly_hours >= 0 AND max_weekly_hours <= 150);
 
 COMMENT ON COLUMN employees.job_description IS 'Comma-separated job roles (e.g., "Cashier, Server")';
 COMMENT ON COLUMN employees.max_weekly_hours IS 'Maximum hours per week (soft limit for AI scheduler). 0 = on leave, NULL = no limit';
@@ -276,7 +276,7 @@ CONSTRAINTS:
 - [ ] Form allows empty job_description
 - [ ] Form allows empty max_weekly_hours
 - [ ] Form shows warning when max_weekly_hours = 0
-- [ ] Form rejects max_weekly_hours > 60
+- [ ] Form rejects max_weekly_hours > 150
 - [ ] Form shows character count for job_description
 - [ ] Success modal displays temp_password correctly
 
