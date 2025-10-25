@@ -281,7 +281,7 @@ After deployment, you should have:
 - ✅ Watchdog runs every minute
 - ✅ All logs are being written
 - ✅ Health endpoint accessible: `curl http://localhost:8888/health`
-- ✅ External endpoint accessible: `curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health`
+- ✅ External endpoint accessible: `curl https://ejwkzjotxfg3i7-8888.proxy.runpod.net/health`
 
 ## 📝 Notes
 
@@ -310,4 +310,4 @@ ps aux | grep -E "ollama|uvicorn|watchdog"
 ---
 
 **Last Updated:** 2025-10-25
-**RunPod URL:** https://ymgoqyxl58jzfo-8888.proxy.runpod.net
+**RunPod URL:** https://ejwkzjotxfg3i7-8888.proxy.runpod.net

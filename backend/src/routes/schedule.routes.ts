@@ -81,6 +81,51 @@ router.post('/:id/approve', managerAuthMiddleware, async (req: Request, res: Res
 });
 
 /**
+ * PATCH /api/schedules/:id/shifts
+ * Edit shifts in a generated/approved schedule
+ * Auth: Manager only
+ */
+router.patch('/:id/shifts', managerAuthMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { shifts } = req.body;
+    const managerId = req.user!.manager_id;
+
+    // Validate schedule ID
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        error: 'Missing schedule ID',
+      });
+      return;
+    }
+
+    // Validate shifts array
+    if (!Array.isArray(shifts)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid shifts data: must be an array',
+      });
+      return;
+    }
+
+    // Update schedule shifts
+    const schedule = await scheduleService.updateShifts(managerId, id, shifts);
+
+    res.status(200).json({
+      success: true,
+      data: schedule,
+    });
+  } catch (error) {
+    console.error('Update shifts error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update shifts',
+    });
+  }
+});
+
+/**
  * GET /api/schedules?week=YYYY-MM-DD
  * Get manager's schedule for a week
  * Auth: Manager only

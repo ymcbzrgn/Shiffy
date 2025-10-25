@@ -59,11 +59,13 @@ app.use(errorHandler);
 
 // Start server
 const PORT = config.port;
-app.listen(PORT, () => {
+const HOST = '0.0.0.0'; // Listen on all network interfaces (for physical device testing)
+app.listen(PORT, HOST, () => {
   console.log('='.repeat(50));
   console.log('🚀 Shiffy Backend Server Started');
   console.log('='.repeat(50));
   console.log(`📍 Port: ${PORT}`);
+  console.log(`🌍 Host: ${HOST} (accessible from network)`);
   console.log(`🌍 Environment: ${config.nodeEnv}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Supabase: ${config.supabase.url}`);

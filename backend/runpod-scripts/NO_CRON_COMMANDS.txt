@@ -127,7 +127,7 @@ ps aux | grep -E "ollama|uvicorn|watchdog"
 # Health check
 curl http://localhost:8888/health
 
-curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health
+curl https://ejwkzjotxfg3i7-8888.proxy.runpod.net/health
 
 # Logs
 cat /root/startup.log

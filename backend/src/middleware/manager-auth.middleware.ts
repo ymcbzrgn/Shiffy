@@ -1,28 +1,25 @@
 /**
  * Manager Authentication Middleware
  *
- * Verifies JWT token and ensures user is a manager
- *
- * NOTE: For MVP, uses same JWT system as employees
- * In production, this will verify Supabase Auth tokens
+ * Verifies Supabase JWT token and ensures user is a manager
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt.utils';
+import { supabase } from '../config/supabase.config';
 
 /**
  * Manager Auth Middleware
  *
- * Verifies JWT token and checks user_type === 'manager'
+ * Verifies Supabase JWT token and checks if user exists in managers table
  *
  * @example
  * router.get('/employees', managerAuthMiddleware, handler);
  */
-export function managerAuthMiddleware(
+export async function managerAuthMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   try {
     // Extract Authorization header
     const authHeader = req.headers.authorization;
@@ -55,10 +52,10 @@ export function managerAuthMiddleware(
       return;
     }
 
-    // Verify token
-    const decoded = verifyToken(token);
+    // Verify Supabase token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (!decoded) {
+    if (authError || !user) {
       res.status(401).json({
         success: false,
         error: 'Invalid or expired token',
@@ -66,17 +63,28 @@ export function managerAuthMiddleware(
       return;
     }
 
-    // Check if user is manager
-    if (decoded.user_type !== 'manager') {
+    // Check if user exists in managers table
+    const { data: manager, error: managerError } = await supabase
+      .from('managers')
+      .select('id, email, store_name')
+      .eq('id', user.id)
+      .single();
+
+    if (managerError || !manager) {
       res.status(403).json({
         success: false,
-        error: 'Access denied. Manager role required.',
+        error: 'Access denied. Manager account not found.',
       });
       return;
     }
 
-    // Attach user info to request
-    req.user = decoded;
+    // Attach user info to request (matching JWT payload format for compatibility)
+    req.user = {
+      user_id: user.id,
+      user_type: 'manager',
+      manager_id: user.id, // For managers, user_id === manager_id
+      username: manager.email, // Use email as username for managers
+    };
 
     // Proceed to next middleware/handler
     next();

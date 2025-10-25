@@ -62,11 +62,20 @@ export const scheduleService = {
         employeePreferences
       );
 
+      // Enrich shifts with job_description from employees
+      const enrichedShifts = shifts.map((shift: any) => {
+        const employee = employees.find((e: Employee) => e.id === shift.employee_id);
+        return {
+          ...shift,
+          job_description: employee?.job_description || 'Çalışan',
+        };
+      });
+
       // Save generated schedule to database
       const schedule = await scheduleRepository.create({
         manager_id: managerId,
         week_start: weekStart,
-        shifts,
+        shifts: enrichedShifts,
         ai_metadata: summary,
       });
 
@@ -127,6 +136,77 @@ export const scheduleService = {
       console.error('Approve schedule error:', error);
       throw new Error(
         `Failed to approve schedule: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  },
+
+  /**
+   * Update schedule shifts (manual editing by manager)
+   */
+  async updateShifts(
+    managerId: string,
+    scheduleId: string,
+    shifts: any[]
+  ): Promise<ScheduleResponse> {
+    try {
+      // Verify schedule exists and belongs to this manager
+      const { data: schedule, error } = await require('../config/supabase.config').supabase
+        .from('schedules')
+        .select('*')
+        .eq('id', scheduleId)
+        .eq('manager_id', managerId)
+        .single();
+
+      if (error || !schedule) {
+        throw new Error('Schedule not found or access denied');
+      }
+
+      // Calculate new summary statistics
+      const totalShifts = shifts.length;
+
+      // Calculate hours per employee
+      const hoursPerEmployee: Record<string, number> = {};
+      const uniqueEmployees = new Set<string>();
+
+      shifts.forEach((shift: any) => {
+        uniqueEmployees.add(shift.employee_id);
+
+        const start = shift.start_time.split(':');
+        const end = shift.end_time.split(':');
+        const startMinutes = parseInt(start[0]) * 60 + parseInt(start[1]);
+        const endMinutes = parseInt(end[0]) * 60 + parseInt(end[1]);
+        const hours = (endMinutes - startMinutes) / 60;
+
+        hoursPerEmployee[shift.employee_id] = (hoursPerEmployee[shift.employee_id] || 0) + hours;
+      });
+
+      const updatedSummary = {
+        total_employees: uniqueEmployees.size,
+        total_shifts: totalShifts,
+        hours_per_employee: hoursPerEmployee,
+        warnings: [], // Manager editing means they've validated
+      };
+
+      // Update shifts in database
+      const updatedSchedule = await scheduleRepository.updateScheduleShifts(
+        scheduleId,
+        shifts,
+        updatedSummary
+      );
+
+      return {
+        id: updatedSchedule.id,
+        week_start: updatedSchedule.week_start,
+        status: updatedSchedule.status,
+        shifts: updatedSchedule.shifts,
+        summary: updatedSchedule.ai_metadata,
+        generated_at: updatedSchedule.generated_at,
+        approved_at: updatedSchedule.approved_at,
+      };
+    } catch (error) {
+      console.error('Update shifts error:', error);
+      throw new Error(
+        `Failed to update shifts: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   },

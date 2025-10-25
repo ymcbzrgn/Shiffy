@@ -7,10 +7,11 @@ export type ScheduleStatus = 'pending' | 'generated' | 'approved';
 export interface Shift {
   employee_id: string;
   employee_name: string;
-  day: string;          // 'Monday', 'Tuesday', etc.
-  start_time: string;   // '08:00'
-  end_time: string;     // '17:00'
-  hours: number;        // 9
+  job_description: string;  // 'Kasiyer', 'Müdür Yardımcısı', etc.
+  day: string;              // 'Monday', 'Tuesday', etc.
+  start_time: string;       // '08:00'
+  end_time: string;         // '17:00'
+  hours: number;            // 9
 }
 
 export interface ScheduleSummary {

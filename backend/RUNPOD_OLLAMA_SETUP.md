@@ -12,7 +12,7 @@
 ✅ **RunPod Instance:** ACTIVE (as of Oct 24, 2025)
 ✅ **Model:** `llama3.1:8b-instruct-q6_K` (deployed)
 ✅ **Hardware:** RTX A4000 (16 GB VRAM)
-✅ **Endpoint:** `https://ymgoqyxl58jzfo-8888.proxy.runpod.net`
+✅ **Endpoint:** `https://ejwkzjotxfg3i7-8888.proxy.runpod.net`
 
 **Quick Start:** See [RUNPOD_PRODUCTION.md](./RUNPOD_PRODUCTION.md) for production endpoint details and integration examples.
 

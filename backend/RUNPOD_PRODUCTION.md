@@ -8,7 +8,7 @@
 
 ## Production Endpoint
 
-**Base URL (public):** `https://ymgoqyxl58jzfo-8888.proxy.runpod.net`
+**Base URL (public):** `https://ejwkzjotxfg3i7-8888.proxy.runpod.net`
 
 **API Key (header value):** `eo2fXSAK6Mpq+27+KYtCfHKeHepqRD/tleFGFCNmkIVxC21c/iqmL0zNb3B/D+T/`
 
@@ -21,7 +21,7 @@
 ## Quick Test (cURL)
 
 ```bash
-BASE='https://ymgoqyxl58jzfo-8888.proxy.runpod.net'
+BASE='https://ejwkzjotxfg3i7-8888.proxy.runpod.net'
 API='eo2fXSAK6Mpq+27+KYtCfHKeHepqRD/tleFGFCNmkIVxC21c/iqmL0zNb3B/D+T/'
 
 # 1) Health check (no authentication required)
@@ -183,7 +183,7 @@ Passthrough to Ollama API for advanced use cases.
 ### Node.js (fetch)
 
 ```javascript
-const BASE = 'https://ymgoqyxl58jzfo-8888.proxy.runpod.net';
+const BASE = 'https://ejwkzjotxfg3i7-8888.proxy.runpod.net';
 const API = 'eo2fXSAK6Mpq+27+KYtCfHKeHepqRD/tleFGFCNmkIVxC21c/iqmL0zNb3B/D+T/';
 
 const response = await fetch(`${BASE}/api/generate-with-system`, {
@@ -215,7 +215,7 @@ console.log('Generated schedule:', data.parsed);
 ```python
 import requests
 
-BASE = 'https://ymgoqyxl58jzfo-8888.proxy.runpod.net'
+BASE = 'https://ejwkzjotxfg3i7-8888.proxy.runpod.net'
 API = 'eo2fXSAK6Mpq+27+KYtCfHKeHepqRD/tleFGFCNmkIVxC21c/iqmL0zNb3B/D+T/'
 
 response = requests.post(
@@ -405,6 +405,6 @@ A: Check response body for `error` field, and include full request/response when
 **Ready to integrate!** If you encounter issues, share the request body and response for debugging.
 
 **Next Steps:**
-1. Test health endpoint: `curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health`
-2. Test authentication: `curl -H "x-api-key: ..." https://ymgoqyxl58jzfo-8888.proxy.runpod.net/ollama/tags`
+1. Test health endpoint: `curl https://ejwkzjotxfg3i7-8888.proxy.runpod.net/health`
+2. Test authentication: `curl -H "x-api-key: ..." https://ejwkzjotxfg3i7-8888.proxy.runpod.net/ollama/tags`
 3. Integrate into backend service (see TypeScript example above)

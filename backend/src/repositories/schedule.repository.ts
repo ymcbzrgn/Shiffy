@@ -112,6 +112,41 @@ export const scheduleRepository = {
   },
 
   /**
+   * Update schedule shifts (manual editing)
+   * Updates both shifts array and ai_metadata summary
+   */
+  async updateScheduleShifts(
+    scheduleId: string,
+    shifts: Shift[],
+    summary: ScheduleSummary
+  ): Promise<Schedule> {
+    try {
+      const { data: schedule, error } = await supabase
+        .from('schedules')
+        .update({
+          shifts,
+          ai_metadata: summary,
+        })
+        .eq('id', scheduleId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update schedule shifts: ${error.message}`);
+      }
+
+      if (!schedule) {
+        throw new Error('Schedule not found');
+      }
+
+      return schedule as Schedule;
+    } catch (error) {
+      console.error('Schedule update shifts error:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Find approved schedule for employee
    * JOIN with employees to filter by manager
    */

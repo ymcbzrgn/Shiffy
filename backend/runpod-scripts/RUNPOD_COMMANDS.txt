@@ -129,7 +129,7 @@ STEP 6: Verify Services Running
 -------------------------------------------
 
 curl http://localhost:8888/health
-curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health
+curl https://ejwkzjotxfg3i7-8888.proxy.runpod.net/health
 
 # Both should return:
 # {"status":"ok","service":"shiffy-ollama-proxy"}
@@ -158,7 +158,7 @@ SUCCESS INDICATORS:
 ✅ Cron jobs configured (check with: crontab -l)
 ✅ Services running (check with: ps aux | grep -E "ollama|uvicorn")
 ✅ Health endpoint responding (check with: curl http://localhost:8888/health)
-✅ External endpoint accessible (check with: curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health)
+✅ External endpoint accessible (check with: curl https://ejwkzjotxfg3i7-8888.proxy.runpod.net/health)
 
 ==========================================
 MONITORING COMMANDS:
