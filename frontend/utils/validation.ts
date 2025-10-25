@@ -71,3 +71,33 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   if (strength <= 4) return 'good';
   return 'strong';
 };
+
+// Get password strength as number (0-3 for easy styling)
+export const getPasswordStrength = (password: string): number => {
+  if (!password) return 0;
+  
+  let strength = 0;
+  
+  // Has minimum length (6 chars)
+  if (password.length >= 6) strength++;
+  
+  // Has uppercase
+  if (/[A-Z]/.test(password)) strength++;
+  
+  // Has lowercase
+  if (/[a-z]/.test(password)) strength++;
+  
+  // Has number
+  if (/[0-9]/.test(password)) strength++;
+  
+  // Calculate final strength (0-3)
+  // All 4 criteria met = 3 (strong)
+  // 3 criteria = 2 (medium)
+  // 2 criteria = 1 (weak)
+  // 0-1 criteria = 0 (very weak)
+  if (strength >= 4) return 3;
+  if (strength >= 3) return 2;
+  if (strength >= 2) return 1;
+  return 0;
+};
+
