@@ -18,6 +18,7 @@ export interface Employee {
   manager_id: string;
   username: string;
   full_name: string;
+  job_description: string | null; // e.g., "Cashier, Server" - comma-separated roles
   first_login: boolean;
   manager_notes: string | null;
   status: 'active' | 'inactive';

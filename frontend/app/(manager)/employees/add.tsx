@@ -23,6 +23,7 @@ export default function AddEmployeeScreen() {
   const [form, setForm] = useState({
     fullName: '',
     username: '',
+    jobDescription: '',
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,7 +57,8 @@ export default function AddEmployeeScreen() {
       const { employee, password } = await addEmployee(
         'mgr-1', // Mock manager ID
         form.fullName,
-        form.username
+        form.username,
+        form.jobDescription || null
       );
       
       setGeneratedPassword(password);
@@ -155,6 +157,33 @@ export default function AddEmployeeScreen() {
               />
             </View>
             {errors.username ? <Text style={styles.errorText}>{errors.username}</Text> : null}
+          </View>
+
+          {/* Job Description Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Job Description (Optional)</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={form.jobDescription}
+                onChangeText={(text) => {
+                  setForm({ ...form, jobDescription: text });
+                }}
+                placeholder="e.g., Cashier, Server"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
+                editable={!loading}
+              />
+              <MaterialIcons
+                name="work"
+                size={20}
+                color="#617c89"
+                style={styles.inputIcon}
+              />
+            </View>
+            <Text style={styles.hintText}>
+              Tip: Separate multiple roles with commas (e.g., "Cashier, Server, Cook")
+            </Text>
           </View>
 
           {/* Info Box */}
@@ -304,6 +333,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#D9534F',
     marginTop: 4,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#617c89',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   infoBox: {
     flexDirection: 'row',

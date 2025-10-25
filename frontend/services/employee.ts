@@ -11,6 +11,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'ahmet.ergun',
     full_name: 'Ahmet Ergün',
+    job_description: 'Cashier, Barista',
     first_login: false,
     manager_notes: 'Sabah vardiyalarını tercih ediyor. Hafta sonu çalışmayı sevmiyor.',
     status: 'active',
@@ -22,6 +23,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'zeynep.yilmaz',
     full_name: 'Zeynep Yılmaz',
+    job_description: 'Server',
     first_login: false,
     manager_notes: null,
     status: 'active',
@@ -33,6 +35,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'mehmet.kaya',
     full_name: 'Mehmet Kaya',
+    job_description: 'Cook',
     first_login: true,
     manager_notes: 'Yeni çalışan. İlk giriş yapması gerekiyor.',
     status: 'active',
@@ -44,6 +47,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'ayse.demir',
     full_name: 'Ayşe Demir',
+    job_description: 'Manager, Server',
     first_login: false,
     manager_notes: 'İzinde. Şubat başında dönecek.',
     status: 'inactive',
@@ -55,6 +59,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'can.ozturk',
     full_name: 'Can Öztürk',
+    job_description: 'Dishwasher',
     first_login: false,
     manager_notes: null,
     status: 'active',
@@ -66,6 +71,7 @@ let MOCK_EMPLOYEES: Employee[] = [
     manager_id: 'mgr-1',
     username: 'elif.sahin',
     full_name: 'Elif Şahin',
+    job_description: 'Bartender, Server',
     first_login: false,
     manager_notes: 'Akşam vardiyalarında çok iyi.',
     status: 'active',
@@ -112,7 +118,8 @@ function generatePassword(): string {
 export async function addEmployee(
   managerId: string,
   fullName: string,
-  username: string
+  username: string,
+  jobDescription: string | null = null
 ): Promise<{ employee: Employee; password: string }> {
   if (USE_MOCK) {
     // Simulate network delay
@@ -129,6 +136,7 @@ export async function addEmployee(
       manager_id: managerId,
       username,
       full_name: fullName,
+      job_description: jobDescription,
       first_login: true,
       manager_notes: null,
       status: 'active',
@@ -145,7 +153,7 @@ export async function addEmployee(
   const response = await fetch(`/api/manager/${managerId}/employees`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ full_name: fullName, username }),
+    body: JSON.stringify({ full_name: fullName, username, job_description: jobDescription }),
   });
   
   if (!response.ok) throw new Error('Failed to add employee');
