@@ -7,9 +7,10 @@
 
 import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
+import { config } from '../config/env.config';
 
-const JWT_SECRET = (process.env.JWT_SECRET as string) || 'fallback-secret-change-in-production';
-const JWT_EXPIRY: StringValue = (process.env.JWT_EXPIRY as StringValue) || '7d';
+const JWT_SECRET = config.jwt.secret;
+const JWT_EXPIRY: StringValue = (config.jwt.expiry as StringValue);
 
 /**
  * JWT Payload Interface
