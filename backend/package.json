@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Tests TBD\" && exit 0",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "migrate": "ts-node src/scripts/migrate.ts",
+    "verify-db": "ts-node src/scripts/verify-db.ts"
   },
   "keywords": [
     "shift-scheduling",
