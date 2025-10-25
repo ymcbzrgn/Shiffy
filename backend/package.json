@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Tests TBD\" && exit 0",
+    "test:foundation": "ts-node src/scripts/test-foundation.ts",
     "clean": "rm -rf dist",
     "migrate": "ts-node src/scripts/migrate.ts",
     "verify-db": "ts-node src/scripts/verify-db.ts"
