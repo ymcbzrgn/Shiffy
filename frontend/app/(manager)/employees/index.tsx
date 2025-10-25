@@ -49,8 +49,7 @@ export default function EmployeeListScreen() {
   };
 
   const handleEmployeePress = (id: string) => {
-    Alert.alert('Çalışan Detayı', `Phase 6'da implement edilecek. ID: ${id}`);
-    // router.push(`/(manager)/employees/${id}` as any);
+    router.push(`/(manager)/employees/${id}` as any);
   };
 
   const handleAddEmployee = () => {

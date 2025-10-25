@@ -256,28 +256,30 @@ types/
 
 ---
 
-### **AŞAMA 6: Çalışan Detayı & Yönetici Notları** 📝
+### **AŞAMA 6: Çalışan Detayı & Yönetici Notları** ✅
 **Süre:** ~60 dakika  
 **Hedef:** Çalışan detay sayfası, notlar, düzenleme
 
 **Yapılacaklar:**
-- [ ] `app/(manager)/employees/[id].tsx`
-  - Profile header (avatar, ad, rol)
-  - Bilgi kartları (email, telefon, vb.)
-  - Manager notes textarea (AI input için)
-  - Performans stats (3 kart)
-  - Shift history timeline
-  - Edit modal
-  - Danger zone (deactivate/delete)
+- ✅ `app/(manager)/employees/[id].tsx`
+  - Profile header (avatar, ad, status badge)
+  - Bilgi kartları (ad, username, katılım tarihi, son giriş)
+  - Manager notes textarea (save butonu)
+  - Status toggle butonu (aktif/pasif)
+- ✅ Service functions:
+  - `getEmployeeById()`
+  - `updateEmployeeNotes()`
+  - `toggleEmployeeStatus()`
+- ✅ Employee card'dan detay sayfasına navigation
 
 **Test Kriterleri:**
-- URL parametresi doğru çalışıyor mu?
-- Notlar kaydediliyor mu?
-- Edit modal açılıyor/kapanıyor mu?
+- ✅ URL parametresi doğru çalışıyor mu?
+- ✅ Notlar kaydediliyor mu?
+- ✅ Status toggle çalışıyor mu?
 
 **Çıktılar:**
-- Employee detail screen
-- Edit modal component
+- ✅ `app/(manager)/employees/[id].tsx` (StyleSheet ile)
+- ✅ Updated employee service with 3 new functions
 
 ---
 

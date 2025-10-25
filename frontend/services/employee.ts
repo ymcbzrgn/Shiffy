@@ -4,8 +4,8 @@ import { Employee } from '../types';
 
 const USE_MOCK = true;
 
-// Mock employees
-const MOCK_EMPLOYEES: Employee[] = [
+// Mock employees (mutable array to persist new employees)
+let MOCK_EMPLOYEES: Employee[] = [
   {
     id: '1',
     manager_id: 'mgr-1',
@@ -149,5 +149,75 @@ export async function addEmployee(
   });
   
   if (!response.ok) throw new Error('Failed to add employee');
+  return response.json();
+}
+
+export async function getEmployeeById(employeeId: string): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Çalışan bulunamadı');
+    }
+    
+    return employee;
+  }
+  
+  // Real API implementation
+  const response = await fetch(`/api/employees/${employeeId}`);
+  if (!response.ok) throw new Error('Failed to fetch employee');
+  return response.json();
+}
+
+export async function updateEmployeeNotes(
+  employeeId: string,
+  notes: string
+): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Çalışan bulunamadı');
+    }
+    
+    employee.manager_notes = notes || null;
+    return employee;
+  }
+  
+  // Real API implementation
+  const response = await fetch(`/api/employees/${employeeId}/notes`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes }),
+  });
+  
+  if (!response.ok) throw new Error('Failed to update notes');
+  return response.json();
+}
+
+export async function toggleEmployeeStatus(employeeId: string): Promise<Employee> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const employee = MOCK_EMPLOYEES.find(e => e.id === employeeId);
+    if (!employee) {
+      throw new Error('Çalışan bulunamadı');
+    }
+    
+    employee.status = employee.status === 'active' ? 'inactive' : 'active';
+    return employee;
+  }
+  
+  // Real API implementation
+  const response = await fetch(`/api/employees/${employeeId}/toggle-status`, {
+    method: 'PATCH',
+  });
+  
+  if (!response.ok) throw new Error('Failed to toggle status');
   return response.json();
 }
