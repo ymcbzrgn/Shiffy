@@ -20,6 +20,20 @@ export default function ManagerLayout() {
           headerShown: true,
         }} 
       />
+      <Stack.Screen 
+        name="employees/index" 
+        options={{ 
+          title: 'Çalışan Listesi',
+          headerShown: true,
+        }} 
+      />
+      <Stack.Screen 
+        name="employees/add" 
+        options={{ 
+          title: 'Yeni Çalışan',
+          headerShown: true,
+        }} 
+      />
     </Stack>
   );
 }

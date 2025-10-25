@@ -77,12 +77,12 @@ export default function ManagerDashboardScreen() {
             <QuickActionButton
               title="Çalışan Ekle"
               icon="person-add"
-              onPress={() => Alert.alert('Çalışan Ekle', 'Phase 5\'te yapılacak')}
+              onPress={() => router.push('/(manager)/employees/add' as any)}
             />
             <QuickActionButton
               title="Çalışan Listesi"
               icon="groups"
-              onPress={() => Alert.alert('Çalışan Listesi', 'Phase 5\'te yapılacak')}
+              onPress={() => router.push('/(manager)/employees' as any)}
             />
             <QuickActionButton
               title="Shift İnceleme"
