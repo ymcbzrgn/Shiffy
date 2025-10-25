@@ -122,12 +122,14 @@ router.post(
       // Success response
       const response: ApiResponse = {
         success: true,
-        message: 'Şifre başarıyla değiştirildi',
+        data: {
+          message: 'Şifre başarıyla değiştirildi',
+        },
       };
 
       return res.status(200).json(response);
     } catch (error: any) {
-      console.error('Change password error:', error);
+      console.error('[EMPLOYEE] Change password error:', error.message);
 
       // Check for specific errors
       if (error.message.includes('Current password is incorrect')) {
@@ -144,6 +146,14 @@ router.post(
           error: 'Mevcut şifre gerekli',
         };
         return res.status(400).json(response);
+      }
+
+      if (error.message.includes('Employee not found')) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Kullanıcı bulunamadı',
+        };
+        return res.status(404).json(response);
       }
 
       // Generic server error

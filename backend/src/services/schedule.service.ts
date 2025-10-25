@@ -18,10 +18,14 @@ const WEEK_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export const scheduleService = {
   /**
    * Generate schedule using AI (Llama)
+   * @param managerId - Manager ID
+   * @param weekStart - Week start date (YYYY-MM-DD)
+   * @param forceRegenerate - If true, deletes existing schedule and regenerates
    */
   async generateSchedule(
     managerId: string,
-    weekStart: string
+    weekStart: string,
+    forceRegenerate: boolean = false
   ): Promise<ScheduleResponse> {
     // Validate week_start format
     if (!WEEK_FORMAT_REGEX.test(weekStart)) {
@@ -29,6 +33,21 @@ export const scheduleService = {
     }
 
     try {
+      // If force regenerate, delete existing schedule first
+      if (forceRegenerate) {
+        console.log('[SCHEDULE SERVICE] Force regenerate - deleting existing schedule');
+        const { error: deleteError } = await require('../config/supabase.config').supabase
+          .from('schedules')
+          .delete()
+          .eq('manager_id', managerId)
+          .eq('week_start', weekStart);
+
+        if (deleteError) {
+          console.warn('[SCHEDULE SERVICE] Failed to delete existing schedule:', deleteError);
+          // Continue anyway - create might still work
+        }
+      }
+
       // Get manager's employees
       const employees = await employeeRepository.findByManager(managerId);
 

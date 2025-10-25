@@ -80,9 +80,15 @@ export default function ShiftReviewScreen() {
 
       setPreferences(prefsData);
       setSchedule(scheduleData);
+
+      // Exit edit mode if week changes
+      if (editMode) {
+        setEditMode(false);
+        setEditedShifts([]);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
-      Alert.alert('Hata', 'Veriler yüklenemedi');
+      Alert.alert('Hata', 'Veriler yüklenemedi. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -90,10 +96,12 @@ export default function ShiftReviewScreen() {
 
   const handlePreviousWeek = () => {
     setWeekOffset(prev => prev - 1);
+    // Loading will be triggered by useEffect when currentWeekStart changes
   };
 
   const handleNextWeek = () => {
     setWeekOffset(prev => prev + 1);
+    // Loading will be triggered by useEffect when currentWeekStart changes
   };
 
   const handleGenerateSchedule = () => {
@@ -106,22 +114,44 @@ export default function ShiftReviewScreen() {
       return;
     }
 
+    // Determine if this is regeneration
+    const isRegenerate = !!schedule;
+    const isApproved = schedule?.status === 'approved';
+
+    // Build appropriate alert message
+    const title = isRegenerate ? 'AI Planı Yeniden Oluştur' : 'AI Shift Oluştur';
+    let message = `Llama AI kullanarak bu hafta için shift planı ${isRegenerate ? 'yeniden ' : ''}oluşturulsun mu?\n\n${preferences.length} çalışanın tercihleri ve notları analiz edilecek.\n\nBu işlem 30-60 saniye sürebilir.`;
+    
+    if (isApproved) {
+      message += '\n\n⚠️ DİKKAT: Mevcut onaylanmış plan silinecek ve yeni plan oluşturulacak!';
+    } else if (isRegenerate) {
+      message += '\n\nMevcut plan silinecek ve yeni plan oluşturulacak.';
+    }
+
     Alert.alert(
-      'AI Shift Oluştur',
-      `Llama AI kullanarak bu hafta için shift planı oluşturulsun mu?\n\n${preferences.length} çalışanın tercihleri ve notları analiz edilecek.\n\nBu işlem 30-60 saniye sürebilir.`,
+      title,
+      message,
       [
         { text: 'İptal', style: 'cancel' },
         {
-          text: 'Oluştur',
+          text: isRegenerate ? 'Yeniden Oluştur' : 'Oluştur',
+          style: isApproved ? 'destructive' : 'default',
           onPress: async () => {
             try {
               setGenerating(true);
               const weekStartStr = formatDateISO(currentWeekStart);
-              const result = await generateSchedule(weekStartStr);
+              const result = await generateSchedule(weekStartStr, isRegenerate); // forceRegenerate if exists
               setSchedule(result);
+              
+              // Exit edit mode if active
+              if (editMode) {
+                setEditMode(false);
+                setEditedShifts([]);
+              }
+              
               Alert.alert(
                 'Başarılı!',
-                `AI shift planı oluşturuldu!\n\nToplam Shift: ${result.summary?.total_shifts || 0}\nToplam Saat: ${result.summary?.total_hours || 0}\nKapsama Skoru: ${((result.summary?.coverage_score || 0) * 100).toFixed(0)}%`
+                `AI shift planı ${isRegenerate ? 'yeniden ' : ''}oluşturuldu!\n\nToplam Shift: ${result.summary?.total_shifts || 0}\nToplam Saat: ${result.summary?.total_hours || 0}\nKapsama Skoru: ${((result.summary?.coverage_score || 0) * 100).toFixed(0)}%`
               );
             } catch (error) {
               Alert.alert('Hata', error instanceof Error ? error.message : 'Shift planı oluşturulamadı');
@@ -316,6 +346,64 @@ export default function ShiftReviewScreen() {
     return dayMap[day.toLowerCase()] || day;
   };
 
+  // Calculate current shifts dynamically (edit mode uses edited, view mode uses schedule)
+  const currentShifts = editMode ? editedShifts : (schedule?.shifts || []);
+  
+  // Calculate REAL total hours from current shifts
+  // If shift.hours exists, use it; otherwise calculate from start_time and end_time
+  const calculatedTotalHours = currentShifts.reduce((sum, shift) => {
+    const hours = shift.hours || calculateHours(shift.start_time, shift.end_time);
+    return sum + hours;
+  }, 0);
+  
+  // Store operating hours calculation
+  // Assuming store is open 08:00-22:00 (14 hours per day) × 7 days = 98 hours per week
+  // You can make this dynamic from manager settings in the future
+  const STORE_HOURS_PER_DAY = 14; // 08:00-22:00
+  const OPERATING_DAYS = 7; // Monday-Sunday
+  const TOTAL_STORE_HOURS = STORE_HOURS_PER_DAY * OPERATING_DAYS; // 98 hours
+  
+  // Store Coverage: How much of the store operating hours are covered by employees
+  const storeCoveragePercent = TOTAL_STORE_HOURS > 0 
+    ? (calculatedTotalHours / TOTAL_STORE_HOURS) * 100 
+    : 0;
+  
+  // Employee Coverage: How many employees have at least 1 shift
+  const employeesWithShifts = new Set(currentShifts.map(s => s.employee_id)).size;
+  const totalActiveEmployees = employees.length > 0 ? employees.length : preferences.length;
+  const employeeCoveragePercent = totalActiveEmployees > 0 
+    ? (employeesWithShifts / totalActiveEmployees) * 100
+    : 0;
+
+  // Advanced Metrics
+  // Average hours per employee
+  const avgHoursPerEmployee = employeesWithShifts > 0 
+    ? calculatedTotalHours / employeesWithShifts 
+    : 0;
+  
+  // Average shifts per employee
+  const avgShiftsPerEmployee = employeesWithShifts > 0 
+    ? currentShifts.length / employeesWithShifts 
+    : 0;
+  
+  // Daily coverage - how many days have at least 1 shift
+  const daysWithShifts = new Set(currentShifts.map(s => s.day.toLowerCase())).size;
+  const dailyCoveragePercent = (daysWithShifts / 7) * 100;
+  
+  // Peak coverage - max simultaneous employees
+  const shiftsPerDay = {
+    monday: currentShifts.filter(s => s.day.toLowerCase() === 'monday').length,
+    tuesday: currentShifts.filter(s => s.day.toLowerCase() === 'tuesday').length,
+    wednesday: currentShifts.filter(s => s.day.toLowerCase() === 'wednesday').length,
+    thursday: currentShifts.filter(s => s.day.toLowerCase() === 'thursday').length,
+    friday: currentShifts.filter(s => s.day.toLowerCase() === 'friday').length,
+    saturday: currentShifts.filter(s => s.day.toLowerCase() === 'saturday').length,
+    sunday: currentShifts.filter(s => s.day.toLowerCase() === 'sunday').length,
+  };
+  const maxShiftsPerDay = Math.max(...Object.values(shiftsPerDay));
+  const minShiftsPerDay = Math.min(...Object.values(shiftsPerDay).filter(v => v > 0), Infinity);
+  const avgShiftsPerDay = currentShifts.length / daysWithShifts || 0;
+  
   // Calculate stats
   const totalEmployees = preferences.length; // This would ideally come from employee count
   const submittedCount = preferences.filter(p => p.submitted_at).length;
@@ -409,32 +497,40 @@ export default function ShiftReviewScreen() {
           </View>
         )}
 
-        {/* AI Generate Button */}
-        {!schedule || schedule.status === 'pending' ? (
-          <TouchableOpacity
-            style={styles.aiButton}
-            onPress={handleGenerateSchedule}
-            activeOpacity={0.8}
-            disabled={generating || preferences.length === 0}
+        {/* AI Generate Button - Always visible, smart behavior */}
+        <TouchableOpacity
+          style={styles.aiButton}
+          onPress={handleGenerateSchedule}
+          activeOpacity={0.8}
+          disabled={generating || preferences.length === 0}
+        >
+          <LinearGradient
+            colors={generating || preferences.length === 0 ? ['#9ca3af', '#6b7280'] : ['#00cd81', '#004dd6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.aiButtonGradient}
           >
-            <LinearGradient
-              colors={generating || preferences.length === 0 ? ['#9ca3af', '#6b7280'] : ['#00cd81', '#004dd6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.aiButtonGradient}
-            >
-              <MaterialIcons name="auto-awesome" size={28} color="#ffffff" />
-              <View style={styles.aiButtonTextContainer}>
-                <Text style={styles.aiButtonTitle}>
-                  {generating ? 'Oluşturuluyor...' : 'AI ile Shift Oluştur'}
-                </Text>
-                <Text style={styles.aiButtonSubtitle}>
-                  {generating ? 'Lütfen bekleyin' : 'Llama AI tercihlerinizi analiz edecek'}
-                </Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ) : null}
+            <MaterialIcons name="auto-awesome" size={28} color="#ffffff" />
+            <View style={styles.aiButtonTextContainer}>
+              <Text style={styles.aiButtonTitle}>
+                {generating 
+                  ? 'Oluşturuluyor...' 
+                  : schedule 
+                    ? 'AI ile Yeniden Oluştur' 
+                    : 'AI ile Shift Oluştur'
+                }
+              </Text>
+              <Text style={styles.aiButtonSubtitle}>
+                {generating 
+                  ? 'Lütfen bekleyin' 
+                  : schedule
+                    ? `Mevcut plan silinip yenisi oluşturulacak${schedule.status === 'approved' ? ' (Onaylı plan!)' : ''}`
+                    : 'Llama AI tercihlerinizi analiz edecek'
+                }
+              </Text>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
 
         {/* Schedule Summary (if generated) */}
         {schedule && schedule.summary && (
@@ -455,16 +551,28 @@ export default function ShiftReviewScreen() {
             <View style={styles.summaryStats}>
               <View style={styles.summaryStatItem}>
                 <Text style={styles.summaryStatLabel}>Toplam Shift</Text>
-                <Text style={styles.summaryStatValue}>{schedule.summary.total_shifts}</Text>
+                <Text style={styles.summaryStatValue}>{currentShifts.length}</Text>
               </View>
               <View style={styles.summaryStatItem}>
                 <Text style={styles.summaryStatLabel}>Toplam Saat</Text>
-                <Text style={styles.summaryStatValue}>{schedule.summary.total_hours}</Text>
+                <Text style={styles.summaryStatValue}>{calculatedTotalHours.toFixed(1)}</Text>
               </View>
               <View style={styles.summaryStatItem}>
-                <Text style={styles.summaryStatLabel}>Kapsama</Text>
+                <Text style={styles.summaryStatLabel}>Mağaza Doluluk</Text>
                 <Text style={styles.summaryStatValue}>
-                  {((schedule.summary.coverage_score || 0) * 100).toFixed(0)}%
+                  {storeCoveragePercent.toFixed(0)}%
+                </Text>
+                <Text style={styles.summaryStatSubtext}>
+                  {calculatedTotalHours.toFixed(0)}h / {TOTAL_STORE_HOURS}h
+                </Text>
+              </View>
+              <View style={styles.summaryStatItem}>
+                <Text style={styles.summaryStatLabel}>Çalışan Katılım</Text>
+                <Text style={styles.summaryStatValue}>
+                  {employeeCoveragePercent.toFixed(0)}%
+                </Text>
+                <Text style={styles.summaryStatSubtext}>
+                  {employeesWithShifts}/{totalActiveEmployees} çalışan
                 </Text>
               </View>
             </View>
@@ -477,27 +585,173 @@ export default function ShiftReviewScreen() {
                 ))}
               </View>
             )}
+
+            {/* Advanced Metrics */}
+            <View style={styles.advancedMetricsContainer}>
+              <Text style={styles.advancedMetricsTitle}>📊 Detaylı İstatistikler</Text>
+              
+              <View style={styles.metricRow}>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Ortalama Saat/Çalışan</Text>
+                  <Text style={styles.metricValue}>{avgHoursPerEmployee.toFixed(1)}h</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Ortalama Shift/Çalışan</Text>
+                  <Text style={styles.metricValue}>{avgShiftsPerEmployee.toFixed(1)}</Text>
+                </View>
+              </View>
+
+              <View style={styles.metricRow}>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Günlük Kapsama</Text>
+                  <Text style={styles.metricValue}>{dailyCoveragePercent.toFixed(0)}%</Text>
+                  <Text style={styles.metricSubtext}>{daysWithShifts}/7 gün</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Gün Başı Shift</Text>
+                  <Text style={styles.metricValue}>{avgShiftsPerDay.toFixed(1)}</Text>
+                  <Text style={styles.metricSubtext}>
+                    Min: {minShiftsPerDay === Infinity ? 0 : minShiftsPerDay} | Max: {maxShiftsPerDay}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Employee Hours Distribution */}
+            {schedule.summary.hours_per_employee && Object.keys(schedule.summary.hours_per_employee).length > 0 && (
+              <View style={styles.employeeHoursContainer}>
+                <Text style={styles.employeeHoursTitle}>👥 Çalışan Saat Dağılımı</Text>
+                <Text style={styles.employeeHoursSubtitle}>
+                  Her çalışanın haftalık çalışma saati ve max limite göre doluluk oranı
+                </Text>
+                {Object.entries(schedule.summary.hours_per_employee)
+                  .sort(([, a], [, b]) => (b as number) - (a as number))
+                  .map(([employeeId, hours], idx) => {
+                    const shift = currentShifts.find(s => s.employee_id === employeeId);
+                    const employee = employees.find(e => e.id === employeeId);
+                    const employeeName = shift?.employee_name || employee?.full_name || `Çalışan ${idx + 1}`;
+                    const hoursNum = hours as number;
+                    
+                    // Get employee max_weekly_hours
+                    const maxWeeklyHours = employee?.max_weekly_hours || 40; // Default 40h
+                    const usagePercent = maxWeeklyHours > 0 ? (hoursNum / maxWeeklyHours) * 100 : 0;
+                    
+                    // Bar shows usage percentage (capped at 100% for display)
+                    const barPercentage = Math.min(usagePercent, 100);
+                    
+                    // Color based on usage percentage
+                    const getBarColor = () => {
+                      if (usagePercent > 100) return '#dc2626'; // Red - over limit
+                      if (usagePercent > 90) return '#f59e0b'; // Orange - near limit
+                      if (usagePercent > 75) return '#10b981'; // Green - good
+                      return '#1193d4'; // Blue - low usage
+                    };
+
+                    const getStatusIcon = () => {
+                      if (usagePercent > 100) return '🔴';
+                      if (usagePercent > 90) return '🟡';
+                      if (usagePercent > 75) return '🟢';
+                      return '🔵';
+                    };
+
+                    return (
+                      <View key={employeeId} style={styles.employeeHourRow}>
+                        <View style={styles.employeeHourInfo}>
+                          <Text style={styles.employeeHourName} numberOfLines={1}>
+                            {getStatusIcon()} {employeeName}
+                          </Text>
+                          <Text style={styles.employeeHourLimit}>
+                            {hoursNum}h / {maxWeeklyHours}h
+                          </Text>
+                        </View>
+                        <View style={styles.employeeHourBarContainer}>
+                          {/* Background 100% bar */}
+                          <View style={styles.employeeHourBarBackground} />
+                          {/* Filled bar based on usage */}
+                          <View style={[
+                            styles.employeeHourBar, 
+                            { width: `${barPercentage}%`, backgroundColor: getBarColor() }
+                          ]} />
+                          {/* Percentage label on the bar */}
+                          <Text style={styles.employeeHourBarLabel}>
+                            {usagePercent.toFixed(0)}%
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+              </View>
+            )}
           </View>
         )}
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <MaterialIcons name="people" size={32} color="#1193d4" />
-            <Text style={styles.statNumber}>{submittedCount}</Text>
-            <Text style={styles.statLabel}>Tercih Bildiren</Text>
+        {/* Weekly Calendar Grid - Show all employee shifts */}
+        {schedule && schedule.shifts.length > 0 && (
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>📅 Haftalık Takvim</Text>
+            </View>
+            
+            {/* Day Headers */}
+            <View style={styles.calendarDayHeaders}>
+              {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day, idx) => {
+                const dayCount = currentShifts.filter(s => s.day.toLowerCase() === 
+                  ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][idx]
+                ).length;
+                
+                return (
+                  <View key={idx} style={styles.calendarDayHeader}>
+                    <Text style={styles.calendarDayHeaderText}>{day}</Text>
+                    <View style={styles.calendarDayHeaderBadge}>
+                      <Text style={styles.calendarDayHeaderCount}>{dayCount}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Shifts Grid by Day */}
+            <View style={styles.calendarGrid}>
+              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, dayIndex) => {
+                const dayShifts = currentShifts.filter(s => s.day.toLowerCase() === day).sort((a, b) => {
+                  // Sort by start time
+                  return a.start_time.localeCompare(b.start_time);
+                });
+                
+                return (
+                  <View key={day} style={styles.calendarDayColumn}>
+                    {dayShifts.length > 0 ? (
+                      dayShifts.map((shift, idx) => {
+                        // Assign colors based on employee
+                        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444'];
+                        const colorIndex = currentShifts.findIndex(s => s.employee_id === shift.employee_id) % colors.length;
+                        const shiftColor = colors[colorIndex];
+                        
+                        return (
+                          <View key={idx} style={[styles.calendarShiftItem, { backgroundColor: shiftColor + '15', borderLeftColor: shiftColor }]}>
+                            <Text style={[styles.calendarShiftTime, { color: shiftColor }]}>
+                              {shift.start_time} • {shift.hours || calculateHours(shift.start_time, shift.end_time)}h
+                            </Text>
+                            <Text style={styles.calendarShiftEmployee} numberOfLines={1}>
+                              {shift.employee_name}
+                            </Text>
+                            <Text style={styles.calendarShiftJob} numberOfLines={1}>
+                              {shift.job_description}
+                            </Text>
+                          </View>
+                        );
+                      })
+                    ) : (
+                      <View style={styles.calendarEmptyDay}>
+                        <Text style={styles.calendarEmptyText}>—</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <MaterialIcons name="schedule" size={32} color="#078836" />
-            <Text style={styles.statNumber}>{schedule?.summary?.total_hours || 0}</Text>
-            <Text style={styles.statLabel}>Toplam Saat</Text>
-          </View>
-          <View style={styles.statCard}>
-            <MaterialIcons name="event" size={32} color="#F0AD4E" />
-            <Text style={styles.statNumber}>7</Text>
-            <Text style={styles.statLabel}>Gün</Text>
-          </View>
-        </View>
+        )}
 
         {/* Action Buttons */}
         {schedule && !editMode && (
@@ -999,13 +1253,15 @@ const styles = StyleSheet.create({
   },
   summaryStats: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 12,
   },
   summaryStatItem: {
     flex: 1,
+    minWidth: '45%',
     alignItems: 'center',
-    padding: 12,
+    padding: 14,
     backgroundColor: '#f6f7f8',
     borderRadius: 12,
   },
@@ -1018,6 +1274,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#111618',
+  },
+  summaryStatSubtext: {
+    fontSize: 10,
+    color: '#617c89',
+    marginTop: 2,
   },
   warningsContainer: {
     marginTop: 12,
@@ -1037,33 +1298,216 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     marginBottom: 4,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
+  // Calendar Grid Styles
+  calendarCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  statNumber: {
-    fontSize: 24,
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 10,
+  },
+  calendarTitle: {
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#111618',
-    marginTop: 8,
+    flex: 1,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#617c89',
+  calendarDayHeaders: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    gap: 4,
+  },
+  calendarDayHeader: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  calendarDayHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#374151',
+    textTransform: 'uppercase',
+  },
+  calendarDayHeaderBadge: {
+    backgroundColor: '#1193d4',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  calendarDayHeaderCount: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  calendarDayColumn: {
+    flex: 1,
+    gap: 6,
+  },
+  calendarShiftItem: {
+    borderLeftWidth: 3,
+    borderRadius: 6,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  calendarShiftTime: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  calendarShiftEmployee: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#111618',
+    marginBottom: 2,
+  },
+  calendarShiftJob: {
+    fontSize: 9,
+    color: '#6b7280',
+  },
+  calendarEmptyDay: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    opacity: 0.3,
+  },
+  calendarEmptyText: {
+    fontSize: 11,
+    color: '#9ca3af',
     marginTop: 4,
+  },
+  // Advanced Metrics
+  advancedMetricsContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  advancedMetricsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#111618',
+    marginBottom: 12,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  metricItem: {
+    flex: 1,
+    backgroundColor: '#f6f7f8',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: '#617c89',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1193d4',
+    marginBottom: 2,
+  },
+  metricSubtext: {
+    fontSize: 9,
+    color: '#617c89',
+    textAlign: 'center',
+  },
+  // Employee Hours Distribution
+  employeeHoursContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  employeeHoursTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#111618',
+    marginBottom: 4,
+  },
+  employeeHoursSubtitle: {
+    fontSize: 11,
+    color: '#617c89',
+    marginBottom: 12,
+  },
+  employeeHourRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  employeeHourInfo: {
+    width: 160,
+  },
+  employeeHourName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#111618',
+    marginBottom: 2,
+  },
+  employeeHourLimit: {
+    fontSize: 10,
+    color: '#617c89',
+  },
+  employeeHourBarContainer: {
+    flex: 1,
+    height: 28,
+    position: 'relative',
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#e5e7eb',
+    justifyContent: 'center',
+  },
+  employeeHourBarBackground: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#e5e7eb',
+  },
+  employeeHourBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#1193d4',
+    borderRadius: 14,
+  },
+  employeeHourBarLabel: {
+    position: 'absolute',
+    right: 8,
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#111618',
+    zIndex: 1,
   },
   actionButtons: {
     flexDirection: 'row',

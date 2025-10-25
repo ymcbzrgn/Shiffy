@@ -86,37 +86,32 @@ export async function changePassword(
   newPassword: string,
   isFirstLogin: boolean
 ): Promise<void> {
-  try {
-    // Find employee
-    const employee = await employeeRepository.findById(employeeId);
+  // Find employee
+  const employee = await employeeRepository.findById(employeeId);
 
-    if (!employee) {
-      throw new Error('Employee not found');
-    }
-
-    // If not first login, verify current password
-    if (!isFirstLogin) {
-      if (!currentPassword) {
-        throw new Error('Current password is required');
-      }
-
-      const isCurrentPasswordValid = await comparePassword(
-        currentPassword,
-        employee.password_hash
-      );
-
-      if (!isCurrentPasswordValid) {
-        throw new Error('Current password is incorrect');
-      }
-    }
-
-    // Hash new password
-    const newPasswordHash = await hashPassword(newPassword);
-
-    // Update password in database (also sets first_login to false)
-    await employeeRepository.updatePassword(employeeId, newPasswordHash);
-
-  } catch (error: any) {
-    throw new Error('Password change failed: ' + error.message);
+  if (!employee) {
+    throw new Error('Employee not found');
   }
+
+  // If not first login, verify current password
+  if (!isFirstLogin) {
+    if (!currentPassword) {
+      throw new Error('Current password is required');
+    }
+
+    const isCurrentPasswordValid = await comparePassword(
+      currentPassword,
+      employee.password_hash
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+  }
+
+  // Hash new password
+  const newPasswordHash = await hashPassword(newPassword);
+
+  // Update password in database (also sets first_login to false)
+  await employeeRepository.updatePassword(employeeId, newPasswordHash);
 }

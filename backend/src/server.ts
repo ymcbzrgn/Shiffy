@@ -5,6 +5,7 @@ import { corsOptions } from './config/cors.config';
 import { errorHandler } from './middleware/error.middleware';
 import './config/supabase.config'; // Initialize Supabase connection
 import routes from './routes';
+import { autoScheduleService } from './services/auto-schedule.service';
 
 const app = express();
 
@@ -71,6 +72,15 @@ app.listen(PORT, HOST, () => {
   console.log(`🔐 Supabase: ${config.supabase.url}`);
   const isRunPodConfigured = config.runpod.apiUrl !== 'PLACEHOLDER';
   console.log(`🤖 RunPod: ${isRunPodConfigured ? 'Configured' : 'Not configured (placeholder)'}`);
+  console.log('='.repeat(50));
+  
+  // Initialize and start auto-schedule service
+  console.log('⏰ Initializing Auto-Schedule Service...');
+  autoScheduleService.initialize();
+  autoScheduleService.start();
+  console.log('✅ Auto-Schedule Service Started');
+  console.log('   📅 Runs daily at 23:00 (checks each manager\'s deadline_day setting)');
+  console.log('   🎯 Generates schedules for next week based on manager preferences');
   console.log('='.repeat(50));
 });
 

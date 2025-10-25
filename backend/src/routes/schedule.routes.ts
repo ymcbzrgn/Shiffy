@@ -17,7 +17,7 @@ const router = Router();
  */
 router.post('/generate', managerAuthMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { week_start }: GenerateScheduleRequest = req.body;
+    const { week_start, force_regenerate }: GenerateScheduleRequest & { force_regenerate?: boolean } = req.body;
     const managerId = req.user!.manager_id;
 
     // Validate request body
@@ -29,8 +29,12 @@ router.post('/generate', managerAuthMiddleware, async (req: Request, res: Respon
       return;
     }
 
-    // Generate schedule using AI
-    const schedule = await scheduleService.generateSchedule(managerId, week_start);
+    // Generate schedule using AI (with optional force regenerate)
+    const schedule = await scheduleService.generateSchedule(
+      managerId, 
+      week_start, 
+      force_regenerate || false
+    );
 
     res.status(201).json({
       success: true,

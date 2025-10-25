@@ -11,19 +11,27 @@ export interface APIResponse<T> {
 
 /**
  * Get fresh token (auto-refreshes Supabase session if needed)
+ * Priority: AsyncStorage (for employee JWT) > Supabase session (for manager)
  */
 async function getFreshToken(): Promise<string | null> {
-  // Try to get Supabase session (auto-refreshes if expired)
+  // First, try AsyncStorage (for employee tokens - custom JWT)
+  const storedToken = await AsyncStorage.getItem('auth_token');
+  
+  if (storedToken) {
+    // Employee token exists, use it
+    return storedToken;
+  }
+
+  // Fallback to Supabase session (for manager tokens)
   const { data: { session }, error } = await supabase.auth.getSession();
 
   if (!error && session?.access_token) {
-    // Update AsyncStorage with fresh token
-    await AsyncStorage.setItem('auth_token', session.access_token);
+    // Manager session exists, use Supabase token
     return session.access_token;
   }
 
-  // Fallback to AsyncStorage (for employee tokens)
-  return await AsyncStorage.getItem('auth_token');
+  // No token found
+  return null;
 }
 
 /**

@@ -16,6 +16,8 @@ export interface ScheduleResponse {
     total_shifts: number;
     total_hours: number;
     coverage_score: number;
+    total_employees?: number;
+    hours_per_employee?: Record<string, number>;
     warnings: string[];
   };
   generated_at: string;
@@ -41,13 +43,20 @@ export interface MyScheduleResponse {
  * - Store operating hours
  *
  * @param weekStart - Week start date in YYYY-MM-DD format
+ * @param forceRegenerate - If true, deletes existing schedule and regenerates (even if approved)
  * @returns Promise<ScheduleResponse> - Generated schedule with AI summary
  * @throws Error if generation fails (e.g., RunPod timeout, validation error)
  */
-export async function generateSchedule(weekStart: string): Promise<ScheduleResponse> {
+export async function generateSchedule(
+  weekStart: string, 
+  forceRegenerate: boolean = false
+): Promise<ScheduleResponse> {
   const response = await apiClient<ScheduleResponse>('/api/schedules/generate', {
     method: 'POST',
-    body: JSON.stringify({ week_start: weekStart }),
+    body: JSON.stringify({ 
+      week_start: weekStart,
+      force_regenerate: forceRegenerate,
+    }),
   });
 
   if (!response.success || !response.data) {
@@ -127,3 +136,88 @@ export async function getMySchedule(weekStart: string): Promise<MyScheduleRespon
 
   return response.data || null;
 }
+
+/**
+ * Trigger Auto-Schedule for Current Manager (Manager Only)
+ *
+ * Manually triggers AI schedule generation for next week
+ * This is normally done automatically every Sunday at 23:00
+ *
+ * @returns Promise<ScheduleResponse> - Generated schedule
+ * @throws Error if generation fails
+ */
+export async function triggerAutoScheduleForMe(): Promise<ScheduleResponse> {
+  const response = await apiClient<{ message: string; schedule: ScheduleResponse }>(
+    '/api/auto-schedule/trigger-me',
+    {
+      method: 'POST',
+    }
+  );
+
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'Failed to trigger auto-schedule');
+  }
+
+  return response.data.schedule;
+}
+
+/**
+ * Trigger Auto-Schedule for All Managers (Manager Only)
+ *
+ * Manually triggers AI schedule generation for ALL managers
+ * Use with caution - this can be resource-intensive
+ *
+ * @returns Promise<AutoScheduleResult> - Generation results
+ * @throws Error if generation fails
+ */
+export async function triggerAutoScheduleForAll(): Promise<{
+  success: number;
+  failed: number;
+  details: Array<{ managerId: string; email: string; status: 'success' | 'failed'; error?: string }>;
+}> {
+  const response = await apiClient<{
+    message: string;
+    success: number;
+    failed: number;
+    details: Array<{ managerId: string; email: string; status: 'success' | 'failed'; error?: string }>;
+  }>('/api/auto-schedule/trigger-all', {
+    method: 'POST',
+  });
+
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'Failed to trigger auto-schedule for all');
+  }
+
+  return {
+    success: response.data.success,
+    failed: response.data.failed,
+    details: response.data.details,
+  };
+}
+
+/**
+ * Get Auto-Schedule Status (Manager Only)
+ *
+ * Check if auto-schedule service is running
+ *
+ * @returns Promise<AutoScheduleStatus> - Service status
+ * @throws Error if fetch fails
+ */
+export async function getAutoScheduleStatus(): Promise<{
+  enabled: boolean;
+  nextRun: string;
+}> {
+  const response = await apiClient<{
+    enabled: boolean;
+    nextRun: string;
+  }>('/api/auto-schedule/status', {
+    method: 'GET',
+  });
+
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'Failed to get auto-schedule status');
+  }
+
+  return response.data;
+}
+

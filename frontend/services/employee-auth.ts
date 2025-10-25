@@ -140,27 +140,32 @@ export async function employeeChangePassword(
     };
   }
 
-  const response = await apiClient<ChangePasswordResponse>(
-    '/api/employee/change-password',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        current_password: isFirstLogin ? undefined : currentPassword,
-        new_password: newPassword,
-        is_first_login: isFirstLogin,
-      }),
+  try {
+    const response = await apiClient<{ message: string }>(
+      '/api/employee/change-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: isFirstLogin ? undefined : currentPassword,
+          new_password: newPassword,
+          is_first_login: isFirstLogin,
+        }),
+      }
+    );
+
+    if (!response.success) {
+      throw new Error(response.error || 'Şifre değiştirilemedi');
     }
-  );
 
-  if (!response.success) {
-    throw new Error(response.error || 'Şifre değiştirilemedi');
+    // Return success response with message
+    return {
+      success: true,
+      message: response.data?.message || 'Şifre başarıyla değiştirildi',
+    };
+  } catch (error) {
+    // Re-throw with better error message
+    throw new Error(error instanceof Error ? error.message : 'Şifre değiştirilemedi');
   }
-
-  // Return success response with message
-  return {
-    success: true,
-    message: response.data?.message || 'Şifre başarıyla değiştirildi',
-  };
 }
 
 /**

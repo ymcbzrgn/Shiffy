@@ -67,11 +67,11 @@ export default function EmployeePasswordResetScreen() {
       );
 
       if (!response.success) {
-        Alert.alert('Hata', response.message);
+        Alert.alert('Hata', response.message || 'Şifre değiştirilemedi');
         return;
       }
 
-      Alert.alert('Başarılı', 'Şifreniz değiştirildi', [
+      Alert.alert('Başarılı', response.message || 'Şifreniz değiştirildi', [
         {
           text: 'Tamam',
           onPress: () => {
@@ -86,7 +86,9 @@ export default function EmployeePasswordResetScreen() {
         },
       ]);
     } catch (error) {
-      Alert.alert('Hata', 'Şifre değiştirilemedi');
+      console.error('Password change error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Şifre değiştirilemedi. Lütfen tekrar deneyin.';
+      Alert.alert('Hata', errorMessage);
     } finally {
       setLoading(false);
     }
