@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { employeeLogin } from '../../services/employee-auth';
+import { setCurrentUser } from '../../utils/mock-storage';
 
 export default function EmployeeLoginScreen() {
   const router = useRouter();
@@ -47,6 +48,17 @@ export default function EmployeeLoginScreen() {
       // await AsyncStorage.setItem('shiffy_access_token', response.token!);
       // await AsyncStorage.setItem('shiffy_user_type', 'employee');
 
+      // Store user in mock storage (Phase 10'da AsyncStorage olacak)
+      if (response.employee) {
+        setCurrentUser({
+          id: response.employee.id,
+          full_name: response.employee.full_name,
+          username: response.employee.username,
+          email: `${response.employee.username}@email.com`, // Mock email
+          user_type: 'employee',
+        });
+      }
+
       // Check if first login
       if (response.employee?.first_login) {
         Alert.alert(
@@ -65,8 +77,7 @@ export default function EmployeeLoginScreen() {
           {
             text: 'Tamam',
             onPress: () => {
-              // router.replace('/(employee)/home' as any);
-              Alert.alert('Phase 8', 'Employee home screen Phase 8\'de yapılacak');
+              router.replace('/(employee)/home' as any);
             },
           },
         ]);
