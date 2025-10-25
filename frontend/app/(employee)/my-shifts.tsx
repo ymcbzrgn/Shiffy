@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 interface Shift {
   id: string;
@@ -77,9 +78,7 @@ const MOCK_SHIFTS: Shift[] = [
 type TabType = 'upcoming' | 'past' | 'all';
 
 export default function MyShiftsScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
+  const router = useRouter();
   const [currentTab, setCurrentTab] = useState<TabType>('upcoming');
   
   // Filter shifts based on current tab
@@ -107,16 +106,15 @@ export default function MyShiftsScreen() {
       key={shift.id}
       style={[
         styles.shiftCard,
-        isDark ? styles.shiftCardDark : styles.shiftCardLight,
         getShiftCardStyle(shift.status)
       ]}
     >
       <View style={styles.shiftCardHeader}>
         <View>
-          <Text style={[styles.shiftDate, isDark ? styles.shiftDateDark : styles.shiftDateLight]}>
+          <Text style={styles.shiftDate}>
             {shift.date}
           </Text>
-          <Text style={[styles.shiftDay, isDark ? styles.shiftDayDark : styles.shiftDayLight]}>
+          <Text style={styles.shiftDay}>
             {shift.dayName}
           </Text>
         </View>
@@ -127,8 +125,8 @@ export default function MyShiftsScreen() {
       
       <View style={styles.shiftCardBody}>
         <View style={styles.shiftRow}>
-          <MaterialIcons name="access-time" size={18} color={isDark ? '#a0b8c4' : '#617c89'} />
-          <Text style={[styles.shiftTime, isDark ? styles.shiftTimeDark : styles.shiftTimeLight]}>
+          <MaterialIcons name="access-time" size={18} color="#617c89" />
+          <Text style={styles.shiftTime}>
             {shift.startTime} - {shift.endTime}
           </Text>
           <View style={styles.durationBadge}>
@@ -137,8 +135,8 @@ export default function MyShiftsScreen() {
         </View>
         
         <View style={styles.shiftRow}>
-          <MaterialIcons name="location-on" size={18} color={isDark ? '#a0b8c4' : '#617c89'} />
-          <Text style={[styles.shiftLocation, isDark ? styles.shiftLocationDark : styles.shiftLocationLight]}>
+          <MaterialIcons name="location-on" size={18} color="#617c89" />
+          <Text style={styles.shiftLocation}>
             {shift.location}
           </Text>
         </View>
@@ -151,31 +149,39 @@ export default function MyShiftsScreen() {
       <View style={styles.emptyIcon}>
         <MaterialIcons name="event-busy" size={48} color="#ffffff" />
       </View>
-      <Text style={[styles.emptyTitle, isDark ? styles.emptyTitleDark : styles.emptyTitleLight]}>
+      <Text style={styles.emptyTitle}>
         Shift Bulunamadı
       </Text>
-      <Text style={[styles.emptyText, isDark ? styles.emptyTextDark : styles.emptyTextLight]}>
+      <Text style={styles.emptyText}>
         Bu kategoride henüz shift bulunmuyor.
       </Text>
     </View>
   );
   
   return (
-    <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => router.push('/(employee)/home' as any)} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Shiftlerim</Text>
-      </View>
+      </LinearGradient>
       
       <ScrollView style={styles.content}>
-        <View style={[styles.tabsContainer, isDark ? styles.tabsContainerDark : styles.tabsContainerLight]}>
+        <View style={styles.tabsContainer}>
           <TouchableOpacity
             onPress={() => setCurrentTab('upcoming')}
             style={[styles.tab, currentTab === 'upcoming' ? styles.tabActive : styles.tabInactive]}
           >
             <Text style={[
               styles.tabText,
-              currentTab === 'upcoming' ? styles.tabTextActive : 
-              (isDark ? styles.tabTextInactiveDark : styles.tabTextInactiveLight)
+              currentTab === 'upcoming' ? styles.tabTextActive : styles.tabTextInactive
             ]}>
               Yaklaşan
             </Text>
@@ -187,8 +193,7 @@ export default function MyShiftsScreen() {
           >
             <Text style={[
               styles.tabText,
-              currentTab === 'past' ? styles.tabTextActive : 
-              (isDark ? styles.tabTextInactiveDark : styles.tabTextInactiveLight)
+              currentTab === 'past' ? styles.tabTextActive : styles.tabTextInactive
             ]}>
               Geçmiş
             </Text>
@@ -200,8 +205,7 @@ export default function MyShiftsScreen() {
           >
             <Text style={[
               styles.tabText,
-              currentTab === 'all' ? styles.tabTextActive : 
-              (isDark ? styles.tabTextInactiveDark : styles.tabTextInactiveLight)
+              currentTab === 'all' ? styles.tabTextActive : styles.tabTextInactive
             ]}>
               Tümü
             </Text>
@@ -219,24 +223,23 @@ export default function MyShiftsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  containerDark: {
-    backgroundColor: '#101c22',
-  },
-  containerLight: {
-    backgroundColor: '#f6f7f8',
+    backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#1193d4',
     paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  backButton: {
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginLeft: 12,
   },
   content: {
     flex: 1,
@@ -248,11 +251,6 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 12,
     marginBottom: 24,
-  },
-  tabsContainerDark: {
-    backgroundColor: '#1a2a33',
-  },
-  tabsContainerLight: {
     backgroundColor: '#ffffff',
   },
   tab: {
@@ -263,7 +261,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: '#1193d4',
+    backgroundColor: '#00cd81',
   },
   tabInactive: {
     backgroundColor: 'transparent',
@@ -275,10 +273,7 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#ffffff',
   },
-  tabTextInactiveDark: {
-    color: '#a0b8c4',
-  },
-  tabTextInactiveLight: {
+  tabTextInactive: {
     color: '#617c89',
   },
   shiftsList: {
@@ -289,11 +284,6 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderLeftWidth: 4,
-  },
-  shiftCardDark: {
-    backgroundColor: '#1a2a33',
-  },
-  shiftCardLight: {
     backgroundColor: '#ffffff',
   },
   shiftApproved: {
@@ -315,20 +305,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
-  },
-  shiftDateDark: {
-    color: '#f0f3f4',
-  },
-  shiftDateLight: {
     color: '#111618',
   },
   shiftDay: {
     fontSize: 14,
-  },
-  shiftDayDark: {
-    color: '#a0b8c4',
-  },
-  shiftDayLight: {
     color: '#617c89',
   },
   statusBadge: {
@@ -353,11 +333,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
-  },
-  shiftTimeDark: {
-    color: '#f0f3f4',
-  },
-  shiftTimeLight: {
     color: '#111618',
   },
   durationBadge: {
@@ -374,11 +349,6 @@ const styles = StyleSheet.create({
   shiftLocation: {
     fontSize: 14,
     flex: 1,
-  },
-  shiftLocationDark: {
-    color: '#a0b8c4',
-  },
-  shiftLocationLight: {
     color: '#617c89',
   },
   emptyState: {
@@ -399,21 +369,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
-  },
-  emptyTitleDark: {
-    color: '#f0f3f4',
-  },
-  emptyTitleLight: {
     color: '#111618',
   },
   emptyText: {
     fontSize: 14,
     textAlign: 'center',
-  },
-  emptyTextDark: {
-    color: '#a0b8c4',
-  },
-  emptyTextLight: {
     color: '#617c89',
   },
 });

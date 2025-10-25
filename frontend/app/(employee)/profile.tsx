@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getUserSession, clearUserSession } from '../../utils/storage';
 
 export default function EmployeeProfileScreen() {
@@ -90,9 +91,17 @@ export default function EmployeeProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => router.push('/(employee)/home' as any)} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Profilim</Text>
-      </View>
+      </LinearGradient>
 
       {/* Profile Section */}
       <View style={styles.profileSection}>
@@ -221,19 +230,23 @@ export default function EmployeeProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7f8',
+    backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#1193d4',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  backButton: {
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginLeft: 12,
   },
   profileSection: {
     alignItems: 'center',
@@ -248,12 +261,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#1193d4',
+    backgroundColor: '#004dd6',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: '#ffffff',
-    shadowColor: '#1193d4',
+    shadowColor: '#004dd6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

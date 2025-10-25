@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { EmployeeCard } from '../../../components/features/EmployeeCard';
 import { Button } from '../../../components/ui/Button';
 import { Employee } from '../../../types';
@@ -67,15 +68,21 @@ export default function EmployeeListScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header with Add Button */}
-      <View style={styles.header}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Çalışan Listesi</Text>
-        <Button
-          title="Yeni Çalışan"
-          onPress={handleAddEmployee}
-          variant="primary"
-        />
-      </View>
+        <TouchableOpacity onPress={handleAddEmployee} style={styles.addButton}>
+          <Text style={styles.addButtonText}>Yeni Çalışan</Text>
+        </TouchableOpacity>
+      </LinearGradient>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -148,18 +155,39 @@ const styles = StyleSheet.create({
     color: '#617c89',
   },
   header: {
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  backButton: {
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#111618',
+    color: '#ffffff',
+    marginLeft: 12,
+    flex: 1,
+  },
+  addButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   searchContainer: {
     padding: 16,

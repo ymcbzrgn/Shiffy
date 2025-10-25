@@ -1,16 +1,23 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 
 export default function UserSelectScreen() {
   const router = useRouter();
+  const [pressedButton, setPressedButton] = useState<'manager' | 'employee' | null>(null);
 
   return (
     <View style={styles.container}>
       {/* Logo Section */}
       <View style={styles.logoSection}>
         <View style={styles.logoCircle}>
-          <MaterialIcons name="schedule" size={80} color="#1193d4" />
+          <Image 
+            source={require('../../assets/images/shiffy-logo.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.title}>Shiffy</Text>
         <Text style={styles.subtitle}>Akıllı Vardiya Yönetim Sistemi</Text>
@@ -22,24 +29,52 @@ export default function UserSelectScreen() {
         <TouchableOpacity
           style={styles.buttonWrapper}
           onPress={() => router.push('/manager-login' as any)}
-          activeOpacity={0.8}
+          onPressIn={() => setPressedButton('manager')}
+          onPressOut={() => setPressedButton(null)}
+          activeOpacity={1}
         >
-          <View style={[styles.button, styles.primaryButton]}>
-            <MaterialIcons name="admin-panel-settings" size={32} color="#ffffff" />
-            <Text style={styles.primaryButtonText}>Yönetici Girişi</Text>
-          </View>
+          {pressedButton === 'manager' ? (
+            <LinearGradient
+              colors={['#00cd81', '#004dd6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <MaterialIcons name="admin-panel-settings" size={32} color="#ffffff" />
+              <Text style={styles.buttonText}>Yönetici Girişi</Text>
+            </LinearGradient>
+          ) : (
+            <View style={[styles.button, styles.buttonUnpressed]}>
+              <MaterialIcons name="admin-panel-settings" size={32} color="#1193d4" />
+              <Text style={styles.buttonTextUnpressed}>Yönetici Girişi</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Employee Button */}
         <TouchableOpacity
           style={styles.buttonWrapper}
           onPress={() => router.push('/employee-login' as any)}
-          activeOpacity={0.8}
+          onPressIn={() => setPressedButton('employee')}
+          onPressOut={() => setPressedButton(null)}
+          activeOpacity={1}
         >
-          <View style={[styles.button, styles.secondaryButton]}>
-            <MaterialIcons name="person" size={32} color="#1193d4" />
-            <Text style={styles.secondaryButtonText}>Çalışan Girişi</Text>
-          </View>
+          {pressedButton === 'employee' ? (
+            <LinearGradient
+              colors={['#00cd81', '#004dd6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <MaterialIcons name="person" size={32} color="#ffffff" />
+              <Text style={styles.buttonText}>Çalışan Girişi</Text>
+            </LinearGradient>
+          ) : (
+            <View style={[styles.button, styles.buttonUnpressed]}>
+              <MaterialIcons name="person" size={32} color="#1193d4" />
+              <Text style={styles.buttonTextUnpressed}>Çalışan Girişi</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -67,7 +102,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: '#E6F4FE',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -76,6 +111,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 8,
+  },
+  logoImage: {
+    width: 140,
+    height: 140,
   },
   title: {
     fontSize: 48,
@@ -90,6 +129,7 @@ const styles = StyleSheet.create({
   },
   buttonsSection: {
     gap: 16,
+    marginBottom: 60,
   },
   buttonWrapper: {
     width: '100%',
@@ -107,20 +147,17 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  primaryButton: {
-    backgroundColor: '#1193d4',
-  },
-  secondaryButton: {
+  buttonUnpressed: {
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: '#1193d4',
+    borderColor: '#e5e7eb',
   },
-  primaryButtonText: {
+  buttonText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
   },
-  secondaryButtonText: {
+  buttonTextUnpressed: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1193d4',

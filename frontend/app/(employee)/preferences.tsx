@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { SlotStatus, DayOfWeek } from '@/types';
 import { ShiftGrid } from '@/components/features/ShiftGrid';
 import { 
@@ -20,12 +21,8 @@ import {
   loadDraft,
   getUserSession
 } from '@/utils/storage';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function PreferencesScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
   const [grid, setGrid] = useState<Record<string, SlotStatus>>(initializeEmptyGrid());
   const [weekOffset, setWeekOffset] = useState(0);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
@@ -173,51 +170,52 @@ export default function PreferencesScreen() {
   };
   
   return (
-    <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity 
-              onPress={() => router.back()} 
-              style={styles.backButton}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Shift Tercihlerim</Text>
-          </View>
-          <TouchableOpacity 
-            onPress={handleSave} 
-            style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
-            disabled={!hasChanges}
-          >
-            <Text style={styles.saveButtonText}>Kaydet</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Shift Tercihlerim</Text>
+        <TouchableOpacity 
+          onPress={handleSave} 
+          style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
+          disabled={!hasChanges}
+        >
+          <Text style={styles.saveButtonText}>Kaydet</Text>
+        </TouchableOpacity>
+      </LinearGradient>
       
       <ScrollView style={styles.content}>
         {/* Week Navigation */}
-        <View style={[styles.weekNav, isDark ? styles.weekNavDark : styles.weekNavLight]}>
+        <View style={styles.weekNav}>
           <TouchableOpacity onPress={handlePreviousWeek} style={styles.weekButton}>
             <MaterialIcons name="chevron-left" size={28} color="#1193d4" />
           </TouchableOpacity>
           <View style={styles.weekInfo}>
-            <Text style={[styles.weekText, isDark ? styles.weekTextDark : styles.weekTextLight]}>
+            <Text style={styles.weekText}>
               {formatWeekRange(currentWeekStart)}
             </Text>
             {weekOffset === 0 && (
-              <Text style={[styles.weekLabel, isDark ? styles.weekLabelDark : styles.weekLabelLight]}>
+              <Text style={styles.weekLabel}>
                 Bu Hafta
               </Text>
             )}
             {weekOffset > 0 && (
-              <Text style={[styles.weekLabel, isDark ? styles.weekLabelDark : styles.weekLabelLight]}>
+              <Text style={styles.weekLabel}>
                 {weekOffset} hafta sonra
               </Text>
             )}
             {weekOffset < 0 && (
-              <Text style={[styles.weekLabel, isDark ? styles.weekLabelDark : styles.weekLabelLight]}>
+              <Text style={styles.weekLabel}>
                 {Math.abs(weekOffset)} hafta önce
               </Text>
             )}
@@ -228,26 +226,26 @@ export default function PreferencesScreen() {
         </View>
         
         {/* Legend */}
-        <View style={[styles.legend, isDark ? styles.legendDark : styles.legendLight]}>
-          <Text style={[styles.legendTitle, isDark ? styles.legendTitleDark : styles.legendTitleLight]}>
+        <View style={styles.legend}>
+          <Text style={styles.legendTitle}>
             Dokunarak Durum Seç:
           </Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
               <View style={[styles.legendBox, styles.legendBoxAvailable]} />
-              <Text style={[styles.legendText, isDark ? styles.legendTextDark : styles.legendTextLight]}>
+              <Text style={styles.legendText}>
                 Müsaitim
               </Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendBox, styles.legendBoxUnavailable]} />
-              <Text style={[styles.legendText, isDark ? styles.legendTextDark : styles.legendTextLight]}>
+              <Text style={styles.legendText}>
                 Müsait Değilim
               </Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendBox, styles.legendBoxOffRequest]} />
-              <Text style={[styles.legendText, isDark ? styles.legendTextDark : styles.legendTextLight]}>
+              <Text style={styles.legendText}>
                 İzin Talebi
               </Text>
             </View>
@@ -255,17 +253,17 @@ export default function PreferencesScreen() {
         </View>
         
         {/* Grid */}
-        <View style={[styles.gridContainer, isDark ? styles.gridContainerDark : styles.gridContainerLight]}>
+        <View style={styles.gridContainer}>
           <ShiftGrid grid={grid} onSlotPress={handleSlotPress} />
         </View>
         
         {/* Reset Button */}
         <TouchableOpacity 
           onPress={handleReset} 
-          style={[styles.resetButton, isDark ? styles.resetButtonDark : styles.resetButtonLight]}
+          style={styles.resetButton}
         >
-          <MaterialIcons name="refresh" size={20} color={isDark ? '#f0f3f4' : '#111618'} />
-          <Text style={[styles.resetButtonText, isDark ? styles.resetButtonTextDark : styles.resetButtonTextLight]}>
+          <MaterialIcons name="refresh" size={20} color="#111618" />
+          <Text style={styles.resetButtonText}>
             Tercihleri Sıfırla
           </Text>
         </TouchableOpacity>
@@ -277,53 +275,41 @@ export default function PreferencesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  containerDark: {
-    backgroundColor: '#101c22',
-  },
-  containerLight: {
-    backgroundColor: '#f6f7f8',
+    backgroundColor: '#ffffff',
   },
   header: {
-    backgroundColor: '#1193d4',
     paddingTop: 50,
     paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  headerTop: {
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
   backButton: {
-    padding: 8,
-    marginRight: 8,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginLeft: 12,
+    flex: 1,
   },
   saveButton: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#1193d4',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   saveButtonDisabled: {
     opacity: 0.5,
   },
   saveButtonText: {
-    color: '#1193d4',
+    color: '#ffffff',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -336,11 +322,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
-  },
-  weekNavDark: {
-    backgroundColor: '#1a2a33',
-  },
-  weekNavLight: {
     backgroundColor: '#ffffff',
   },
   weekButton: {
@@ -353,43 +334,23 @@ const styles = StyleSheet.create({
   weekText: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  weekTextDark: {
-    color: '#f0f3f4',
-  },
-  weekTextLight: {
     color: '#111618',
   },
   weekLabel: {
     fontSize: 12,
     marginTop: 4,
-  },
-  weekLabelDark: {
-    color: '#a0b8c4',
-  },
-  weekLabelLight: {
     color: '#617c89',
   },
   legend: {
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
-  },
-  legendDark: {
-    backgroundColor: '#1a2a33',
-  },
-  legendLight: {
     backgroundColor: '#ffffff',
   },
   legendTitle: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 12,
-  },
-  legendTitleDark: {
-    color: '#f0f3f4',
-  },
-  legendTitleLight: {
     color: '#111618',
   },
   legendItems: {
@@ -418,22 +379,12 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-  },
-  legendTextDark: {
-    color: '#a0b8c4',
-  },
-  legendTextLight: {
     color: '#617c89',
   },
   gridContainer: {
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
-  },
-  gridContainerDark: {
-    backgroundColor: '#1a2a33',
-  },
-  gridContainerLight: {
     backgroundColor: '#ffffff',
   },
   resetButton: {
@@ -444,21 +395,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
-  },
-  resetButtonDark: {
-    backgroundColor: '#1a2a33',
-  },
-  resetButtonLight: {
     backgroundColor: '#ffffff',
   },
   resetButtonText: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  resetButtonTextDark: {
-    color: '#f0f3f4',
-  },
-  resetButtonTextLight: {
     color: '#111618',
   },
 });

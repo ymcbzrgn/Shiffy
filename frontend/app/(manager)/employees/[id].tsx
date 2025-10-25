@@ -1,5 +1,3 @@
-// Employee Detail Screen - View and edit employee info + manager notes
-
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -12,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Employee } from '../../../types';
 import { getEmployeeById, updateEmployeeNotes, toggleEmployeeStatus } from '../../../services/employee';
 import { Loading } from '../../../components/ui/Loading';
@@ -130,13 +129,18 @@ export default function EmployeeDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header with Back Button */}
-      <View style={styles.header}>
+      {/* Header with Gradient & Back Button */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Çalışan Detayları</Text>
-      </View>
+      </LinearGradient>
 
       {/* Profile Card */}
       <View style={styles.profileCard}>
@@ -232,11 +236,18 @@ export default function EmployeeDetailScreen() {
         <TouchableOpacity
           onPress={handleSaveNotes}
           disabled={savingNotes}
-          style={[styles.saveButton, savingNotes && styles.saveButtonDisabled]}
+          style={styles.saveButtonContainer}
         >
-          <Text style={styles.saveButtonText}>
-            {savingNotes ? 'Kaydediliyor...' : 'Notları Kaydet'}
-          </Text>
+          <LinearGradient
+            colors={['#00cd81', '#004dd6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.saveButton, savingNotes && styles.saveButtonDisabled]}
+          >
+            <Text style={styles.saveButtonText}>
+              {savingNotes ? 'Kaydediliyor...' : 'Notları Kaydet'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -249,26 +260,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f7f8',
   },
   header: {
-    backgroundColor: '#1193d4',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   backButton: {
-    padding: 8,
-    marginRight: 12,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginLeft: 12,
   },
   profileCard: {
     backgroundColor: '#ffffff',
     marginHorizontal: 16,
-    marginTop: -20,
+    marginTop: 16,
     borderRadius: 12,
     padding: 20,
     shadowColor: '#000',
@@ -414,12 +429,14 @@ const styles = StyleSheet.create({
     minHeight: 120,
     backgroundColor: '#ffffff',
   },
-  saveButton: {
-    backgroundColor: '#1193d4',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
+  saveButtonContainer: {
     marginTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  saveButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
   },
   saveButtonDisabled: {
     opacity: 0.6,

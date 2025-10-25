@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  TextInput,
+  StyleSheet, 
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  Dimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
+import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { validateEmail, validatePassword } from '../../utils/validation';
 import { loginManager, storeAuthToken } from '../../services/auth';
 import { saveUserSession } from '../../utils/storage';
 
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+
 export default function ManagerLoginScreen() {
   const router = useRouter();
+  const emailInputRef = useRef<TextInput>(null);
   
   const [form, setForm] = useState({
     email: '',
     password: '',
-    rememberMe: false,
   });
   
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +72,14 @@ export default function ManagerLoginScreen() {
       });
       
       // Navigate to manager dashboard
-      router.replace('/(manager)/dashboard' as any);
+      Alert.alert('Hoş Geldiniz', `Merhaba ${manager.store_name}!`, [
+        {
+          text: 'Tamam',
+          onPress: () => {
+            router.replace('/(manager)/dashboard' as any);
+          },
+        },
+      ]);
     } catch (error) {
       Alert.alert('Hata', error instanceof Error ? error.message : 'Giriş başarısız');
     } finally {
@@ -65,57 +88,137 @@ export default function ManagerLoginScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Yönetici Girişi</Text>
-        <Text style={styles.subtitle}>Shift yönetim panelinize giriş yapın</Text>
-      </View>
-
-      <View style={styles.form}>
-        <Input
-          label="Email"
-          value={form.email}
-          onChangeText={(text) => setForm({ ...form, email: text })}
-          placeholder="ornek@isletme.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          error={errors.email}
-        />
-
-        <Input
-          label="Şifre"
-          value={form.password}
-          onChangeText={(text) => setForm({ ...form, password: text })}
-          placeholder="••••••••"
-          secureTextEntry
-          error={errors.password}
-        />
-
-        <TouchableOpacity 
-          onPress={() => setForm({ ...form, rememberMe: !form.rememberMe })}
-          style={styles.checkboxRow}
-        >
-          <View style={[styles.checkbox, form.rememberMe && styles.checkboxChecked]}>
-            {form.rememberMe && <Text style={styles.checkmark}>✓</Text>}
-          </View>
-          <Text style={styles.checkboxLabel}>Beni Hatırla</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#617c89" />
         </TouchableOpacity>
 
-        <Button
-          title="Giriş Yap"
-          onPress={handleLogin}
-          loading={loading}
-          variant="primary"
-        />
+        {/* Logo & Title */}
+        <View style={styles.header}>
+          <View style={styles.logoCircle}>
+            <Image 
+              source={require('../../assets/images/shiffy-logo.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.title}>Yönetici Girişi</Text>
+          <Text style={styles.subtitle}>Email ve şifrenizle giriş yapın</Text>
+        </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Hesabınız yok mu? </Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/manager-register' as any)}>
-            <Text style={styles.link}>Kayıt Ol</Text>
+        {/* Login Form */}
+        <View style={styles.form}>
+          {/* Email Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={emailInputRef}
+                style={[styles.input, errors.email && styles.inputError]}
+                value={form.email}
+                onChangeText={(text) => {
+                  setForm({ ...form, email: text });
+                  if (errors.email) setErrors({ ...errors, email: '' });
+                }}
+                placeholder="ornek@isletme.com"
+                placeholderTextColor="#9ca3af"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                editable={!loading}
+              />
+              <MaterialIcons
+                name="email"
+                size={20}
+                color="#617c89"
+                style={styles.inputIcon}
+                pointerEvents="none"
+              />
+            </View>
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Şifre</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, errors.password && styles.inputError]}
+                value={form.password}
+                onChangeText={(text) => setForm({ ...form, password: text })}
+                placeholder="••••••••"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="password"
+                textContentType="password"
+                editable={!loading}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.inputIcon}
+              >
+                <MaterialIcons
+                  name={showPassword ? 'visibility' : 'visibility-off'}
+                  size={20}
+                  color="#617c89"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+          </View>
+
+          {/* Login Button */}
+          <TouchableOpacity
+            onPress={handleLogin}
+            style={[styles.loginButtonContainer, loading && styles.loginButtonDisabled]}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#00cd81', '#004dd6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginButton}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Register Link */}
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/manager-register' as any)}
+            style={styles.registerButton}
+          >
+            <Text style={styles.registerText}>
+              Hesabınız yok mu? <Text style={styles.registerLink}>Kayıt Ol</Text>
+            </Text>
+          </TouchableOpacity>
+
+          {/* Back to Select Button */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backToSelectButton}
+          >
+            <Text style={styles.backToSelectText}>Giriş Türü Seç</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -124,64 +227,144 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f6f7f8',
   },
-  content: {
-    padding: 24,
-    paddingTop: 60,
+  scrollContent: {
+    flexGrow: 1,
+    padding: width * 0.05,
+    paddingTop: height * 0.06,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    padding: 8,
+    marginBottom: height * 0.02,
   },
   header: {
-    marginBottom: 40,
+    alignItems: 'center',
+    marginBottom: height * 0.04,
+  },
+  logoCircle: {
+    width: width * 0.24,
+    height: width * 0.24,
+    maxWidth: 100,
+    maxHeight: 100,
+    borderRadius: width * 0.12,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: height * 0.02,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoImage: {
+    width: '80%',
+    height: '80%',
+  },
+  logoText: {
+    fontSize: isSmallDevice ? 40 : 48,
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
   title: {
-    fontSize: 28,
+    fontSize: isSmallDevice ? 24 : 28,
     fontWeight: 'bold',
     color: '#111618',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: isSmallDevice ? 13 : 14,
     color: '#617c89',
+    textAlign: 'center',
+    paddingHorizontal: width * 0.1,
   },
   form: {
-    gap: 20,
+    marginBottom: height * 0.02,
   },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  inputGroup: {
+    marginBottom: height * 0.025,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
+  label: {
+    fontSize: isSmallDevice ? 13 : 14,
+    fontWeight: '600',
+    color: '#617c89',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    position: 'relative',
+  },
+  input: {
     borderWidth: 2,
-    borderColor: '#1193d4',
-    borderRadius: 4,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingVertical: height * 0.018,
+    paddingHorizontal: 16,
+    paddingRight: 48,
+    fontSize: isSmallDevice ? 15 : 16,
+    color: '#111618',
+    backgroundColor: '#ffffff',
+  },
+  inputError: {
+    borderColor: '#D9534F',
+  },
+  inputIcon: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -10,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#D9534F',
+    marginTop: 4,
+  },
+  loginButtonContainer: {
+    marginTop: height * 0.01,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loginButton: {
+    paddingVertical: height * 0.02,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: '#1193d4',
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
-  checkmark: {
+  loginButtonText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: isSmallDevice ? 15 : 16,
     fontWeight: 'bold',
   },
-  checkboxLabel: {
-    fontSize: 14,
-    color: '#111618',
+  registerButton: {
+    alignItems: 'center',
+    marginTop: height * 0.025,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    fontSize: 14,
+  registerText: {
+    fontSize: isSmallDevice ? 13 : 14,
     color: '#617c89',
   },
-  link: {
-    fontSize: 14,
+  registerLink: {
     color: '#1193d4',
+    fontWeight: '600',
+  },
+  backToSelectButton: {
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    paddingVertical: height * 0.018,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: height * 0.015,
+    backgroundColor: '#ffffff',
+  },
+  backToSelectText: {
+    color: '#617c89',
+    fontSize: isSmallDevice ? 15 : 16,
     fontWeight: '600',
   },
 });

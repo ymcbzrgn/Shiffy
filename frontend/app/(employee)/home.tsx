@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getUserSession } from '../../utils/storage';
 
 export default function EmployeeHomeScreen() {
   const router = useRouter();
   const [userName, setUserName] = useState('Çalışan');
   const [userInitials, setUserInitials] = useState('C');
+  const [pressedButton, setPressedButton] = useState<string | null>(null);
   
   // Load user session on mount
   useEffect(() => {
@@ -60,7 +62,12 @@ export default function EmployeeHomeScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
         <View style={styles.userSection}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{employee.initials}</Text>
@@ -72,10 +79,10 @@ export default function EmployeeHomeScreen() {
         </View>
         
         <TouchableOpacity style={styles.notificationButton}>
-          <MaterialIcons name="notifications" size={24} color="#111618" />
+          <MaterialIcons name="notifications" size={24} color="#ffffff" />
           {employee.hasUnreadNotifications && <View style={styles.notificationDot} />}
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       {/* Logo Section */}
       <View style={styles.logoSection}>
@@ -150,31 +157,88 @@ export default function EmployeeHomeScreen() {
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/my-shifts' as any)}
+            onPressIn={() => setPressedButton('shifts')}
+            onPressOut={() => setPressedButton(null)}
+            activeOpacity={1}
           >
-            <View style={styles.quickActionIcon}>
-              <MaterialIcons name="event" size={28} color="#1193d4" />
-            </View>
-            <Text style={styles.quickActionText}>Shiftlerim</Text>
+            {pressedButton === 'shifts' ? (
+              <LinearGradient
+                colors={['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quickActionButtonGradient}
+              >
+                <View style={styles.quickActionIconPressed}>
+                  <MaterialIcons name="event" size={28} color="#ffffff" />
+                </View>
+                <Text style={styles.quickActionTextPressed}>Shiftlerim</Text>
+              </LinearGradient>
+            ) : (
+              <>
+                <View style={styles.quickActionIcon}>
+                  <MaterialIcons name="event" size={28} color="#1193d4" />
+                </View>
+                <Text style={styles.quickActionText}>Shiftlerim</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/preferences' as any)}
+            onPressIn={() => setPressedButton('preferences')}
+            onPressOut={() => setPressedButton(null)}
+            activeOpacity={1}
           >
-            <View style={styles.quickActionIcon}>
-              <MaterialIcons name="edit-calendar" size={28} color="#1193d4" />
-            </View>
-            <Text style={styles.quickActionText}>Tercihlerim</Text>
+            {pressedButton === 'preferences' ? (
+              <LinearGradient
+                colors={['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quickActionButtonGradient}
+              >
+                <View style={styles.quickActionIconPressed}>
+                  <MaterialIcons name="edit-calendar" size={28} color="#ffffff" />
+                </View>
+                <Text style={styles.quickActionTextPressed}>Tercihlerim</Text>
+              </LinearGradient>
+            ) : (
+              <>
+                <View style={styles.quickActionIcon}>
+                  <MaterialIcons name="edit-calendar" size={28} color="#1193d4" />
+                </View>
+                <Text style={styles.quickActionText}>Tercihlerim</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push('/(employee)/profile' as any)}
+            onPressIn={() => setPressedButton('profile')}
+            onPressOut={() => setPressedButton(null)}
+            activeOpacity={1}
           >
-            <View style={styles.quickActionIcon}>
-              <MaterialIcons name="person" size={28} color="#1193d4" />
-            </View>
-            <Text style={styles.quickActionText}>Profilim</Text>
+            {pressedButton === 'profile' ? (
+              <LinearGradient
+                colors={['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quickActionButtonGradient}
+              >
+                <View style={styles.quickActionIconPressed}>
+                  <MaterialIcons name="person" size={28} color="#ffffff" />
+                </View>
+                <Text style={styles.quickActionTextPressed}>Profilim</Text>
+              </LinearGradient>
+            ) : (
+              <>
+                <View style={styles.quickActionIcon}>
+                  <MaterialIcons name="person" size={28} color="#1193d4" />
+                </View>
+                <Text style={styles.quickActionText}>Profilim</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -188,7 +252,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f7f8',
   },
   header: {
-    backgroundColor: '#ffffff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -209,7 +272,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1193d4',
+    backgroundColor: '#004dd6',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -222,12 +285,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#617c89',
+    color: '#ffffff',
   },
   userName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1193d4',
+    color: '#ffffff',
   },
   notificationButton: {
     position: 'relative',
@@ -244,16 +307,16 @@ const styles = StyleSheet.create({
   },
   logoSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 16,
   },
   logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#1193d4',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     shadowColor: '#1193d4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -261,17 +324,18 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   logoText: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   logoTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#111618',
   },
   content: {
     padding: 16,
+    paddingBottom: 32,
   },
   sectionTitle: {
     fontSize: 18,
@@ -280,7 +344,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   quickActionsTitle: {
-    marginTop: 24,
+    marginTop: 16,
   },
   actionRequiredCard: {
     backgroundColor: 'rgba(217, 83, 79, 0.05)',
@@ -413,8 +477,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  quickActionButtonGradient: {
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   quickActionIcon: {
-    backgroundColor: 'rgba(17, 147, 212, 0.1)',
+    backgroundColor: 'rgba(0, 205, 129, 0.1)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  quickActionIconPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -426,6 +506,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#111618',
+    textAlign: 'center',
+  },
+  quickActionTextPressed: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffff',
     textAlign: 'center',
   },
 });

@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Modal, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
+import { LinearGradient } from 'expo-linear-gradient';
 import { validateRequired } from '../../../utils/validation';
 import { addEmployee } from '../../../services/employee';
 
@@ -59,7 +69,6 @@ export default function AddEmployeeScreen() {
   };
 
   const handleCopyPassword = () => {
-    // TODO: Implement clipboard copy when expo-clipboard is installed
     Alert.alert('Şifre', generatedPassword + '\n\nNot: Kopyalama özelliği Phase 6\'da eklenecek');
   };
 
@@ -70,52 +79,112 @@ export default function AddEmployeeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Logo/Icon Section */}
-        <View style={styles.iconSection}>
-          <View style={styles.iconCircle}>
-            <MaterialIcons name="person-add" size={48} color="#1193d4" />
-          </View>
-          <Text style={styles.title}>Yeni Çalışan Ekle</Text>
-          <Text style={styles.subtitle}>
-            Çalışan bilgilerini girin. Sistem otomatik olarak güvenli bir şifre oluşturacak.
-          </Text>
-        </View>
+      {/* Header */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Yeni Çalışan Ekle</Text>
+      </LinearGradient>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
 
         {/* Form */}
         <View style={styles.form}>
-          <Input
-            label="Ad Soyad"
-            value={form.fullName}
-            onChangeText={(text) => setForm({ ...form, fullName: text })}
-            placeholder="Örn: Ahmet Yılmaz"
-            error={errors.fullName}
-          />
+          {/* Full Name Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Ad Soyad</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, errors.fullName && styles.inputError]}
+                value={form.fullName}
+                onChangeText={(text) => {
+                  setForm({ ...form, fullName: text });
+                  if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                }}
+                placeholder="Örn: Ahmet Yılmaz"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
+                editable={!loading}
+              />
+              <MaterialIcons
+                name="person"
+                size={20}
+                color="#617c89"
+                style={styles.inputIcon}
+              />
+            </View>
+            {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+          </View>
 
-          <Input
-            label="Kullanıcı Adı"
-            value={form.username}
-            onChangeText={(text) => setForm({ ...form, username: text.toLowerCase() })}
-            placeholder="Örn: ahmet.yilmaz"
-            autoCapitalize="none"
-            error={errors.username}
-          />
+          {/* Username Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Kullanıcı Adı</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, errors.username && styles.inputError]}
+                value={form.username}
+                onChangeText={(text) => {
+                  setForm({ ...form, username: text.toLowerCase() });
+                  if (errors.username) setErrors({ ...errors, username: '' });
+                }}
+                placeholder="Örn: ahmet.yilmaz"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+              <MaterialIcons
+                name="alternate-email"
+                size={20}
+                color="#617c89"
+                style={styles.inputIcon}
+              />
+            </View>
+            {errors.username ? <Text style={styles.errorText}>{errors.username}</Text> : null}
+          </View>
 
+          {/* Info Box */}
           <View style={styles.infoBox}>
-            <MaterialIcons name="info" size={20} color="#1193d4" />
+            <MaterialIcons name="info" size={18} color="#1193d4" />
             <Text style={styles.infoText}>
               Kullanıcı adı sadece küçük harf, rakam, nokta (.) ve alt çizgi (_) içerebilir.
             </Text>
           </View>
 
-          <Button
-            title="Çalışan Ekle"
+          {/* Submit Button */}
+          <TouchableOpacity
             onPress={handleSubmit}
-            loading={loading}
-            variant="primary"
-          />
+            style={styles.submitButtonContainer}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#00cd81', '#004dd6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Ekleniyor...' : 'Çalışan Ekle'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Success Modal */}
       <Modal
@@ -148,11 +217,19 @@ export default function AddEmployeeScreen() {
               </Text>
             </View>
 
-            <Button
-              title="Tamam"
+            <TouchableOpacity
               onPress={handleClose}
-              variant="primary"
-            />
+              style={styles.modalButtonContainer}
+            >
+              <LinearGradient
+                colors={['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalButton}
+              >
+                <Text style={styles.modalButtonText}>Tamam</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -165,52 +242,105 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f6f7f8',
   },
-  content: {
-    padding: 24,
-    paddingTop: 40,
-  },
-  iconSection: {
+  header: {
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
   },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(17, 147, 212, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#ffffff',
+    marginLeft: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+    paddingTop: 20,
+  },
+  form: {
+    gap: 20,
+  },
+  inputGroup: {
+    marginBottom: 4,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#111618',
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#617c89',
-    textAlign: 'center',
-    paddingHorizontal: 20,
+  inputContainer: {
+    position: 'relative',
   },
-  form: {
-    marginBottom: 20,
+  input: {
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    padding: 16,
+    paddingRight: 48,
+    fontSize: 16,
+    color: '#111618',
+    backgroundColor: '#ffffff',
+  },
+  inputError: {
+    borderColor: '#D9534F',
+  },
+  inputIcon: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -10,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#D9534F',
+    marginTop: 4,
   },
   infoBox: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     backgroundColor: 'rgba(17, 147, 212, 0.1)',
     padding: 12,
     borderRadius: 8,
-    alignItems: 'flex-start',
-    marginBottom: 20,
+    marginTop: 8,
   },
   infoText: {
     flex: 1,
     fontSize: 13,
     color: '#1193d4',
+    marginLeft: 8,
     lineHeight: 18,
-    marginLeft: 10,
+  },
+  submitButtonContainer: {
+    marginTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  submitButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -228,10 +358,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successIcon: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#111618',
     marginBottom: 8,
@@ -246,36 +376,48 @@ const styles = StyleSheet.create({
   passwordBox: {
     width: '100%',
     backgroundColor: '#f6f7f8',
-    padding: 16,
     borderRadius: 12,
+    padding: 16,
     marginBottom: 24,
   },
   passwordLabel: {
     fontSize: 12,
+    fontWeight: '600',
     color: '#617c89',
     marginBottom: 8,
-    fontWeight: '600',
   },
   passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   passwordText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#111618',
-    letterSpacing: 1,
+    color: '#1193d4',
+    letterSpacing: 2,
   },
   copyButton: {
     padding: 8,
-    backgroundColor: 'rgba(17, 147, 212, 0.1)',
-    borderRadius: 8,
   },
   passwordHint: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#617c89',
-    fontStyle: 'italic',
+    lineHeight: 16,
+  },
+  modalButtonContainer: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  modalButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Employee } from '../../types';
 
 interface Props {
@@ -66,10 +67,21 @@ export function EmployeeCard({ employee, onPress }: Props) {
       </View>
 
       {/* Action Button */}
-      <View style={styles.actionButton}>
-        <Text style={styles.actionButtonText}>Detayları Gör</Text>
-        <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
-      </View>
+      <TouchableOpacity 
+        style={styles.actionButtonContainer}
+        onPress={() => onPress(employee.id)}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={['#00cd81', '#004dd6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.actionButton}
+        >
+          <Text style={styles.actionButtonText}>Detayları Gör</Text>
+          <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+        </LinearGradient>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -169,13 +181,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 6,
   },
+  actionButtonContainer: {
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1193d4',
     paddingVertical: 12,
-    borderRadius: 8,
   },
   actionButtonText: {
     color: '#ffffff',

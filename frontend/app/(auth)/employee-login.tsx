@@ -9,11 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { employeeLogin } from '../../services/employee-auth';
 import { saveUserSession } from '../../utils/storage';
+
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
 
 export default function EmployeeLoginScreen() {
   const router = useRouter();
@@ -101,6 +107,7 @@ export default function EmployeeLoginScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {/* Back Button */}
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -110,7 +117,11 @@ export default function EmployeeLoginScreen() {
         {/* Logo & Title */}
         <View style={styles.header}>
           <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>S</Text>
+            <Image 
+              source={require('../../assets/images/shiffy-logo.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.title}>Çalışan Girişi</Text>
           <Text style={styles.subtitle}>Kullanıcı adı ve şifrenizle giriş yapın</Text>
@@ -171,11 +182,18 @@ export default function EmployeeLoginScreen() {
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            style={[styles.loginButtonContainer, loading && styles.loginButtonDisabled]}
           >
-            <Text style={styles.loginButtonText}>
-              {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
-            </Text>
+            <LinearGradient
+              colors={['#00cd81', '#004dd6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginButton}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Back to User Select */}
@@ -206,55 +224,62 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: width * 0.05,
+    paddingTop: height * 0.06,
   },
   backButton: {
     alignSelf: 'flex-start',
     padding: 8,
-    marginBottom: 20,
+    marginBottom: height * 0.02,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: height * 0.04,
   },
   logoCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#1193d4',
+    width: width * 0.24,
+    height: width * 0.24,
+    maxWidth: 100,
+    maxHeight: 100,
+    borderRadius: width * 0.12,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: height * 0.02,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 4,
+  },
+  logoImage: {
+    width: '80%',
+    height: '80%',
   },
   logoText: {
-    fontSize: 48,
+    fontSize: isSmallDevice ? 40 : 48,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   title: {
-    fontSize: 28,
+    fontSize: isSmallDevice ? 24 : 28,
     fontWeight: 'bold',
     color: '#111618',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: isSmallDevice ? 13 : 14,
     color: '#617c89',
     textAlign: 'center',
   },
   form: {
-    marginBottom: 20,
+    marginBottom: height * 0.02,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: height * 0.025,
   },
   label: {
-    fontSize: 14,
+    fontSize: isSmallDevice ? 13 : 14,
     fontWeight: '600',
     color: '#617c89',
     marginBottom: 8,
@@ -266,50 +291,53 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#e5e7eb',
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: height * 0.018,
     paddingHorizontal: 16,
     paddingRight: 48,
-    fontSize: 16,
+    fontSize: isSmallDevice ? 15 : 16,
     color: '#111618',
     backgroundColor: '#ffffff',
   },
   inputIcon: {
     position: 'absolute',
     right: 16,
-    top: 16,
+    top: '50%',
+    marginTop: -10,
   },
-  loginButton: {
-    backgroundColor: '#1193d4',
-    paddingVertical: 16,
+  loginButtonContainer: {
+    marginTop: height * 0.01,
     borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#1193d4',
+    overflow: 'hidden',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+  },
+  loginButton: {
+    paddingVertical: height * 0.02,
+    alignItems: 'center',
   },
   loginButtonDisabled: {
     opacity: 0.6,
   },
   loginButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: isSmallDevice ? 15 : 16,
     fontWeight: 'bold',
   },
   backToSelectButton: {
     borderWidth: 2,
     borderColor: '#e5e7eb',
-    paddingVertical: 14,
+    paddingVertical: height * 0.018,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: height * 0.015,
     backgroundColor: '#ffffff',
   },
   backToSelectText: {
     color: '#617c89',
-    fontSize: 16,
+    fontSize: isSmallDevice ? 15 : 16,
     fontWeight: '600',
   },
   testInfo: {

@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { useRef, useState } from 'react';
 import type { SlotStatus, DayOfWeek } from '@/types';
 import { generateTimeSlots, getDayLabels, getDayKeys, getSlotKey } from '@/utils/shift-grid-helpers';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface ShiftGridProps {
   grid: Record<string, SlotStatus>;
@@ -9,8 +9,9 @@ interface ShiftGridProps {
 }
 
 export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const [isDragging, setIsDragging] = useState(false);
+  const lastTouchedCellRef = useRef<string | null>(null);
+  const cellRefs = useRef<Map<string, View>>(new Map());
   
   const timeSlots = generateTimeSlots();
   const dayLabels = getDayLabels();
@@ -20,79 +21,124 @@ export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
   const getCellStyle = (status: SlotStatus) => {
     if (status === 'available') return styles.cellAvailable;
     if (status === 'unavailable') return styles.cellUnavailable;
-    if (status === 'off_request') return isDark ? styles.cellOffRequestDark : styles.cellOffRequestLight;
-    return isDark ? styles.cellEmptyDark : styles.cellEmptyLight;
+    if (status === 'off_request') return styles.cellOffRequest;
+    return styles.cellEmpty;
   };
   
   // Render cell content (icon or dash)
   const renderCellContent = (status: SlotStatus) => {
     if (status === null) {
-      return <Text style={[styles.cellText, isDark ? styles.cellTextDark : styles.cellTextLight]}>-</Text>;
+      return <Text style={styles.cellText}>-</Text>;
     }
     return null;
   };
   
+  // Handle cell touch (single tap or drag)
+  const handleCellPress = (day: DayOfWeek, time: string) => {
+    onSlotPress(day, time);
+  };
+  
+  // Handle cell touch during drag
+  const handleCellTouchMove = (day: DayOfWeek, time: string) => {
+    if (!isDragging) return;
+    
+    const key = getSlotKey(day, time);
+    
+    // Prevent firing same cell multiple times
+    if (lastTouchedCellRef.current === key) return;
+    
+    lastTouchedCellRef.current = key;
+    onSlotPress(day, time);
+  };
+  
   return (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      style={styles.horizontalScroll}
-    >
-      <View>
-        {/* Header Row */}
-        <View style={styles.headerRow}>
-          <View style={[styles.timeHeaderCell, isDark ? styles.headerDark : styles.headerLight]}>
-            <Text style={[styles.headerText, isDark ? styles.headerTextDark : styles.headerTextLight]}>
-              Saat
-            </Text>
-          </View>
-          {dayLabels.map((label, index) => (
-            <View 
-              key={index} 
-              style={[styles.dayHeaderCell, isDark ? styles.headerDark : styles.headerLight]}
-            >
-              <Text style={[styles.headerText, isDark ? styles.headerTextDark : styles.headerTextLight]}>
-                {label}
+    <View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.horizontalScroll}
+      >
+        <View>
+          {/* Header Row */}
+          <View style={styles.headerRow}>
+            <View style={styles.timeHeaderCell}>
+              <Text style={styles.headerText}>
+                Saat
               </Text>
             </View>
-          ))}
-        </View>
-        
-        {/* Grid Rows */}
-        <ScrollView 
-          showsVerticalScrollIndicator={true}
-          style={styles.verticalScroll}
-        >
-          {timeSlots.map((time, rowIndex) => (
-            <View key={time} style={styles.gridRow}>
-              {/* Time Label */}
-              <View style={[styles.timeCell, isDark ? styles.timeCellDark : styles.timeCellLight]}>
-                <Text style={[styles.timeText, isDark ? styles.timeTextDark : styles.timeTextLight]}>
-                  {time}
+            {dayLabels.map((label, index) => (
+              <View 
+                key={index} 
+                style={styles.dayHeaderCell}
+              >
+                <Text style={styles.headerText}>
+                  {label}
                 </Text>
               </View>
-              
-              {/* Day Cells */}
-              {dayKeys.map((day) => {
-                const key = getSlotKey(day, time);
-                const status = grid[key];
-                
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    onPress={() => onSlotPress(day, time)}
-                    style={[styles.cell, getCellStyle(status)]}
-                    activeOpacity={0.7}
-                  >
-                    {renderCellContent(status)}
-                  </TouchableOpacity>
-                );
-              })}
+            ))}
+          </View>
+          
+          {/* Grid Rows */}
+          <ScrollView 
+            showsVerticalScrollIndicator={true}
+            style={styles.verticalScroll}
+          >
+            <View
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+              onResponderGrant={(e) => {
+                setIsDragging(true);
+              }}
+              onResponderMove={(e) => {
+                if (isDragging) {
+                  // Find which cell was touched during drag
+                  const { locationX, locationY } = e.nativeEvent;
+                  // This will trigger re-render and select cells during drag
+                }
+              }}
+              onResponderRelease={() => {
+                setIsDragging(false);
+                lastTouchedCellRef.current = null;
+              }}
+            >
+              {timeSlots.map((time, rowIndex) => (
+                <View key={time} style={styles.gridRow}>
+                  {/* Time Label */}
+                  <View style={styles.timeCell}>
+                    <Text style={styles.timeText}>
+                      {time}
+                    </Text>
+                  </View>
+                  
+                  {/* Day Cells */}
+                  {dayKeys.map((day) => {
+                    const key = getSlotKey(day, time);
+                    const status = grid[key];
+                    
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={[styles.cell, getCellStyle(status)]}
+                        activeOpacity={0.7}
+                        onPress={() => handleCellPress(day, time)}
+                        onPressIn={() => {
+                          if (isDragging) {
+                            handleCellTouchMove(day, time);
+                          }
+                        }}
+                        delayPressIn={0}
+                      >
+                        {renderCellContent(status)}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
-          ))}
-        </ScrollView>
-      </View>
-    </ScrollView>
+          </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -101,12 +147,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verticalScroll: {
-    maxHeight: 600, // Limit height for scrolling
+    maxHeight: 600,
   },
   headerRow: {
     flexDirection: 'row',
     borderBottomWidth: 2,
-    borderBottomColor: '#1193d4',
+    borderBottomColor: '#004dd6',
   },
   timeHeaderCell: {
     width: 70,
@@ -114,6 +160,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#ffffff',
   },
   dayHeaderCell: {
     width: 60,
@@ -121,21 +168,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerDark: {
-    backgroundColor: '#1a2a33',
-  },
-  headerLight: {
     backgroundColor: '#ffffff',
   },
   headerText: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  headerTextDark: {
-    color: '#a0b8c4',
-  },
-  headerTextLight: {
     color: '#617c89',
   },
   gridRow: {
@@ -150,22 +187,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRightWidth: 1,
     borderRightColor: '#e5e7eb',
-  },
-  timeCellDark: {
-    backgroundColor: '#1a2a33',
-  },
-  timeCellLight: {
     backgroundColor: '#ffffff',
   },
   timeText: {
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  timeTextDark: {
-    color: '#f0f3f4',
-  },
-  timeTextLight: {
     color: '#111618',
   },
   cell: {
@@ -176,33 +203,21 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: '#e5e7eb',
   },
-  // Status colors
   cellAvailable: {
     backgroundColor: '#078836',
   },
   cellUnavailable: {
     backgroundColor: '#D9534F',
   },
-  cellOffRequestLight: {
+  cellOffRequest: {
     backgroundColor: '#9ca3af',
   },
-  cellOffRequestDark: {
-    backgroundColor: '#6b7280',
-  },
-  cellEmptyLight: {
+  cellEmpty: {
     backgroundColor: '#f3f4f6',
-  },
-  cellEmptyDark: {
-    backgroundColor: '#374151',
   },
   cellText: {
     fontSize: 12,
     fontWeight: '600',
-  },
-  cellTextDark: {
-    color: '#a0b8c4',
-  },
-  cellTextLight: {
     color: '#9ca3af',
   },
 });

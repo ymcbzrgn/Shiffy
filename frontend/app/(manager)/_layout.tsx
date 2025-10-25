@@ -4,34 +4,43 @@ export default function ManagerLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#1193d4',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerShown: false, // Tüm manager ekranlarında navigation header'ı gizle
       }}
     >
       <Stack.Screen 
         name="dashboard" 
         options={{ 
           title: 'Yönetici Paneli',
-          headerShown: true,
         }} 
       />
       <Stack.Screen 
         name="employees/index" 
         options={{ 
           title: 'Çalışan Listesi',
-          headerShown: true,
         }} 
       />
       <Stack.Screen 
         name="employees/add" 
         options={{ 
           title: 'Yeni Çalışan',
-          headerShown: true,
+        }} 
+      />
+      <Stack.Screen 
+        name="employees/[id]" 
+        options={{ 
+          title: 'Çalışan Detayları',
+        }} 
+      />
+      <Stack.Screen 
+        name="shift-review" 
+        options={{ 
+          title: 'Shift İncelemesi',
+        }} 
+      />
+      <Stack.Screen 
+        name="settings" 
+        options={{ 
+          title: 'Ayarlar',
         }} 
       />
     </Stack>

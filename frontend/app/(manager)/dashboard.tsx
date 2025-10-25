@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatCard } from '../../components/features/StatCard';
 import { QuickActionButton } from '../../components/features/QuickActionButton';
 
@@ -27,9 +28,14 @@ export default function ManagerDashboardScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.headerTitle}>Yönetici Paneli</Text>
@@ -42,7 +48,7 @@ export default function ManagerDashboardScreen() {
             <MaterialIcons name="logout" size={24} color="#ffffff" />
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
 
       <View style={styles.content}>
         {/* Stat Cards */}
@@ -87,12 +93,12 @@ export default function ManagerDashboardScreen() {
             <QuickActionButton
               title="Shift İnceleme"
               icon="calendar-month"
-              onPress={() => Alert.alert('Shift İnceleme', 'Phase 6\'da yapılacak')}
+              onPress={() => router.push('/(manager)/shift-review' as any)}
             />
             <QuickActionButton
               title="Ayarlar"
               icon="settings"
-              onPress={() => Alert.alert('Ayarlar', 'Phase 8\'de yapılacak')}
+              onPress={() => router.push('/(manager)/settings' as any)}
             />
             <QuickActionButton
               title="Raporlar"
@@ -117,12 +123,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f7f8',
   },
   header: {
-    backgroundColor: '#1193d4',
-    paddingVertical: 24,
+    paddingTop: 50,
+    paddingBottom: 16,
     paddingHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -132,17 +138,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 4,
   },
   logoutButton: {
-    padding: 12,
+    padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 8,
   },
