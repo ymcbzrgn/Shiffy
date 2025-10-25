@@ -190,6 +190,122 @@ and this project follows semantic versioning principles.
 
 ---
 
+### [2025-10-25 02:25] - Phase 4 Complete: Shift Preferences API
+
+#### Added
+- **Shift Types** (`shift.types.ts`): TypeScript interfaces for shift preferences
+  - SlotStatus: 'available' | 'unavailable' | 'off_request' | null
+  - ShiftSlot: day, time, status
+  - ShiftPreference: Full database schema interface
+  - ShiftPreferenceResponse: Public-facing preference data
+  - SubmitPreferencesRequest: Employee submission request
+  - ShiftRequestsResponse: Manager view with employee names
+  - Files: `backend/src/types/shift.types.ts`
+
+- **Shift Repository** (`shift.repository.ts`): Data access layer for shift_preferences
+  - `createOrUpdate(employeeId, weekStart, slots)` - Upsert shift preferences
+    - Conflict resolution on (employee_id, week_start) unique constraint
+    - Sets submitted_at = NOW() on each submission
+  - `findByEmployeeAndWeek(employeeId, weekStart)` - Get employee's preferences
+    - Returns null if not found (not an error)
+  - `findRequestsByManagerAndWeek(managerId, weekStart)` - Get all employee requests
+    - JOIN with employees table to get full_name
+    - Filters by manager_id and week_start
+  - Files: `backend/src/repositories/shift.repository.ts`
+
+- **Shift Service** (`shift.service.ts`): Business logic for preferences
+  - `submitPreferences(employeeId, weekStart, slots)` - Validate and submit preferences
+    - Validation: slots array not empty
+    - Validation: week_start matches YYYY-MM-DD format
+  - `getMyPreferences(employeeId, weekStart)` - Get employee's own preferences
+  - `getShiftRequests(managerId, weekStart)` - Get all employee requests for manager
+    - Transforms JOIN result to include employee_name
+  - Files: `backend/src/services/shift.service.ts`
+
+- **Shift Routes** (`shift.routes.ts`): 3 REST endpoints
+  - POST `/api/shifts/preferences` - Employee submit/update preferences
+    - Auth: Employee JWT required
+    - Body: `{ week_start: "YYYY-MM-DD", slots: ShiftSlot[] }`
+    - Response: Created/updated preference with submitted_at timestamp
+  - GET `/api/shifts/my-preferences?week=YYYY-MM-DD` - Employee retrieve preferences
+    - Auth: Employee JWT required
+    - Query: week parameter required
+    - Response: Preference data or null if not found
+  - GET `/api/shifts/requests?week=YYYY-MM-DD` - Manager view all employee requests
+    - Auth: Manager JWT required
+    - Query: week parameter required
+    - Response: Array of requests with employee names
+  - All routes have proper validation and error handling
+  - Files: `backend/src/routes/shift.routes.ts`
+
+- **Database Verification Script** (`check-shift-table.ts`): Utility for table validation
+  - Checks if shift_preferences table exists
+  - Shows sample data if available
+  - Used for development debugging
+  - Files: `backend/src/scripts/check-shift-table.ts`
+
+#### Changed
+- **Routes Index** (`routes/index.ts`): Mounted shift routes
+  - Added `router.use('/shifts', shiftRoutes)`
+  - Shift endpoints now accessible at `/api/shifts/*`
+  - Files: `backend/src/routes/index.ts`
+
+#### Fixed
+- **CRITICAL FIX: Supabase JOIN Syntax for Employee Names**
+  - **Problem**: Manager endpoint returned employee_name: "Unknown"
+    - Supabase JOIN with `employees!inner(...)` returned undefined
+    - Result: Manager couldn't see employee names in preference requests
+  - **Root Cause**: Incorrect Supabase JOIN syntax
+    - Wrong: `.select('id, employee_id, ..., employees!inner(...)')`
+    - Correct: `.select('*, employees(id, full_name, manager_id)')`
+  - **Fix**: Updated repository query syntax
+    - Changed to simplified `.select('*, employees(...)') format`
+    - Removed unnecessary field enumeration
+  - **Impact**: Manager endpoint now correctly displays employee full names
+  - **Testing**: SQL Editor confirmed JOIN works, backend now matches
+  - **Files**: `backend/src/repositories/shift.repository.ts:104`
+
+#### Tested
+- **All 6 Tests Passing (100% Success Rate)**:
+  1. ✅ POST `/api/shifts/preferences` - Employee submit preferences (201 Created)
+  2. ✅ GET `/api/shifts/my-preferences?week=2025-10-28` - Employee retrieve (200 OK)
+  3. ✅ GET `/api/shifts/requests?week=2025-10-28` - Manager view (employee_name: "Test Employee" ✅)
+  4. ✅ Validation: Empty slots → 400 "Slots array cannot be empty"
+  5. ✅ Validation: Invalid week format (2025/10/28) → 400 "Invalid week_start format. Expected YYYY-MM-DD"
+  6. ✅ Edge Case: Non-existent week → 200 OK with data: null
+
+- **Upsert Verification**:
+  - ✅ Same employee_id + week_start updates existing record (not duplicate)
+  - ✅ submitted_at timestamp updated on each submission
+  - ✅ Unique constraint working correctly
+
+- **JSONB Storage**:
+  - ✅ Slots array stored correctly in PostgreSQL JSONB column
+  - ✅ Complex nested objects (day, time, status) preserved
+  - ✅ Database query returns full slot data
+
+#### Context
+- **Phase 4 Duration**: ~50 minutes (estimated 2h, actual 50min - 2.4x faster!)
+- **Critical Bug Discovery**: Supabase JOIN syntax issue caught and fixed during testing
+- **SQL Editor Verification**: Used Supabase SQL Editor to verify JOIN query before backend fix
+- **Next Phase**: Phase 5 - AI Schedule Generation with Llama (6h)
+  - Llama API integration with RunPod
+  - Schedule generation endpoint
+  - JSON response validation
+  - Approve/reject schedule functionality
+
+#### Files Created (5 files, ~460 lines)
+- `backend/src/types/shift.types.ts` (47 lines)
+- `backend/src/repositories/shift.repository.ts` (128 lines)
+- `backend/src/services/shift.service.ts` (120 lines)
+- `backend/src/routes/shift.routes.ts` (130 lines)
+- `backend/src/scripts/check-shift-table.ts` (33 lines)
+
+#### Files Modified (1 file)
+- `backend/src/routes/index.ts` (+3 lines)
+
+---
+
 ### [2025-10-25 01:35] - Phase 3 Complete: Manager Employee CRUD
 
 #### Added
