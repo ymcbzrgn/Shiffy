@@ -1,6 +1,42 @@
 // Employee authentication service (custom backend, not Supabase)
 
 import { apiClient, saveToken, clearToken } from './api-client';
+import { verifyPassword } from './employee';
+
+// Mock mode toggle
+const USE_MOCK = false; // Backend is ready!
+
+// Mock credentials - In MOCK mode, accept any password for testing
+// In production, backend validates against hashed passwords
+const MOCK_CREDENTIALS: Record<string, { password: string; employeeData: any }> = {
+  'ahmet': {
+    password: 'ANY', // Accept any password in mock mode
+    employeeData: {
+      id: '1',
+      username: 'ahmet',
+      full_name: 'Ahmet Yılmaz',
+      first_login: false,
+    }
+  },
+  'ayse': {
+    password: 'ANY',
+    employeeData: {
+      id: '2',
+      username: 'ayse',
+      full_name: 'Ayşe Demir',
+      first_login: true,
+    }
+  },
+  'mehmet': {
+    password: 'ANY',
+    employeeData: {
+      id: '3',
+      username: 'mehmet',
+      full_name: 'Mehmet Kaya',
+      first_login: false,
+    }
+  },
+};
 
 interface LoginResponse {
   token: string;
@@ -32,6 +68,35 @@ export async function employeeLogin(
   username: string,
   password: string
 ): Promise<LoginResponse> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const usernameLower = username.toLowerCase();
+    const mockUser = MOCK_CREDENTIALS[usernameLower];
+    
+    if (!mockUser) {
+      throw new Error('Kullanıcı adı veya şifre hatalı');
+    }
+    
+    // Verify password (Backend mantığı: bcrypt.compare)
+    const isPasswordValid = await verifyPassword(usernameLower, password);
+    
+    if (!isPasswordValid) {
+      throw new Error('Kullanıcı adı veya şifre hatalı');
+    }
+    
+    console.log(`[MOCK AUTH] ✅ Login successful for: ${usernameLower}`);
+    
+    const mockToken = `mock-jwt-token-${usernameLower}-${Date.now()}`;
+    await saveToken(mockToken);
+    
+    return {
+      token: mockToken,
+      employee: mockUser.employeeData,
+    };
+  }
+
   const response = await apiClient<LoginResponse>('/api/employee/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
@@ -64,6 +129,17 @@ export async function employeeChangePassword(
   newPassword: string,
   isFirstLogin: boolean
 ): Promise<ChangePasswordResponse> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In mock mode, just accept the password change
+    return {
+      success: true,
+      message: 'Şifre başarıyla değiştirildi',
+    };
+  }
+
   const response = await apiClient<ChangePasswordResponse>(
     '/api/employee/change-password',
     {
@@ -83,7 +159,7 @@ export async function employeeChangePassword(
   // Return success response with message
   return {
     success: true,
-    message: response.message || 'Şifre başarıyla değiştirildi',
+    message: response.data?.message || 'Şifre başarıyla değiştirildi',
   };
 }
 
