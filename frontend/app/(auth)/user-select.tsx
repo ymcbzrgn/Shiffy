@@ -2,11 +2,9 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
 
 export default function UserSelectScreen() {
   const router = useRouter();
-  const [pressedButton, setPressedButton] = useState<'manager' | 'employee' | null>(null);
 
   return (
     <View style={styles.container}>
@@ -29,52 +27,34 @@ export default function UserSelectScreen() {
         <TouchableOpacity
           style={styles.buttonWrapper}
           onPress={() => router.push('/manager-login' as any)}
-          onPressIn={() => setPressedButton('manager')}
-          onPressOut={() => setPressedButton(null)}
-          activeOpacity={1}
+          activeOpacity={0.8}
         >
-          {pressedButton === 'manager' ? (
-            <LinearGradient
-              colors={['#00cd81', '#004dd6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              <MaterialIcons name="admin-panel-settings" size={32} color="#ffffff" />
-              <Text style={styles.buttonText}>Yönetici Girişi</Text>
-            </LinearGradient>
-          ) : (
-            <View style={[styles.button, styles.buttonUnpressed]}>
-              <MaterialIcons name="admin-panel-settings" size={32} color="#1193d4" />
-              <Text style={styles.buttonTextUnpressed}>Yönetici Girişi</Text>
-            </View>
-          )}
+          <LinearGradient
+            colors={['#00cd81', '#004dd6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <MaterialIcons name="admin-panel-settings" size={32} color="#ffffff" />
+            <Text style={styles.buttonText}>Yönetici Girişi</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         {/* Employee Button */}
         <TouchableOpacity
           style={styles.buttonWrapper}
           onPress={() => router.push('/employee-login' as any)}
-          onPressIn={() => setPressedButton('employee')}
-          onPressOut={() => setPressedButton(null)}
-          activeOpacity={1}
+          activeOpacity={0.8}
         >
-          {pressedButton === 'employee' ? (
-            <LinearGradient
-              colors={['#00cd81', '#004dd6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              <MaterialIcons name="person" size={32} color="#ffffff" />
-              <Text style={styles.buttonText}>Çalışan Girişi</Text>
-            </LinearGradient>
-          ) : (
-            <View style={[styles.button, styles.buttonUnpressed]}>
-              <MaterialIcons name="person" size={32} color="#1193d4" />
-              <Text style={styles.buttonTextUnpressed}>Çalışan Girişi</Text>
-            </View>
-          )}
+          <LinearGradient
+            colors={['#00cd81', '#004dd6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <MaterialIcons name="person" size={32} color="#ffffff" />
+            <Text style={styles.buttonText}>Çalışan Girişi</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -147,20 +127,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  buttonUnpressed: {
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-  },
   buttonText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
-  },
-  buttonTextUnpressed: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1193d4',
   },
   footer: {
     alignItems: 'center',
