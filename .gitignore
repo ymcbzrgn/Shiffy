@@ -1,3 +1,7 @@
 frontend/.expo/
 frontend/node_modules/
 frontend/.vscode/
+
+# macOS system files
+.DS_Store
+**/.DS_Store

@@ -25,13 +25,21 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<APIChatMessage[]>([]);
+  const [lastSentTime, setLastSentTime] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // TODO: Set your API configuration here
-  // You can set this from environment variables or props
+  // Constants from documentation
+  const MAX_HISTORY_MESSAGES = 6; // Last 3 conversation pairs
+  const MAX_MESSAGE_LENGTH = 500;
+  const MIN_DELAY_MS = 2000; // 2 seconds between messages
+
+  // Configure chat service from environment variables
   useEffect(() => {
-    // Example: chatService.configure('YOUR_API_URL', 'YOUR_API_KEY');
-    // chatService.configure(import.meta.env.VITE_LLAMA_API_URL, import.meta.env.VITE_LLAMA_API_KEY);
+    const apiUrl = import.meta.env.VITE_LLAMA_API_URL || import.meta.env.VITE_API_URL || '';
+    const apiKey = import.meta.env.VITE_LLAMA_API_KEY || '';
+    if (apiUrl) {
+      chatService.configure(apiUrl, apiKey);
+    }
   }, []);
 
   const content = {
@@ -44,6 +52,8 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
       typing: "AI is thinking...",
       aiAssistant: "AI Assistant",
       tryAsking: "Try asking:",
+      clearChat: "Clear Chat",
+      rateLimitMessage: "Please wait at least 2 seconds between messages.",
     },
     tr: {
       title: "Shiffy AI Asistan",
@@ -54,6 +64,8 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
       typing: "Yapay zeka düşünüyor...",
       aiAssistant: "AI Asistan",
       tryAsking: "Şunları sorabilirsiniz:",
+      clearChat: "Sohbeti Temizle",
+      rateLimitMessage: "Lütfen mesajlar arasında en az 2 saniye bekleyin.",
     }
   };
 
@@ -94,6 +106,20 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
+    // Rate limiting: minimum delay between messages
+    const now = Date.now();
+    if (now - lastSentTime < MIN_DELAY_MS) {
+      const rateLimitMsg: Message = {
+        id: `rate-${now}`,
+        text: t.rateLimitMessage,
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, rateLimitMsg]);
+      return;
+    }
+    setLastSentTime(now);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
@@ -106,19 +132,23 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
     setIsTyping(true);
 
     try {
-      // Call the chat service
+      // Prepare sliding-window history (last 6 messages = 3 pairs)
+      const recentHistory = conversationHistory.slice(-MAX_HISTORY_MESSAGES);
+
+      // Call the chat service with recent history
       const response = await chatService.sendMessage(
         userMessage.text,
-        conversationHistory,
+        recentHistory,
         language
       );
 
-      // Update conversation history
+      // Update conversation history with sliding window
       const newHistory: APIChatMessage[] = [
         ...conversationHistory,
-        { role: 'user', content: userMessage.text },
-        { role: 'assistant', content: response.message }
-      ];
+        { role: 'user' as const, content: userMessage.text },
+        { role: 'assistant' as const, content: response.message }
+      ].slice(-MAX_HISTORY_MESSAGES); // Keep only last 6 messages
+      
       setConversationHistory(newHistory);
 
       // Add bot response to messages
@@ -158,6 +188,17 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
     setInputValue(question);
   };
 
+  const handleClearChat = () => {
+    setMessages([{
+      id: "welcome",
+      text: t.welcomeMessage,
+      sender: "bot",
+      timestamp: new Date(),
+    }]);
+    setConversationHistory([]);
+    setLastSentTime(0);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -175,6 +216,15 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {messages.length > 1 && (
+            <button
+              onClick={handleClearChat}
+              className="text-white/80 hover:text-white transition-colors text-xs px-2 py-1 rounded-lg hover:bg-white/10"
+              aria-label={t.clearChat}
+            >
+              {t.clearChat}
+            </button>
+          )}
           <button
             onClick={onMinimize}
             className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
@@ -193,7 +243,12 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -267,16 +322,23 @@ const ChatWindow = ({ isOpen, onClose, onMinimize }: ChatWindowProps) => {
             placeholder={t.placeholder}
             className="flex-1 resize-none rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 max-h-32 min-h-[44px]"
             rows={1}
+            maxLength={MAX_MESSAGE_LENGTH}
           />
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isTyping}
             className="gradient-primary text-white p-3 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
+        {/* Character count display when approaching limit */}
+        {inputValue.length > 400 && (
+          <div className="text-xs text-muted-foreground text-right mt-1">
+            {inputValue.length}/{MAX_MESSAGE_LENGTH}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -23,6 +23,41 @@ class ChatService {
   }
 
   /**
+   * Map API errors to user-friendly messages
+   */
+  private handleApiError(error: any, language: 'en' | 'tr' = 'en'): string {
+    const errorMessage = error.message || '';
+    
+    if (errorMessage.includes('429') || error.status === 429) {
+      return language === 'en'
+        ? 'Too many requests. Please wait a minute and try again. ⏱️'
+        : 'Çok fazla istek gönderdiniz. Lütfen 1 dakika bekleyin. ⏱️';
+    }
+    
+    if (errorMessage.includes('400') || error.status === 400) {
+      return language === 'en'
+        ? 'Your message is invalid or too long. Please try a shorter message. ✏️'
+        : 'Mesajınız geçersiz veya çok uzun. Lütfen daha kısa bir mesaj deneyin. ✏️';
+    }
+    
+    if (errorMessage.includes('500') || errorMessage.includes('503') || error.status >= 500) {
+      return language === 'en'
+        ? 'Server error. Please try again later. 🔧'
+        : 'Sunucu hatası. Lütfen daha sonra tekrar deneyin. 🔧';
+    }
+    
+    if (errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch') || errorMessage.includes('Network')) {
+      return language === 'en'
+        ? 'Connection error. Please check your internet connection. 🌐'
+        : 'Bağlantı hatası. İnternet bağlantınızı kontrol edin. 🌐';
+    }
+    
+    return language === 'en'
+      ? "I'm having trouble connecting right now. Please try again in a moment. 🔄"
+      : "Şu anda bağlantı kurmakta sorun yaşıyorum. Lütfen bir dakika sonra tekrar deneyin. 🔄";
+  }
+
+  /**
    * Check if the question is related to Shiffy
    */
   private isShiffyRelated(question: string): boolean {
@@ -49,7 +84,11 @@ class ChatService {
   }
 
   /**
-   * Send message to Llama API
+   * Send message to Shiffy Chatbot API
+   * API Format (from documentation):
+   * POST /chatbot/chat
+   * Body: { message: string, history?: Array<{role, content}> }
+   * Response: { success: boolean, data?: { message: string }, error?: string }
    */
   async sendMessage(
     userMessage: string,
@@ -57,64 +96,97 @@ class ChatService {
     language: 'en' | 'tr' = 'en'
   ): Promise<ChatResponse> {
     try {
-      // Check if question is Shiffy-related
-      if (!this.isShiffyRelated(userMessage)) {
+      // Check if API is configured
+      if (!this.apiUrl) {
+        console.warn('API URL not configured, using quick response');
         return {
-          message: this.getOutOfScopeResponse(language)
+          message: this.getQuickResponse(userMessage, language)
         };
       }
 
-      // Prepare messages for API
-      const messages: ChatMessage[] = [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT
-        },
-        ...conversationHistory,
-        {
-          role: 'user',
-          content: userMessage
-        }
-      ];
-
-      // Call Llama API
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` })
-        },
-        body: JSON.stringify({
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 500,
-          top_p: 0.9,
-        })
+      console.log('🔍 ChatService Debug:', {
+        apiUrl: this.apiUrl,
+        hasApiKey: !!this.apiKey,
+        message: userMessage,
+        historyLength: conversationHistory.length
       });
 
+      // Don't filter messages - let AI handle all questions
+      // AI backend has system prompt to guide responses
+
+      // Prepare history in the format expected by Shiffy API
+      // Only include user/assistant messages (no system prompt in history)
+      const history = conversationHistory
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+
+      const requestBody = {
+        message: userMessage,
+        history: history.length > 0 ? history : undefined,
+        system_prompt: SYSTEM_PROMPT, // Send custom system prompt
+      };
+
+      console.log('📤 API Request:', requestBody);
+
+      // Call RunPod Chatbot API via Vite proxy
+      // Development: /api/runpod/api/chatbot (proxied by Vite)
+      // Production: Direct HTTPS call (CORS must be handled)
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Only add x-api-key if calling RunPod directly (not via proxy)
+      if (this.apiKey && !this.apiUrl.startsWith('/api/runpod')) {
+        headers['x-api-key'] = this.apiKey;
+      }
+
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('📥 API Response Status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ API Error Data:', errorData);
+        throw Object.assign(new Error(errorData.detail || errorData.error || `API Error: ${response.status}`), { status: response.status });
       }
 
       const data = await response.json();
-      
-      // Extract message from response (adjust based on your API's response format)
-      const assistantMessage = data.choices?.[0]?.message?.content 
-        || data.response 
-        || data.message
-        || "I apologize, but I couldn't generate a response. Please try again.";
+      console.log('✅ API Response Data:', data);
 
+      // Handle RunPod API response format
+      // Response: { success: true, message: "AI response", model: "...", done: true }
+      if (data.success && data.message) {
+        return {
+          message: data.message
+        };
+      } else if (data.message) {
+        // Some responses might not have success field
+        return {
+          message: data.message
+        };
+      } else if (data.detail) {
+        throw new Error(data.detail);
+      }
+
+      // Fallback if response format is unexpected
       return {
-        message: assistantMessage
+        message: language === 'en'
+          ? "I received an unexpected response. Please try again."
+          : "Beklenmeyen bir yanıt aldım. Lütfen tekrar deneyin."
       };
 
     } catch (error) {
-      console.error('Chat service error:', error);
+      console.error('💥 Chat service error:', error);
       
       return {
-        message: language === 'en' 
-          ? "I'm having trouble connecting right now. Please try again in a moment. 🔄"
-          : "Şu anda bağlantı kurmakta sorun yaşıyorum. Lütfen bir dakika sonra tekrar deneyin. 🔄",
+        message: this.handleApiError(error, language),
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

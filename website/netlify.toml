@@ -1,0 +1,20 @@
+# Netlify configuration
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# Environment variables (set in Netlify dashboard)
+# RUNPOD_API_KEY = eo2fXSAK6Mpq+27+KYtCfHKeHepqRD/tleFGFCNmkIVxC21c/iqmL0zNb3B/D+T/
+
+# Redirects for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API proxy redirect
+[[redirects]]
+  from = "/api/chatbot"
+  to = "/.netlify/functions/chatbot"
+  status = 200
