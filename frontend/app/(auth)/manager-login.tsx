@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { validateEmail, validatePassword } from '../../utils/validation';
 import { loginManager, storeAuthToken } from '../../services/auth';
-import { setCurrentUser } from '../../utils/mock-storage';
+import { saveUserSession } from '../../utils/storage';
 
 export default function ManagerLoginScreen() {
   const router = useRouter();
@@ -41,13 +41,18 @@ export default function ManagerLoginScreen() {
       // Store token
       await storeAuthToken(token, 'manager');
       
-      // Store user in mock storage
-      setCurrentUser({
-        id: manager.id,
-        full_name: manager.store_name,
-        username: manager.email,
-        email: manager.email,
-        user_type: 'manager',
+      // Store user session in AsyncStorage
+      await saveUserSession({
+        user: {
+          id: manager.id,
+          email: manager.email,
+          store_name: manager.store_name,
+          created_at: manager.created_at,
+          subscription_status: manager.subscription_status,
+          subscription_tier: manager.subscription_tier,
+        },
+        userType: 'manager',
+        accessToken: token,
       });
       
       // Navigate to manager dashboard

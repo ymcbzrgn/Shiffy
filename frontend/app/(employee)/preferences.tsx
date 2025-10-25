@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -13,6 +13,13 @@ import {
   countSlotsByStatus,
   getSlotKey
 } from '@/utils/shift-grid-helpers';
+import { 
+  saveShiftPreferences, 
+  loadShiftPreferences, 
+  saveDraft, 
+  loadDraft,
+  getUserSession
+} from '@/utils/storage';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function PreferencesScreen() {
@@ -23,6 +30,67 @@ export default function PreferencesScreen() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
   const [hasChanges, setHasChanges] = useState(false);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Load user session on mount
+  useEffect(() => {
+    getUserSession().then(session => {
+      if (session && session.userType === 'employee') {
+        setEmployeeId(session.user.id);
+      }
+    });
+  }, []);
+  
+  // Load saved preferences when week or employee changes
+  useEffect(() => {
+    if (!employeeId) return;
+    
+    const weekStartStr = formatDateISO(currentWeekStart);
+    
+    // Try to load saved preferences first
+    loadShiftPreferences(employeeId, weekStartStr).then(saved => {
+      if (saved) {
+        setGrid(saved.grid);
+        setHasChanges(false);
+        return;
+      }
+      
+      // If no saved preferences, try to load draft
+      loadDraft(employeeId, weekStartStr).then(draft => {
+        if (draft) {
+          setGrid(draft.grid);
+          setHasChanges(true);
+        } else {
+          setGrid(initializeEmptyGrid());
+          setHasChanges(false);
+        }
+      });
+    });
+  }, [employeeId, currentWeekStart]);
+  
+  // Auto-save draft every 3 seconds when there are changes
+  useEffect(() => {
+    if (!employeeId || !hasChanges) return;
+    
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Set new timer
+    autoSaveTimerRef.current = setTimeout(() => {
+      const weekStartStr = formatDateISO(currentWeekStart);
+      saveDraft(employeeId, weekStartStr, grid);
+    }, 3000);
+    
+    // Cleanup
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [grid, hasChanges, employeeId, currentWeekStart]);
   
   // Update week start when offset changes
   useEffect(() => {
@@ -52,7 +120,9 @@ export default function PreferencesScreen() {
     setWeekOffset(prev => prev + 1);
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!employeeId) return;
+    
     const stats = countSlotsByStatus(grid);
     
     if (stats.available === 0 && stats.unavailable === 0 && stats.offRequest === 0) {
@@ -64,19 +134,24 @@ export default function PreferencesScreen() {
       return;
     }
     
-    Alert.alert(
-      'Tercihler Kaydedildi',
-      `Haftanın tercihleri başarıyla kaydedildi.\n\nMüsait: ${stats.available}\nMüsait Değil: ${stats.unavailable}\nİzin: ${stats.offRequest}`,
-      [
-        {
-          text: 'Tamam',
-          onPress: () => {
-            setHasChanges(false);
-            // TODO: Phase 10 - Save to AsyncStorage and API
-          }
-        }
-      ]
-    );
+    try {
+      const weekStartStr = formatDateISO(currentWeekStart);
+      await saveShiftPreferences(employeeId, weekStartStr, grid);
+      
+      Alert.alert(
+        'Tercihler Kaydedildi',
+        `Haftanın tercihleri başarıyla kaydedildi.\n\nMüsait: ${stats.available}\nMüsait Değil: ${stats.unavailable}\nİzin: ${stats.offRequest}`,
+        [{ text: 'Tamam' }]
+      );
+      
+      setHasChanges(false);
+    } catch (error) {
+      Alert.alert(
+        'Hata',
+        'Tercihler kaydedilemedi. Lütfen tekrar deneyin.',
+        [{ text: 'Tamam' }]
+      );
+    }
   };
   
   const handleReset = () => {

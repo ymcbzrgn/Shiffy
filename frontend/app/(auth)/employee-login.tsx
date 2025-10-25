@@ -13,7 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { employeeLogin } from '../../services/employee-auth';
-import { setCurrentUser } from '../../utils/mock-storage';
+import { saveUserSession } from '../../utils/storage';
 
 export default function EmployeeLoginScreen() {
   const router = useRouter();
@@ -44,18 +44,22 @@ export default function EmployeeLoginScreen() {
         return;
       }
 
-      // Store token and user data (mock for now)
-      // await AsyncStorage.setItem('shiffy_access_token', response.token!);
-      // await AsyncStorage.setItem('shiffy_user_type', 'employee');
-
-      // Store user in mock storage (Phase 10'da AsyncStorage olacak)
+      // Store user session in AsyncStorage
       if (response.employee) {
-        setCurrentUser({
-          id: response.employee.id,
-          full_name: response.employee.full_name,
-          username: response.employee.username,
-          email: `${response.employee.username}@email.com`, // Mock email
-          user_type: 'employee',
+        await saveUserSession({
+          user: {
+            id: response.employee.id,
+            manager_id: '', // Employee doesn't need manager_id here
+            username: response.employee.username,
+            full_name: response.employee.full_name,
+            first_login: response.employee.first_login,
+            manager_notes: null,
+            status: 'active',
+            created_at: '',
+            last_login: null,
+          },
+          userType: 'employee',
+          accessToken: response.token || '',
         });
       }
 

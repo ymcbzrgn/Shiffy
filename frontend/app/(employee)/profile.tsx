@@ -1,6 +1,6 @@
 // Employee Profile Screen - View personal info and settings
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,24 +11,37 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getCurrentUser, clearCurrentUser } from '../../utils/mock-storage';
+import { getUserSession, clearUserSession } from '../../utils/storage';
 
 export default function EmployeeProfileScreen() {
   const router = useRouter();
-
-  // Get logged-in user data
-  const currentUser = getCurrentUser();
-  
-  // Mock employee data (will be replaced with API)
-  const employee = {
-    id: currentUser?.id || '1',
-    full_name: currentUser?.full_name || 'Çalışan',
-    username: currentUser?.username || 'calisan',
-    email: currentUser?.email || 'calisan@email.com',
+  const [employee, setEmployee] = useState({
+    id: '1',
+    full_name: 'Çalışan',
+    username: 'calisan',
+    email: 'calisan@email.com',
     phone: '+90 555 123 4567',
     joined_date: '2025-01-15T10:00:00Z',
     last_login: '2025-10-25T09:30:00Z',
-  };
+  });
+
+  // Load user session on mount
+  useEffect(() => {
+    getUserSession().then(session => {
+      if (session && session.userType === 'employee') {
+        const emp = session.user as any;
+        setEmployee({
+          id: emp.id,
+          full_name: emp.full_name || 'Çalışan',
+          username: emp.username || 'calisan',
+          email: `${emp.username}@email.com`,
+          phone: '+90 555 123 4567',
+          joined_date: emp.created_at || '2025-01-15T10:00:00Z',
+          last_login: emp.last_login || new Date().toISOString(),
+        });
+      }
+    });
+  }, []);
 
   const getInitials = (name: string): string => {
     const words = name.split(' ');
@@ -55,7 +68,7 @@ export default function EmployeeProfileScreen() {
     } as any);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Çıkış Yap',
       'Çıkış yapmak istediğinize emin misiniz?',
@@ -64,11 +77,9 @@ export default function EmployeeProfileScreen() {
         {
           text: 'Çıkış Yap',
           style: 'destructive',
-          onPress: () => {
-            // Clear storage and redirect
-            // await AsyncStorage.removeItem('shiffy_access_token');
-            // await AsyncStorage.removeItem('shiffy_user_type');
-            clearCurrentUser(); // Clear mock storage
+          onPress: async () => {
+            // Clear AsyncStorage and redirect
+            await clearUserSession();
             router.replace('/(auth)/user-select' as any);
           },
         },

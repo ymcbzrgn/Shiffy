@@ -10,13 +10,23 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getCurrentUser } from '../../utils/mock-storage';
+import { getUserSession } from '../../utils/storage';
 
 export default function EmployeeHomeScreen() {
   const router = useRouter();
+  const [userName, setUserName] = useState('Çalışan');
+  const [userInitials, setUserInitials] = useState('C');
   
-  // Get logged-in user data
-  const currentUser = getCurrentUser();
+  // Load user session on mount
+  useEffect(() => {
+    getUserSession().then(session => {
+      if (session && session.userType === 'employee') {
+        const employee = session.user as any;
+        setUserName(employee.full_name || 'Çalışan');
+        setUserInitials(getInitials(employee.full_name || 'C'));
+      }
+    });
+  }, []);
   
   const getInitials = (name: string): string => {
     const words = name.split(' ');
@@ -26,10 +36,10 @@ export default function EmployeeHomeScreen() {
     return name.substring(0, 2).toUpperCase();
   };
   
-  // Employee data from logged-in user
+  // Employee data
   const employee = {
-    name: currentUser?.full_name || 'Çalışan',
-    initials: currentUser ? getInitials(currentUser.full_name) : 'C',
+    name: userName,
+    initials: userInitials,
     hasUnreadNotifications: true,
   };
 
