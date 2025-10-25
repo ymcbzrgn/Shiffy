@@ -45,32 +45,25 @@ export default function EmployeeLoginScreen() {
       setLoading(true);
       const response = await employeeLogin(username.trim(), password);
 
-      if (!response.success) {
-        Alert.alert('Giriş Başarısız', response.message || 'Kullanıcı adı veya şifre hatalı');
-        return;
-      }
-
       // Store user session in AsyncStorage
-      if (response.employee) {
-        await saveUserSession({
-          user: {
-            id: response.employee.id,
-            manager_id: '', // Employee doesn't need manager_id here
-            username: response.employee.username,
-            full_name: response.employee.full_name,
-            first_login: response.employee.first_login,
-            manager_notes: null,
-            status: 'active',
-            created_at: '',
-            last_login: null,
-          },
-          userType: 'employee',
-          accessToken: response.token || '',
-        });
-      }
+      await saveUserSession({
+        user: {
+          id: response.employee.id,
+          manager_id: '', // Employee doesn't need manager_id here
+          username: response.employee.username,
+          full_name: response.employee.full_name,
+          first_login: response.employee.first_login,
+          manager_notes: null,
+          status: 'active',
+          created_at: '',
+          last_login: null,
+        },
+        userType: 'employee',
+        accessToken: response.token,
+      });
 
       // Check if first login
-      if (response.employee?.first_login) {
+      if (response.employee.first_login) {
         Alert.alert(
           'İlk Giriş',
           'Güvenliğiniz için şifrenizi değiştirmeniz gerekmektedir.',
@@ -83,7 +76,7 @@ export default function EmployeeLoginScreen() {
         );
       } else {
         // Navigate to employee home
-        Alert.alert('Hoş Geldiniz', `Merhaba ${response.employee?.full_name}!`, [
+        Alert.alert('Hoş Geldiniz', `Merhaba ${response.employee.full_name}!`, [
           {
             text: 'Tamam',
             onPress: () => {
@@ -93,7 +86,7 @@ export default function EmployeeLoginScreen() {
         ]);
       }
     } catch (error) {
-      Alert.alert('Hata', 'Giriş sırasında bir hata oluştu');
+      Alert.alert('Hata', error instanceof Error ? error.message : 'Giriş sırasında bir hata oluştu');
     } finally {
       setLoading(false);
     }

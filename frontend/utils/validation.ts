@@ -18,11 +18,11 @@ export const validatePassword = (password: string): string | null => {
   if (!password) {
     return 'Şifre gerekli';
   }
-  
-  if (password.length < 6) {
-    return 'Şifre en az 6 karakter olmalı';
+
+  if (password.length < 8) {
+    return 'Şifre en az 8 karakter olmalı';
   }
-  
+
   return null;
 };
 
@@ -75,18 +75,18 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
 // Get password strength as number (0-3 for easy styling)
 export const getPasswordStrength = (password: string): number => {
   if (!password) return 0;
-  
+
   let strength = 0;
-  
-  // Has minimum length (6 chars)
-  if (password.length >= 6) strength++;
-  
+
+  // Has minimum length (8 chars)
+  if (password.length >= 8) strength++;
+
   // Has uppercase
   if (/[A-Z]/.test(password)) strength++;
-  
+
   // Has lowercase
   if (/[a-z]/.test(password)) strength++;
-  
+
   // Has number
   if (/[0-9]/.test(password)) strength++;
   

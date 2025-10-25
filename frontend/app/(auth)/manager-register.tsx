@@ -11,7 +11,7 @@ import {
   validatePasswordMatch,
   calculatePasswordStrength 
 } from '../../utils/validation';
-import { registerManager, storeAuthToken } from '../../services/auth';
+import { registerManager } from '../../services/auth';
 
 export default function ManagerRegisterScreen() {
   const router = useRouter();
@@ -54,10 +54,7 @@ export default function ManagerRegisterScreen() {
         form.email,
         form.password
       );
-      
-      // Store token
-      await storeAuthToken(token, 'manager');
-      
+
       // Navigate to manager dashboard
       router.replace('/(manager)/dashboard' as any);
     } catch (error) {

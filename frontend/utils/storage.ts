@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/config/supabase.config';
 import type { SlotStatus, Employee, Manager } from '@/types';
 
 // Storage Keys
@@ -37,14 +38,33 @@ export async function getUserSession(): Promise<UserSession | null> {
       KEYS.USER_SESSION,
       KEYS.USER_TYPE,
     ]);
-    
+
     if (!userJson || !userType) return null;
-    
+
     const user = JSON.parse(userJson);
+
+    // Get fresh token (auto-refreshes for managers)
+    let accessToken = '';
+
+    if (userType === 'manager') {
+      // For managers: Use Supabase session (auto-refreshes if expired)
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (!error && session?.access_token) {
+        accessToken = session.access_token;
+        // Update AsyncStorage with fresh token
+        await AsyncStorage.setItem('auth_token', session.access_token);
+      }
+    } else {
+      // For employees: Get from AsyncStorage (custom JWT)
+      const token = await AsyncStorage.getItem('auth_token');
+      accessToken = token || '';
+    }
+
     return {
       user,
       userType: userType as 'employee' | 'manager',
-      accessToken: '', // TODO: Add token storage in Phase 11
+      accessToken,
     };
   } catch (error) {
     console.error('Failed to get user session:', error);

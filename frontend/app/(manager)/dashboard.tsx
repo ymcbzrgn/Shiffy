@@ -1,13 +1,72 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatCard } from '../../components/features/StatCard';
 import { QuickActionButton } from '../../components/features/QuickActionButton';
+import { getEmployees } from '../../services/employee';
+import { getShiftRequests } from '../../services/shift';
+import { getManagerSchedule } from '../../services/schedule';
+import { getUserSession } from '../../utils/storage';
+import { getWeekStart, formatDateISO } from '../../utils/shift-grid-helpers';
 
 export default function ManagerDashboardScreen() {
   const router = useRouter();
+
+  // State
+  const [storeName, setStoreName] = useState('Yönetici');
+  const [stats, setStats] = useState({
+    employeeCount: 0,
+    pendingPreferences: 0,
+    weekShifts: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Load dashboard stats on mount
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+
+      // Get manager info
+      const session = await getUserSession();
+      if (session && session.userType === 'manager') {
+        setStoreName(session.user.store_name || 'Yönetici');
+      }
+
+      // Calculate week dates
+      const today = new Date();
+      const currentWeekStart = getWeekStart(today);
+      const nextWeekStart = new Date(currentWeekStart);
+      nextWeekStart.setDate(currentWeekStart.getDate() + 7);
+
+      const currentWeek = formatDateISO(currentWeekStart);
+      const nextWeek = formatDateISO(nextWeekStart);
+
+      // Load data in parallel
+      const [employees, preferences, schedule] = await Promise.all([
+        getEmployees().catch(() => []),
+        getShiftRequests(nextWeek).catch(() => []),
+        getManagerSchedule(currentWeek).catch(() => null)
+      ]);
+
+      // Calculate stats
+      setStats({
+        employeeCount: employees.length,
+        pendingPreferences: preferences.filter(p => p.submitted_at !== null).length,
+        weekShifts: schedule?.shifts?.length || 0
+      });
+    } catch (error) {
+      console.error('Failed to load dashboard stats:', error);
+      Alert.alert('Hata', 'İstatistikler yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -19,7 +78,7 @@ export default function ManagerDashboardScreen() {
           text: 'Çıkış Yap',
           style: 'destructive',
           onPress: () => {
-            // Clear auth token (Phase 7'de implement edilecek)
+            // Clear auth token
             router.replace('/(auth)/user-select' as any);
           },
         },
@@ -39,9 +98,9 @@ export default function ManagerDashboardScreen() {
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.headerTitle}>Yönetici Paneli</Text>
-            <Text style={styles.headerSubtitle}>Hoş geldiniz, Kahve Dükkanı</Text>
+            <Text style={styles.headerSubtitle}>Hoş geldiniz, {storeName}</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.logoutButton}
             onPress={handleLogout}
           >
@@ -51,67 +110,76 @@ export default function ManagerDashboardScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
-        {/* Stat Cards */}
-        <View style={styles.statsGrid}>
-          <StatCard
-            title="Toplam Çalışan"
-            value="24"
-            icon="group"
-            color="#1193d4"
-            bgColor="rgba(17, 147, 212, 0.1)"
-          />
-          <StatCard
-            title="Bekleyen Tercihler"
-            value="12"
-            icon="pending-actions"
-            color="#F0AD4E"
-            bgColor="rgba(240, 173, 78, 0.1)"
-          />
-          <StatCard
-            title="Bu Hafta Shift"
-            value="156"
-            icon="event"
-            color="#078836"
-            bgColor="rgba(7, 136, 54, 0.1)"
-          />
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
-          <View style={styles.quickActionsGrid}>
-            <QuickActionButton
-              title="Çalışan Ekle"
-              icon="person-add"
-              onPress={() => router.push('/(manager)/employees/add' as any)}
-            />
-            <QuickActionButton
-              title="Çalışan Listesi"
-              icon="groups"
-              onPress={() => router.push('/(manager)/employees' as any)}
-            />
-            <QuickActionButton
-              title="Shift İnceleme"
-              icon="calendar-month"
-              onPress={() => router.push('/(manager)/shift-review' as any)}
-            />
-            <QuickActionButton
-              title="Ayarlar"
-              icon="settings"
-              onPress={() => router.push('/(manager)/settings' as any)}
-            />
-            <QuickActionButton
-              title="Raporlar"
-              icon="analytics"
-              onPress={() => Alert.alert('Raporlar', 'Gelecek versiyonda')}
-            />
-            <QuickActionButton
-              title="Yardım"
-              icon="help"
-              onPress={() => Alert.alert('Yardım', 'Gelecek versiyonda')}
-            />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#1193d4" />
+            <Text style={styles.loadingText}>İstatistikler yükleniyor...</Text>
           </View>
-        </View>
+        ) : (
+          <>
+            {/* Stat Cards */}
+            <View style={styles.statsGrid}>
+              <StatCard
+                title="Toplam Çalışan"
+                value={stats.employeeCount.toString()}
+                icon="group"
+                color="#1193d4"
+                bgColor="rgba(17, 147, 212, 0.1)"
+              />
+              <StatCard
+                title="Bekleyen Tercihler"
+                value={stats.pendingPreferences.toString()}
+                icon="pending-actions"
+                color="#F0AD4E"
+                bgColor="rgba(240, 173, 78, 0.1)"
+              />
+              <StatCard
+                title="Bu Hafta Shift"
+                value={stats.weekShifts.toString()}
+                icon="event"
+                color="#078836"
+                bgColor="rgba(7, 136, 54, 0.1)"
+              />
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.quickActionsContainer}>
+              <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
+              <View style={styles.quickActionsGrid}>
+                <QuickActionButton
+                  title="Çalışan Ekle"
+                  icon="person-add"
+                  onPress={() => router.push('/(manager)/employees/add' as any)}
+                />
+                <QuickActionButton
+                  title="Çalışan Listesi"
+                  icon="groups"
+                  onPress={() => router.push('/(manager)/employees' as any)}
+                />
+                <QuickActionButton
+                  title="Shift İnceleme"
+                  icon="calendar-month"
+                  onPress={() => router.push('/(manager)/shift-review' as any)}
+                />
+                <QuickActionButton
+                  title="Ayarlar"
+                  icon="settings"
+                  onPress={() => router.push('/(manager)/settings' as any)}
+                />
+                <QuickActionButton
+                  title="Raporlar"
+                  icon="analytics"
+                  onPress={() => Alert.alert('Raporlar', 'Gelecek versiyonda')}
+                />
+                <QuickActionButton
+                  title="Yardım"
+                  icon="help"
+                  onPress={() => Alert.alert('Yardım', 'Gelecek versiyonda')}
+                />
+              </View>
+            </View>
+          </>
+        )}
       </View>
     </ScrollView>
   );
@@ -154,6 +222,16 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#617c89',
   },
   statsGrid: {
     marginBottom: 32,

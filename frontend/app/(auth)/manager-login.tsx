@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { validateEmail, validatePassword } from '../../utils/validation';
-import { loginManager, storeAuthToken } from '../../services/auth';
+import { loginManager } from '../../services/auth';
 import { saveUserSession } from '../../utils/storage';
 
 const { width, height } = Dimensions.get('window');
@@ -68,10 +68,7 @@ export default function ManagerLoginScreen() {
     
     try {
       const { manager, token } = await loginManager(form.email, form.password);
-      
-      // Store token
-      await storeAuthToken(token, 'manager');
-      
+
       // Store user session in AsyncStorage
       await saveUserSession({
         user: {

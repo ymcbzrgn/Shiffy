@@ -19,6 +19,7 @@ export interface Employee {
   username: string;
   full_name: string;
   job_description: string | null; // e.g., "Cashier, Server" - comma-separated roles
+  max_weekly_hours: number | null; // 0-150, 0=on leave, null=no limit
   first_login: boolean;
   manager_notes: string | null;
   status: 'active' | 'inactive';

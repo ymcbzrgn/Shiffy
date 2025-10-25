@@ -104,3 +104,41 @@ export function countSlotsByStatus(grid: Record<string, SlotStatus>) {
     { available: 0, unavailable: 0, offRequest: 0, empty: 0 }
   );
 }
+
+// ====================================================================
+// BACKEND API CONVERSION HELPERS
+// ====================================================================
+
+import type { TimeSlot } from '@/types';
+
+/**
+ * Convert grid object to TimeSlot array for backend API
+ * Only includes non-null slots (skips empty slots)
+ */
+export function gridToSlots(grid: Record<string, SlotStatus>): TimeSlot[] {
+  const slots: TimeSlot[] = [];
+
+  Object.entries(grid).forEach(([key, status]) => {
+    if (status !== null) {
+      const { day, time } = parseSlotKey(key);
+      slots.push({ day, time, status });
+    }
+  });
+
+  return slots;
+}
+
+/**
+ * Convert TimeSlot array from backend API to grid object
+ * Initializes empty grid and populates with slots
+ */
+export function slotsToGrid(slots: TimeSlot[]): Record<string, SlotStatus> {
+  const grid = initializeEmptyGrid();
+
+  slots.forEach(slot => {
+    const key = getSlotKey(slot.day, slot.time);
+    grid[key] = slot.status;
+  });
+
+  return grid;
+}

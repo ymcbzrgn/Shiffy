@@ -115,7 +115,7 @@ export default function EmployeePasswordResetScreen() {
   };
 
   // Password requirements
-  const hasMinLength = newPassword.length >= 6;
+  const hasMinLength = newPassword.length >= 8;
   const hasUpperCase = /[A-Z]/.test(newPassword);
   const hasLowerCase = /[a-z]/.test(newPassword);
   const hasNumber = /[0-9]/.test(newPassword);
@@ -286,7 +286,7 @@ export default function EmployeePasswordResetScreen() {
                       color="#ffffff"
                     />
                   </View>
-                  <Text style={styles.requirementText}>En az 6 karakter</Text>
+                  <Text style={styles.requirementText}>En az 8 karakter</Text>
                 </View>
                 <View style={styles.requirement}>
                   <View

@@ -12,7 +12,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Employee } from '../../../types';
-import { getEmployeeById, updateEmployeeNotes, toggleEmployeeStatus } from '../../../services/employee';
+import { getEmployee, updateEmployeeNotes, toggleEmployeeStatus } from '../../../services/employee';
 import { Loading } from '../../../components/ui/Loading';
 
 export default function EmployeeDetailScreen() {
@@ -31,11 +31,11 @@ export default function EmployeeDetailScreen() {
   const loadEmployee = async () => {
     try {
       setLoading(true);
-      const data = await getEmployeeById(id);
+      const data = await getEmployee(id);
       setEmployee(data);
       setNotes(data.manager_notes || '');
     } catch (error) {
-      Alert.alert('Hata', 'Çalışan bilgileri yüklenemedi');
+      Alert.alert('Hata', error instanceof Error ? error.message : 'Çalışan bilgileri yüklenemedi');
       router.back();
     } finally {
       setLoading(false);

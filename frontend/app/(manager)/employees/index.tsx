@@ -23,11 +23,11 @@ export default function EmployeeListScreen() {
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      const data = await getEmployees('mgr-1'); // Mock manager ID
+      const data = await getEmployees();
       setEmployees(data);
       setFilteredEmployees(data);
     } catch (error) {
-      Alert.alert('Hata', 'Çalışanlar yüklenemedi');
+      Alert.alert('Hata', error instanceof Error ? error.message : 'Çalışanlar yüklenemedi');
     } finally {
       setLoading(false);
     }
@@ -35,17 +35,17 @@ export default function EmployeeListScreen() {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query) {
       setFilteredEmployees(employees);
       return;
     }
-    
+
     try {
-      const results = await searchEmployees('mgr-1', query);
+      const results = await searchEmployees(query);
       setFilteredEmployees(results);
     } catch (error) {
-      Alert.alert('Hata', 'Arama başarısız');
+      Alert.alert('Hata', error instanceof Error ? error.message : 'Arama başarısız');
     }
   };
 

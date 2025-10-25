@@ -5,26 +5,27 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { SlotStatus, DayOfWeek } from '@/types';
 import { ShiftGrid } from '@/components/features/ShiftGrid';
-import { 
-  initializeEmptyGrid, 
-  cycleSlotStatus, 
-  getWeekStart, 
+import {
+  initializeEmptyGrid,
+  cycleSlotStatus,
+  getWeekStart,
   formatWeekRange,
   formatDateISO,
   countSlotsByStatus,
-  getSlotKey
+  getSlotKey,
+  gridToSlots,
+  slotsToGrid
 } from '@/utils/shift-grid-helpers';
-import { 
-  saveShiftPreferences, 
-  loadShiftPreferences, 
-  saveDraft, 
+import {
+  saveDraft,
   loadDraft,
   getUserSession
 } from '@/utils/storage';
+import { submitPreferences, getMyPreferences } from '@/services/shift';
 
 export default function PreferencesScreen() {
   const [grid, setGrid] = useState<Record<string, SlotStatus>>(initializeEmptyGrid());
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(1);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
   const [hasChanges, setHasChanges] = useState(false);
   const [employeeId, setEmployeeId] = useState<string | null>(null);
@@ -42,18 +43,31 @@ export default function PreferencesScreen() {
   // Load saved preferences when week or employee changes
   useEffect(() => {
     if (!employeeId) return;
-    
+
     const weekStartStr = formatDateISO(currentWeekStart);
-    
-    // Try to load saved preferences first
-    loadShiftPreferences(employeeId, weekStartStr).then(saved => {
-      if (saved) {
-        setGrid(saved.grid);
+
+    // Try to load saved preferences from backend first
+    getMyPreferences(weekStartStr).then(saved => {
+      if (saved && saved.slots) {
+        // Convert backend TimeSlot[] to grid format
+        setGrid(slotsToGrid(saved.slots));
         setHasChanges(false);
         return;
       }
-      
-      // If no saved preferences, try to load draft
+
+      // If no saved preferences, try to load draft (local storage)
+      loadDraft(employeeId, weekStartStr).then(draft => {
+        if (draft) {
+          setGrid(draft.grid);
+          setHasChanges(true);
+        } else {
+          setGrid(initializeEmptyGrid());
+          setHasChanges(false);
+        }
+      });
+    }).catch(error => {
+      console.error('Failed to load preferences:', error);
+      // Fallback to draft on error
       loadDraft(employeeId, weekStartStr).then(draft => {
         if (draft) {
           setGrid(draft.grid);
@@ -119,9 +133,9 @@ export default function PreferencesScreen() {
   
   const handleSave = async () => {
     if (!employeeId) return;
-    
+
     const stats = countSlotsByStatus(grid);
-    
+
     if (stats.available === 0 && stats.unavailable === 0 && stats.offRequest === 0) {
       Alert.alert(
         'Boş Tercih',
@@ -130,22 +144,27 @@ export default function PreferencesScreen() {
       );
       return;
     }
-    
+
     try {
       const weekStartStr = formatDateISO(currentWeekStart);
-      await saveShiftPreferences(employeeId, weekStartStr, grid);
-      
+
+      // Convert grid to TimeSlot array for backend
+      const slots = gridToSlots(grid);
+
+      // Submit to backend API
+      await submitPreferences(weekStartStr, slots);
+
       Alert.alert(
         'Tercihler Kaydedildi',
         `Haftanın tercihleri başarıyla kaydedildi.\n\nMüsait: ${stats.available}\nMüsait Değil: ${stats.unavailable}\nİzin: ${stats.offRequest}`,
         [{ text: 'Tamam' }]
       );
-      
+
       setHasChanges(false);
     } catch (error) {
       Alert.alert(
         'Hata',
-        'Tercihler kaydedilemedi. Lütfen tekrar deneyin.',
+        error instanceof Error ? error.message : 'Tercihler kaydedilemedi. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }]
       );
     }

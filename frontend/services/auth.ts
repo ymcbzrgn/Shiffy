@@ -1,88 +1,100 @@
-// Manager Authentication Service
-// Mock implementation - will be replaced with Supabase calls
-
+import { supabase } from '../config/supabase.config';
 import { Manager } from '../types';
+import { saveToken, clearToken } from './api-client';
 
-const USE_MOCK = true;
+/**
+ * Manager Login (Supabase Auth)
+ */
+export async function loginManager(
+  email: string,
+  password: string
+): Promise<{ manager: Manager; token: string }> {
+  // Sign in with Supabase
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-// Mock manager data
-const MOCK_MANAGER: Manager = {
-  id: 'mgr-1',
-  store_name: 'Kahve Dükkanı',
-  email: 'yonetici@test.com',
-  created_at: '2025-01-01T00:00:00Z',
-  subscription_status: 'active',
-  subscription_tier: 'premium'
-};
-
-// Mock login - simulates Supabase auth
-export async function loginManager(email: string, password: string): Promise<{ manager: Manager; token: string }> {
-  if (USE_MOCK) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Mock validation (accept yonetici@test.com / 123456)
-    if (email === 'yonetici@test.com' && password === '123456') {
-      return {
-        manager: MOCK_MANAGER,
-        token: 'mock_jwt_token_manager_' + Date.now()
-      };
-    }
-    
-    throw new Error('Email veya şifre hatalı');
+  if (error) {
+    throw new Error(error.message);
   }
-  
-  // Real Supabase implementation will go here
-  // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  throw new Error('Real auth not implemented yet');
+
+  if (!data.user || !data.session) {
+    throw new Error('Login failed');
+  }
+
+  // Save token for API requests
+  await saveToken(data.session.access_token);
+
+  // Fetch manager profile from database
+  const { data: managerData, error: profileError } = await supabase
+    .from('managers')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profileError || !managerData) {
+    throw new Error('Failed to fetch manager profile');
+  }
+
+  return {
+    manager: managerData as Manager,
+    token: data.session.access_token,
+  };
 }
 
-// Mock register - simulates Supabase auth
+/**
+ * Manager Registration (Supabase Auth)
+ */
 export async function registerManager(
   storeName: string,
   email: string,
   password: string
 ): Promise<{ manager: Manager; token: string }> {
-  if (USE_MOCK) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    // Mock email check (reject if already exists)
-    if (email === 'yonetici@test.com') {
-      throw new Error('Bu email zaten kullanılıyor');
-    }
-    
-    const newManager: Manager = {
-      id: 'mgr-' + Date.now(),
-      store_name: storeName,
-      email: email,
-      created_at: new Date().toISOString(),
-      subscription_status: 'trial',
-      subscription_tier: 'basic'
-    };
-    
-    return {
-      manager: newManager,
-      token: 'mock_jwt_token_manager_' + Date.now()
-    };
+  // Create auth user
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
-  
-  // Real Supabase implementation will go here
-  // const { data, error } = await supabase.auth.signUp({ email, password });
-  throw new Error('Real auth not implemented yet');
+
+  if (!data.user || !data.session) {
+    throw new Error('Registration failed');
+  }
+
+  // Create manager profile
+  const { data: managerData, error: profileError } = await supabase
+    .from('managers')
+    .insert({
+      id: data.user.id,
+      email,
+      store_name: storeName,
+      subscription_status: 'trial',
+      subscription_tier: 'basic',
+    })
+    .select()
+    .single();
+
+  if (profileError || !managerData) {
+    throw new Error('Failed to create manager profile');
+  }
+
+  // Save token
+  await saveToken(data.session.access_token);
+
+  return {
+    manager: managerData as Manager,
+    token: data.session.access_token,
+  };
 }
 
-// Store auth token in AsyncStorage
-export async function storeAuthToken(token: string, userType: 'manager' | 'employee'): Promise<void> {
-  // TODO: Use AsyncStorage when implementing real auth
-  // await AsyncStorage.setItem('shiffy_access_token', token);
-  // await AsyncStorage.setItem('shiffy_user_type', userType);
-  console.log('Stored token:', token, 'for', userType);
-}
-
-// Get stored token
-export async function getAuthToken(): Promise<string | null> {
-  // TODO: Use AsyncStorage when implementing real auth
-  // return await AsyncStorage.getItem('shiffy_access_token');
-  return null;
+/**
+ * Logout (clear session)
+ */
+export async function logoutManager(): Promise<void> {
+  await supabase.auth.signOut();
+  await clearToken();
 }

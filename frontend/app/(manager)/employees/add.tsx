@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { validateRequired } from '../../../utils/validation';
-import { addEmployee } from '../../../services/employee';
+import { createEmployee } from '../../../services/employee';
 
 export default function AddEmployeeScreen() {
   const router = useRouter();
@@ -65,16 +65,16 @@ export default function AddEmployeeScreen() {
     
     setErrors({});
     setLoading(true);
-    
+
     try {
-      const { employee, password } = await addEmployee(
-        'mgr-1', // Mock manager ID
+      const { employee, tempPassword } = await createEmployee(
         form.fullName,
         form.username,
-        form.jobDescription || null
+        form.jobDescription || null,
+        parseInt(form.maxWeeklyHours) || null
       );
-      
-      setGeneratedPassword(password);
+
+      setGeneratedPassword(tempPassword);
       setSuccessModal(true);
     } catch (error) {
       Alert.alert('Hata', error instanceof Error ? error.message : 'Çalışan eklenemedi');

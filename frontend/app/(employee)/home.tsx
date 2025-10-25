@@ -7,29 +7,72 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserSession } from '../../utils/storage';
+import { getMyPreferences } from '../../services/shift';
+import { getWeekStart, formatWeekRange, formatDateISO } from '../../utils/shift-grid-helpers';
 
 export default function EmployeeHomeScreen() {
   const router = useRouter();
   const [userName, setUserName] = useState('Çalışan');
   const [userInitials, setUserInitials] = useState('C');
   const [pressedButton, setPressedButton] = useState<string | null>(null);
-  
+  const [weekStatus, setWeekStatus] = useState({
+    week: '',
+    daysRemaining: 0,
+    hasSubmittedPreferences: false
+  });
+  const [loading, setLoading] = useState(true);
+
   // Load user session on mount
   useEffect(() => {
-    getUserSession().then(session => {
+    loadEmployeeData();
+  }, []);
+
+  const loadEmployeeData = async () => {
+    try {
+      setLoading(true);
+
+      // Get user session
+      const session = await getUserSession();
       if (session && session.userType === 'employee') {
         const employee = session.user as any;
         setUserName(employee.full_name || 'Çalışan');
         setUserInitials(getInitials(employee.full_name || 'C'));
       }
-    });
-  }, []);
-  
+
+      // Calculate next week (offset +1)
+      const today = new Date();
+      const nextWeekStart = getWeekStart(today);
+      nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+
+      const weekRange = formatWeekRange(nextWeekStart);
+
+      // Calculate days to Friday (deadline)
+      const friday = new Date(nextWeekStart);
+      friday.setDate(friday.getDate() + 4); // Monday + 4 = Friday
+      const daysRemaining = Math.ceil((friday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Check if preferences submitted
+      const weekStartStr = formatDateISO(nextWeekStart);
+      const preferences = await getMyPreferences(weekStartStr).catch(() => null);
+
+      setWeekStatus({
+        week: weekRange,
+        daysRemaining: Math.max(0, daysRemaining),
+        hasSubmittedPreferences: preferences?.submitted_at !== null
+      });
+    } catch (error) {
+      console.error('Failed to load employee data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getInitials = (name: string): string => {
     const words = name.split(' ');
     if (words.length >= 2) {
@@ -37,18 +80,12 @@ export default function EmployeeHomeScreen() {
     }
     return name.substring(0, 2).toUpperCase();
   };
-  
+
   // Employee data
   const employee = {
     name: userName,
     initials: userInitials,
     hasUnreadNotifications: true,
-  };
-
-  const weekStatus = {
-    week: '25-31 Ekim',
-    daysRemaining: 2,
-    hasSubmittedPreferences: false, // false = needs action, true = pending approval
   };
 
   const handleGoToPreferences = () => {
@@ -77,7 +114,7 @@ export default function EmployeeHomeScreen() {
             <Text style={styles.userName}>{employee.name}</Text>
           </View>
         </View>
-        
+
         <TouchableOpacity style={styles.notificationButton}>
           <MaterialIcons name="notifications" size={24} color="#ffffff" />
           {employee.hasUnreadNotifications && <View style={styles.notificationDot} />}
@@ -88,63 +125,72 @@ export default function EmployeeHomeScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Bu Haftanın Durumu</Text>
 
-        {/* Conditional Card - Action Required or Pending */}
-        {!weekStatus.hasSubmittedPreferences ? (
-          // Action Required Card
-          <View style={styles.actionRequiredCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="error" size={28} color="#D9534F" />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardBadge}>TERCİHLERİN BEKLENİYOR</Text>
-                <Text style={styles.cardTitle}>
-                  Bu haftaki shift tercihlerini henüz girmedin
-                </Text>
-                <Text style={styles.cardSubtitle}>
-                  {weekStatus.week} · Son gün:{' '}
-                  <Text style={styles.daysRemainingText}>{weekStatus.daysRemaining} gün</Text>
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={handleGoToPreferences}
-              style={styles.actionButton}
-            >
-              <MaterialIcons name="edit-calendar" size={20} color="#ffffff" />
-              <Text style={styles.actionButtonText}>Tercihleri Gir</Text>
-            </TouchableOpacity>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#1193d4" />
+            <Text style={styles.loadingText}>Yükleniyor...</Text>
           </View>
         ) : (
-          // Pending Approval Card
-          <View style={styles.pendingCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconContainerPending}>
-                <MaterialIcons name="pending" size={28} color="#F0AD4E" />
+          <>
+            {/* Conditional Card - Action Required or Pending */}
+            {!weekStatus.hasSubmittedPreferences ? (
+              // Action Required Card
+              <View style={styles.actionRequiredCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconContainer}>
+                    <MaterialIcons name="error" size={28} color="#D9534F" />
+                  </View>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.cardBadge}>TERCİHLERİN BEKLENİYOR</Text>
+                    <Text style={styles.cardTitle}>
+                      Bu haftaki shift tercihlerini henüz girmedin
+                    </Text>
+                    <Text style={styles.cardSubtitle}>
+                      {weekStatus.week} · Son gün:{' '}
+                      <Text style={styles.daysRemainingText}>{weekStatus.daysRemaining} gün</Text>
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={handleGoToPreferences}
+                  style={styles.actionButton}
+                >
+                  <MaterialIcons name="edit-calendar" size={20} color="#ffffff" />
+                  <Text style={styles.actionButtonText}>Tercihleri Gir</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardBadgePending}>TERCİHLER GÖNDERİLDİ</Text>
-                <Text style={styles.cardTitle}>
-                  Tercihlerin yönetici onayı bekliyor
-                </Text>
-                <Text style={styles.cardSubtitle}>
-                  {weekStatus.week} · Gönderildi: 23 Ekim
-                </Text>
+            ) : (
+              // Pending Approval Card
+              <View style={styles.pendingCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconContainerPending}>
+                    <MaterialIcons name="pending" size={28} color="#F0AD4E" />
+                  </View>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.cardBadgePending}>TERCİHLER GÖNDERİLDİ</Text>
+                    <Text style={styles.cardTitle}>
+                      Tercihlerin yönetici onayı bekliyor
+                    </Text>
+                    <Text style={styles.cardSubtitle}>
+                      {weekStatus.week}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={handleViewPreferences}
+                  style={styles.viewButton}
+                >
+                  <MaterialIcons name="visibility" size={20} color="#F0AD4E" />
+                  <Text style={styles.viewButtonText}>Tercihleri Görüntüle</Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity
-              onPress={handleViewPreferences}
-              style={styles.viewButton}
-            >
-              <MaterialIcons name="visibility" size={20} color="#F0AD4E" />
-              <Text style={styles.viewButtonText}>Tercihleri Görüntüle</Text>
-            </TouchableOpacity>
-          </View>
+            )}
+          </>
         )}
 
         {/* Quick Actions */}
         <Text style={[styles.sectionTitle, styles.quickActionsTitle]}>Hızlı Erişim</Text>
-        
+
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickActionButton}
@@ -309,6 +355,16 @@ const styles = StyleSheet.create({
   },
   quickActionsTitle: {
     marginTop: 16,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#617c89',
   },
   actionRequiredCard: {
     backgroundColor: 'rgba(217, 83, 79, 0.05)',
