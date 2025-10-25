@@ -123,12 +123,21 @@ export async function getManagerSchedule(weekStart: string): Promise<ScheduleRes
  * @throws Error if fetch fails
  */
 export async function getMySchedule(weekStart: string): Promise<MyScheduleResponse | null> {
+  console.log(`🔍 Fetching my schedule for week: ${weekStart}`);
+  
   const response = await apiClient<MyScheduleResponse | null>(
     `/api/schedules/my-schedule?week=${weekStart}`,
     {
       method: 'GET',
     }
   );
+
+  console.log(`📥 Response for ${weekStart}:`, {
+    success: response.success,
+    hasData: !!response.data,
+    shiftCount: response.data?.shifts?.length || 0,
+    error: response.error
+  });
 
   if (!response.success) {
     throw new Error(response.error || 'Failed to fetch schedule');

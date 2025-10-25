@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -110,8 +110,11 @@ function convertAssignedShiftToShift(
 
   const isPast = shiftDate < today;
 
+  // Generate unique ID from date, day, and time
+  const uniqueId = `${date}-${assignedShift.day}-${assignedShift.start_time}`;
+
   return {
-    id: assignedShift.id,
+    id: uniqueId,
     date,
     dayName: TURKISH_DAYS[assignedShift.day],
     startTime: assignedShift.start_time,
@@ -141,18 +144,29 @@ export default function MyShiftsScreen() {
 
       // Get store name from user session
       const session = await getUserSession();
-      const userStoreName = session?.user?.full_name || 'Mağaza';
+      const userStoreName = (session?.user as any)?.full_name || 'Mağaza';
       setStoreName(userStoreName);
 
       // Load schedules for 8 weeks (4 past + current + 3 future)
       const weeksToLoad = getWeeksToLoad(4, 3);
+      
+      console.log('📅 Loading shifts for weeks:', weeksToLoad);
 
       // Fetch all weeks in parallel
       const schedulePromises = weeksToLoad.map(weekStart =>
-        getMySchedule(weekStart).catch(() => null)
+        getMySchedule(weekStart).catch((err) => {
+          console.log(`❌ Failed to load week ${weekStart}:`, err);
+          return null;
+        })
       );
 
       const schedules = await Promise.all(schedulePromises);
+      
+      console.log('📊 Loaded schedules:', schedules.map((s, i) => ({
+        week: weeksToLoad[i],
+        hasData: !!s,
+        shiftCount: s?.shifts?.length || 0
+      })));
 
       // Convert all shifts to frontend format
       const allShifts: Shift[] = [];
@@ -160,6 +174,7 @@ export default function MyShiftsScreen() {
       schedules.forEach((schedule, index) => {
         if (schedule && schedule.shifts && schedule.shifts.length > 0) {
           const weekStart = weeksToLoad[index];
+          console.log(`✅ Processing ${schedule.shifts.length} shifts for week ${weekStart}`);
           schedule.shifts.forEach(assignedShift => {
             allShifts.push(
               convertAssignedShiftToShift(assignedShift, weekStart, userStoreName)
@@ -170,6 +185,8 @@ export default function MyShiftsScreen() {
 
       // Sort by date (ascending)
       allShifts.sort((a, b) => a.date.localeCompare(b.date));
+      
+      console.log(`✅ Total shifts loaded: ${allShifts.length}`);
 
       setShifts(allShifts);
     } catch (error) {
@@ -242,19 +259,60 @@ export default function MyShiftsScreen() {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <View style={styles.emptyIcon}>
-        <MaterialIcons name="event-busy" size={48} color="#ffffff" />
+  const renderEmptyState = () => {
+    const getMessage = () => {
+      if (shifts.length === 0) {
+        // No shifts at all in any week
+        return {
+          icon: 'info-outline',
+          title: 'Henüz Shift Atanmamış',
+          message: 'Yöneticiniz henüz bu haftalara shift atamamış.\n\nShift tercihlerinizi girmeyi unutmayın.',
+          color: '#1193d4',
+        };
+      } else if (currentTab === 'upcoming' && filteredShifts.length === 0) {
+        return {
+          icon: 'event-available',
+          title: 'Yaklaşan Shift Yok',
+          message: 'Şu anda yaklaşan bir shift bulunmuyor.',
+          color: '#078836',
+        };
+      } else if (currentTab === 'past' && filteredShifts.length === 0) {
+        return {
+          icon: 'history',
+          title: 'Geçmiş Shift Yok',
+          message: 'Henüz tamamlanmış shift bulunmuyor.',
+          color: '#617c89',
+        };
+      }
+      return {
+        icon: 'event-busy',
+        title: 'Shift Bulunamadı',
+        message: 'Bu kategoride shift bulunmuyor.',
+        color: '#617c89',
+      };
+    };
+
+    const { icon, title, message, color } = getMessage();
+
+    return (
+      <View style={styles.emptyState}>
+        <View style={[styles.emptyIcon, { backgroundColor: color }]}>
+          <MaterialIcons name={icon as any} size={48} color="#ffffff" />
+        </View>
+        <Text style={styles.emptyTitle}>{title}</Text>
+        <Text style={styles.emptyText}>{message}</Text>
+        {shifts.length === 0 && (
+          <TouchableOpacity
+            onPress={() => router.push('/(employee)/preferences' as any)}
+            style={styles.emptyButton}
+          >
+            <MaterialIcons name="edit-calendar" size={20} color="#ffffff" />
+            <Text style={styles.emptyButtonText}>Tercihleri Gir</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      <Text style={styles.emptyTitle}>
-        Shift Bulunamadı
-      </Text>
-      <Text style={styles.emptyText}>
-        Bu kategoride henüz shift bulunmuyor.
-      </Text>
-    </View>
-  );
+    );
+  };
 
   const renderLoadingState = () => (
     <View style={styles.loadingContainer}>
@@ -281,7 +339,17 @@ export default function MyShiftsScreen() {
         </TouchableOpacity>
       </LinearGradient>
 
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadShifts}
+            colors={['#1193d4']}
+            tintColor="#1193d4"
+          />
+        }
+      >
         {loading ? (
           renderLoadingState()
         ) : (
@@ -493,7 +561,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(17, 147, 212, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -503,10 +570,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
     color: '#111618',
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 14,
     textAlign: 'center',
     color: '#617c89',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    backgroundColor: '#1193d4',
+  },
+  emptyButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });

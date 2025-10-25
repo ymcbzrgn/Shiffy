@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserSession } from '../../utils/storage';
 import { getMyPreferences } from '../../services/shift';
+import { getMySchedule } from '../../services/schedule';
 import { getWeekStart, formatWeekRange, formatDateISO } from '../../utils/shift-grid-helpers';
 
 export default function EmployeeHomeScreen() {
@@ -23,7 +24,9 @@ export default function EmployeeHomeScreen() {
   const [weekStatus, setWeekStatus] = useState({
     week: '',
     daysRemaining: 0,
-    hasSubmittedPreferences: false
+    hasSubmittedPreferences: false,
+    scheduleApproved: false,
+    hasShifts: false
   });
   const [loading, setLoading] = useState(true);
 
@@ -44,26 +47,30 @@ export default function EmployeeHomeScreen() {
         setUserInitials(getInitials(employee.full_name || 'C'));
       }
 
-      // Calculate next week (offset +1)
+      // Calculate current week (this week)
       const today = new Date();
-      const nextWeekStart = getWeekStart(today);
-      nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+      const currentWeekStart = getWeekStart(today);
 
-      const weekRange = formatWeekRange(nextWeekStart);
+      const weekRange = formatWeekRange(currentWeekStart);
 
       // Calculate days to Friday (deadline)
-      const friday = new Date(nextWeekStart);
+      const friday = new Date(currentWeekStart);
       friday.setDate(friday.getDate() + 4); // Monday + 4 = Friday
       const daysRemaining = Math.ceil((friday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
       // Check if preferences submitted
-      const weekStartStr = formatDateISO(nextWeekStart);
+      const weekStartStr = formatDateISO(currentWeekStart);
       const preferences = await getMyPreferences(weekStartStr).catch(() => null);
+
+      // Check if schedule is approved
+      const schedule = await getMySchedule(weekStartStr).catch(() => null);
 
       setWeekStatus({
         week: weekRange,
         daysRemaining: Math.max(0, daysRemaining),
-        hasSubmittedPreferences: preferences?.submitted_at !== null
+        hasSubmittedPreferences: preferences?.submitted_at !== null,
+        scheduleApproved: schedule?.status === 'approved',
+        hasShifts: !!(schedule && schedule.shifts.length > 0)
       });
     } catch (error) {
       console.error('Failed to load employee data:', error);
@@ -131,9 +138,9 @@ export default function EmployeeHomeScreen() {
           </View>
         ) : (
           <>
-            {/* Conditional Card - Action Required or Pending */}
+            {/* Conditional Card - 3 States */}
             {!weekStatus.hasSubmittedPreferences ? (
-              // Action Required Card
+              // State 1: Action Required - No Preferences Submitted
               <View style={styles.actionRequiredCard}>
                 <View style={styles.cardHeader}>
                   <View style={styles.iconContainer}>
@@ -158,8 +165,40 @@ export default function EmployeeHomeScreen() {
                   <Text style={styles.actionButtonText}>Tercihleri Gir</Text>
                 </TouchableOpacity>
               </View>
+            ) : weekStatus.scheduleApproved ? (
+              // State 2: Schedule Approved - Ready to View Shifts
+              <LinearGradient
+                colors={['#00cd81', '#004dd6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.approvedCard}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconContainerApproved}>
+                    <MaterialIcons name="check-circle" size={28} color="#ffffff" />
+                  </View>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.cardBadgeApproved}>SCHEDULE HAZIR</Text>
+                    <Text style={styles.cardTitleWhite}>
+                      {weekStatus.hasShifts 
+                        ? 'Bu haftaki shift planın onaylandı!' 
+                        : 'Schedule onaylandı (shift atanmadı)'}
+                    </Text>
+                    <Text style={styles.cardSubtitleWhite}>
+                      {weekStatus.week}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push('/(employee)/my-shifts' as any)}
+                  style={styles.approvedButton}
+                >
+                  <MaterialIcons name="event" size={20} color="#00cd81" />
+                  <Text style={styles.approvedButtonText}>Shiftlerimi Gör</Text>
+                </TouchableOpacity>
+              </LinearGradient>
             ) : (
-              // Pending Approval Card
+              // State 3: Pending Approval - Preferences Submitted but Not Approved Yet
               <View style={styles.pendingCard}>
                 <View style={styles.cardHeader}>
                   <View style={styles.iconContainerPending}>
@@ -335,6 +374,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  approvedCard: {
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
   cardHeader: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -350,6 +398,15 @@ const styles = StyleSheet.create({
   },
   iconContainerPending: {
     backgroundColor: 'rgba(240, 173, 78, 0.2)',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  iconContainerApproved: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     width: 48,
     height: 48,
     borderRadius: 12,
@@ -374,6 +431,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 4,
   },
+  cardBadgeApproved: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -381,9 +445,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 22,
   },
+  cardTitleWhite: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
   cardSubtitle: {
     fontSize: 13,
     color: '#617c89',
+  },
+  cardSubtitleWhite: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   daysRemainingText: {
     fontWeight: '600',
@@ -420,6 +495,25 @@ const styles = StyleSheet.create({
   },
   viewButtonText: {
     color: '#F0AD4E',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  approvedButton: {
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  approvedButtonText: {
+    color: '#004dd6',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
