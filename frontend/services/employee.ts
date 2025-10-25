@@ -2,9 +2,89 @@
 
 import { apiClient } from './api-client';
 import { Employee } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock mode toggle
-const USE_MOCK = true;
+const USE_MOCK = false; // Backend is ready!
+
+// Helper: Generate random password (Backend ile aynı - özel karakter yok!)
+const generateRandomPassword = (length: number = 8): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
+// Helper: Hash password (Backend'de bcrypt, mock için basit hash)
+const hashPassword = (password: string): string => {
+  // Backend: await bcrypt.hash(password, 10)
+  // Mock: basit string manipülasyonu
+  return `$2b$10$mock_${password}_hash`;
+};
+
+// Helper: Compare password (Backend'de bcrypt.compare)
+const comparePassword = (plainPassword: string, hashedPassword: string): boolean => {
+  const expectedHash = hashPassword(plainPassword);
+  return hashedPassword === expectedHash;
+};
+
+// Helper: Save password hash to AsyncStorage (SQL simülasyonu)
+const savePasswordHash = async (username: string, hashedPassword: string): Promise<void> => {
+  try {
+    const key = `mock_password_hash_${username}`;
+    await AsyncStorage.setItem(key, hashedPassword);
+    console.log(`[MOCK SQL] ✅ Password hash saved for: ${username}`);
+  } catch (error) {
+    console.error('[MOCK SQL] ❌ Failed to save password hash:', error);
+  }
+};
+
+// Helper: Get password hash (SQL query simülasyonu)
+export const getPasswordHash = async (username: string): Promise<string | null> => {
+  try {
+    const key = `mock_password_hash_${username}`;
+    return await AsyncStorage.getItem(key);
+  } catch (error) {
+    console.error('[MOCK SQL] ❌ Failed to get password hash:', error);
+    return null;
+  }
+};
+
+// Helper: Verify password (Backend auth.service.loginEmployee mantığı)
+export const verifyPassword = async (username: string, plainPassword: string): Promise<boolean> => {
+  const storedHash = await getPasswordHash(username);
+  if (!storedHash) {
+    console.log(`[MOCK AUTH] ❌ No password found for: ${username}`);
+    return false;
+  }
+  
+  const isValid = comparePassword(plainPassword, storedHash);
+  console.log(`[MOCK AUTH] Password check for ${username}: ${isValid ? '✅ SUCCESS' : '❌ FAILED'}`);
+  return isValid;
+};
+
+// Helper: Save mock password to AsyncStorage
+const saveMockPassword = async (username: string, password: string): Promise<void> => {
+  try {
+    const key = `mock_password_${username}`;
+    await AsyncStorage.setItem(key, password);
+  } catch (error) {
+    console.error('Failed to save mock password:', error);
+  }
+};
+
+// Helper: Get mock password from AsyncStorage
+export const getMockPassword = async (username: string): Promise<string | null> => {
+  try {
+    const key = `mock_password_${username}`;
+    return await AsyncStorage.getItem(key);
+  } catch (error) {
+    console.error('Failed to get mock password:', error);
+    return null;
+  }
+};
 
 // Mock data
 const MOCK_EMPLOYEES: Employee[] = [
@@ -173,9 +253,18 @@ export async function createEmployee(
     
     MOCK_EMPLOYEES.push(newEmployee);
     
+    // Generate random password (Backend: manager.service.createEmployee mantığı)
+    const tempPassword = generateRandomPassword(8);
+    
+    // Hash password and save to "database" (Backend: bcrypt.hash + SQL INSERT)
+    const passwordHash = hashPassword(tempPassword);
+    await savePasswordHash(username, passwordHash);
+    
+    console.log(`[MOCK] Created employee: ${username}, temp password: ${tempPassword}`);
+    
     return {
       employee: newEmployee,
-      tempPassword: 'temp123456',
+      tempPassword: tempPassword, // Plain text döner (sadece 1 kez gösterilir)
     };
   }
 

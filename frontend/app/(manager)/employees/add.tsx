@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -85,8 +86,17 @@ export default function AddEmployeeScreen() {
     }
   };
 
-  const handleCopyPassword = () => {
-    Alert.alert('Şifre', generatedPassword + '\n\nNot: Kopyalama özelliği Phase 6\'da eklenecek');
+  const handleCopyPassword = async () => {
+    try {
+      await Clipboard.setStringAsync(generatedPassword);
+      Alert.alert(
+        'Kopyalandı!', 
+        `Şifre başarıyla kopyalandı:\n\n${generatedPassword}\n\nBu şifreyi çalışana güvenli bir şekilde iletin.`,
+        [{ text: 'Tamam', style: 'default' }]
+      );
+    } catch (error) {
+      Alert.alert('Hata', 'Şifre kopyalanamadı');
+    }
   };
 
   const handleClose = () => {

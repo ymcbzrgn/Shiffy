@@ -4,7 +4,8 @@
 import { apiClient } from './api-client';
 import { ShiftPreference, TimeSlot } from '../types';
 
-const USE_MOCK = true; // Toggle for backend development
+// Mock mode toggle
+const USE_MOCK = false; // Backend is ready!
 
 /**
  * Submit Shift Preferences (Employee)
