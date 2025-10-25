@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import employeeRoutes from './employee.routes';
 import managerRoutes from './manager.routes';
+import shiftRoutes from './shift.routes';
 
 const router = Router();
 
@@ -12,7 +13,8 @@ router.use('/employee', employeeRoutes);
 // Mounted at: /api/manager
 router.use('/manager', managerRoutes);
 
-// Placeholder for future routes
-// Will add shift.routes in future phases
+// Shift preferences routes
+// Mounted at: /api/shifts
+router.use('/shifts', shiftRoutes);
 
 export default router;
