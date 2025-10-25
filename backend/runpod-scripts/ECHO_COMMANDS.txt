@@ -1,0 +1,88 @@
+==========================================
+RUNPOD DEPLOYMENT - ECHO VERSION
+==========================================
+
+Copy these commands ONE BY ONE to RunPod terminal:
+
+-------------------------------------------
+STEP 1: Create start_services.sh
+-------------------------------------------
+
+echo '#!/bin/bash
+LOG_FILE="/root/startup.log"
+echo "=== Service Startup: $(date) ===" >> "$LOG_FILE"
+is_running() { ps aux | grep -v grep | grep "$1" > /dev/null 2>&1; return $?; }
+echo "[$(date)] Starting Ollama..." >> "$LOG_FILE"
+if is_running "ollama serve"; then echo "[$(date)] Ollama already running" >> "$LOG_FILE"; else nohup ollama serve > /root/ollama.log 2>&1 & ; echo "[$(date)] Ollama started (PID: $!)" >> "$LOG_FILE"; for i in {1..30}; do if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then echo "[$(date)] Ollama is ready" >> "$LOG_FILE"; break; fi; sleep 1; done; fi
+echo "[$(date)] Starting Proxy..." >> "$LOG_FILE"
+if is_running "uvicorn secure_proxy:app"; then echo "[$(date)] Proxy already running" >> "$LOG_FILE"; else cd /root; nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 & ; echo "[$(date)] Proxy started (PID: $!)" >> "$LOG_FILE"; for i in {1..10}; do if curl -s http://localhost:8888/health > /dev/null 2>&1; then echo "[$(date)] Proxy is ready" >> "$LOG_FILE"; break; fi; sleep 1; done; fi
+echo "[$(date)] Verifying services..." >> "$LOG_FILE"
+if curl -s http://localhost:8888/health > /dev/null 2>&1; then echo "[$(date)] ✅ All services running successfully" >> "$LOG_FILE"; else echo "[$(date)] ❌ Service verification failed" >> "$LOG_FILE"; fi
+echo "=== Startup Complete: $(date) ===" >> "$LOG_FILE"' > /root/start_services.sh
+
+chmod +x /root/start_services.sh
+
+-------------------------------------------
+STEP 2: Create watchdog.sh
+-------------------------------------------
+
+echo '#!/bin/bash
+LOG_FILE="/root/watchdog.log"
+is_running() { ps aux | grep -v grep | grep "$1" > /dev/null 2>&1; return $?; }
+restart_service() { local service_name=$1; local restart_command=$2; echo "[$(date)] ⚠️  $service_name is down, restarting..." >> "$LOG_FILE"; eval "$restart_command"; echo "[$(date)] ✅ $service_name restarted" >> "$LOG_FILE"; }
+if ! is_running "ollama serve"; then restart_service "Ollama" "nohup ollama serve > /root/ollama.log 2>&1 &"; sleep 5; fi
+if ! is_running "uvicorn secure_proxy:app"; then restart_service "Proxy" "cd /root && nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 &"; sleep 3; fi
+if ! curl -s http://localhost:8888/health > /dev/null 2>&1; then echo "[$(date)] ❌ Health check failed - services may be unhealthy" >> "$LOG_FILE"; fi' > /root/watchdog.sh
+
+chmod +x /root/watchdog.sh
+
+-------------------------------------------
+STEP 3: Configure Cron Jobs
+-------------------------------------------
+
+(crontab -l 2>/dev/null; echo "@reboot /root/start_services.sh >> /root/startup.log 2>&1") | crontab -
+
+(crontab -l 2>/dev/null; echo "*/1 * * * * /root/watchdog.sh >> /root/watchdog.log 2>&1") | crontab -
+
+-------------------------------------------
+STEP 4: Verify Cron Setup
+-------------------------------------------
+
+crontab -l
+
+-------------------------------------------
+STEP 5: Test Startup Script
+-------------------------------------------
+
+/root/start_services.sh
+
+sleep 5
+
+cat /root/startup.log
+
+-------------------------------------------
+STEP 6: Verify Services Running
+-------------------------------------------
+
+curl http://localhost:8888/health
+
+curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health
+
+-------------------------------------------
+STEP 7: Check Running Processes
+-------------------------------------------
+
+ps aux | grep -E "ollama|uvicorn"
+
+==========================================
+SUCCESS CHECK:
+==========================================
+
+Both health checks should return:
+{"status":"ok","service":"shiffy-ollama-proxy"}
+
+Crontab should show:
+@reboot /root/start_services.sh >> /root/startup.log 2>&1
+*/1 * * * * /root/watchdog.sh >> /root/watchdog.log 2>&1
+
+==========================================

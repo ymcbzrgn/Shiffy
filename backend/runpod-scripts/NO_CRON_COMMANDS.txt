@@ -1,0 +1,190 @@
+==========================================
+RUNPOD AUTO-RESTART - NO CRON VERSION
+==========================================
+
+Crontab olmadan auto-restart için:
+- Watchdog infinite loop olarak çalışacak
+- Tek komutla tüm servisleri başlat
+
+-------------------------------------------
+STEP 1: Continuous Watchdog Oluştur
+-------------------------------------------
+
+echo '#!/bin/bash
+LOG_FILE="/root/watchdog.log"
+echo "[$(date)] 🚀 Watchdog started (continuous mode)" >> "$LOG_FILE"
+
+is_running() { ps aux | grep -v grep | grep "$1" > /dev/null 2>&1; return $?; }
+
+restart_service() {
+    local service_name=$1
+    local restart_command=$2
+    echo "[$(date)] ⚠️  $service_name is down, restarting..." >> "$LOG_FILE"
+    eval "$restart_command"
+    echo "[$(date)] ✅ $service_name restarted" >> "$LOG_FILE"
+}
+
+while true; do
+    if ! is_running "ollama serve"; then
+        restart_service "Ollama" "nohup ollama serve > /root/ollama.log 2>&1 &"
+        sleep 5
+    fi
+
+    if ! is_running "uvicorn secure_proxy:app"; then
+        restart_service "Proxy" "cd /root && nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 &"
+        sleep 3
+    fi
+
+    if ! curl -s http://localhost:8888/health > /dev/null 2>&1; then
+        echo "[$(date)] ❌ Health check failed" >> "$LOG_FILE"
+    fi
+
+    sleep 60
+done' > /root/watchdog_loop.sh && chmod +x /root/watchdog_loop.sh
+
+-------------------------------------------
+STEP 2: Master Start Script Oluştur
+-------------------------------------------
+
+echo '#!/bin/bash
+LOG_FILE="/root/startup.log"
+echo "=== Service Startup: $(date) ===" >> "$LOG_FILE"
+
+is_running() { ps aux | grep -v grep | grep "$1" > /dev/null 2>&1; return $?; }
+
+# 1. Start Ollama
+echo "[$(date)] Starting Ollama..." >> "$LOG_FILE"
+if is_running "ollama serve"; then
+    echo "[$(date)] Ollama already running" >> "$LOG_FILE"
+else
+    nohup ollama serve > /root/ollama.log 2>&1 &
+    echo "[$(date)] Ollama started (PID: $!)" >> "$LOG_FILE"
+    for i in {1..30}; do
+        if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+            echo "[$(date)] Ollama is ready" >> "$LOG_FILE"
+            break
+        fi
+        sleep 1
+    done
+fi
+
+# 2. Start Proxy
+echo "[$(date)] Starting Proxy..." >> "$LOG_FILE"
+if is_running "uvicorn secure_proxy:app"; then
+    echo "[$(date)] Proxy already running" >> "$LOG_FILE"
+else
+    cd /root
+    nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 &
+    echo "[$(date)] Proxy started (PID: $!)" >> "$LOG_FILE"
+    for i in {1..10}; do
+        if curl -s http://localhost:8888/health > /dev/null 2>&1; then
+            echo "[$(date)] Proxy is ready" >> "$LOG_FILE"
+            break
+        fi
+        sleep 1
+    done
+fi
+
+# 3. Start Watchdog Loop
+echo "[$(date)] Starting Watchdog..." >> "$LOG_FILE"
+if is_running "watchdog_loop.sh"; then
+    echo "[$(date)] Watchdog already running" >> "$LOG_FILE"
+else
+    nohup /root/watchdog_loop.sh > /dev/null 2>&1 &
+    echo "[$(date)] Watchdog started (PID: $!)" >> "$LOG_FILE"
+fi
+
+# 4. Verify
+echo "[$(date)] Verifying services..." >> "$LOG_FILE"
+if curl -s http://localhost:8888/health > /dev/null 2>&1; then
+    echo "[$(date)] ✅ All services running successfully" >> "$LOG_FILE"
+else
+    echo "[$(date)] ❌ Service verification failed" >> "$LOG_FILE"
+fi
+
+echo "=== Startup Complete: $(date) ===" >> "$LOG_FILE"
+echo ""
+echo "✅ Services started!"
+echo "📊 Monitor logs:"
+echo "   tail -f /root/startup.log"
+echo "   tail -f /root/watchdog.log"
+echo "   tail -f /root/ollama.log"
+echo "   tail -f /root/proxy.log"' > /root/start_all.sh && chmod +x /root/start_all.sh
+
+-------------------------------------------
+STEP 3: Tüm Servisleri Başlat
+-------------------------------------------
+
+/root/start_all.sh
+
+-------------------------------------------
+STEP 4: Kontrol Et
+-------------------------------------------
+
+# Running processes
+ps aux | grep -E "ollama|uvicorn|watchdog"
+
+# Health check
+curl http://localhost:8888/health
+
+curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health
+
+# Logs
+cat /root/startup.log
+
+-------------------------------------------
+STEP 5: Stop Script (Gerekirse)
+-------------------------------------------
+
+echo '#!/bin/bash
+echo "Stopping all services..."
+pkill -f "ollama serve"
+pkill -f "uvicorn secure_proxy"
+pkill -f "watchdog_loop.sh"
+echo "✅ All services stopped"' > /root/stop_all.sh && chmod +x /root/stop_all.sh
+
+-------------------------------------------
+RUNPOD POD BAŞLADIĞINDA YAPILACAKLAR:
+-------------------------------------------
+
+# Pod her yeniden başladığında bu komutu çalıştır:
+/root/start_all.sh
+
+# Manual olarak çalıştırman gerekecek, ama tek komut!
+
+==========================================
+ÖNEMLİ NOTLAR:
+==========================================
+
+✅ Watchdog sürekli arka planda çalışacak (infinite loop)
+✅ Her 60 saniyede bir kontrol edecek
+✅ Servis çökerse otomatik restart edecek
+✅ Tek komutla tüm servisleri başlat: /root/start_all.sh
+
+⚠️  Pod restart olduğunda:
+   - Manuel olarak /root/start_all.sh çalıştırman gerekecek
+   - Veya RunPod'un "Startup Command" ayarına ekle
+
+==========================================
+MONITORING:
+==========================================
+
+# Tüm logları görüntüle
+tail -f /root/startup.log
+tail -f /root/watchdog.log
+tail -f /root/ollama.log
+tail -f /root/proxy.log
+
+# Process kontrol
+ps aux | grep -E "ollama|uvicorn|watchdog"
+
+# Health check
+curl http://localhost:8888/health
+
+# Stop all
+/root/stop_all.sh
+
+# Restart all
+/root/stop_all.sh && sleep 2 && /root/start_all.sh
+
+==========================================

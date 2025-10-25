@@ -5,19 +5,20 @@ import type { Shift, ScheduleSummary } from '../types/schedule.types';
 // LLAMA SERVICE - RunPod AI Integration
 // ==========================================
 
-interface LlamaResponse {
-  model: string;
-  created_at: string;
-  response: string;
-  done: boolean;
-  parsed: {
-    shifts: Shift[];
-    summary: ScheduleSummary;
-  };
-  validation: {
-    ok: boolean;
-  };
-}
+// Temporarily commented out - using dynamic parsing
+// interface LlamaResponse {
+//   model: string;
+//   created_at: string;
+//   response: string;
+//   done: boolean;
+//   parsed: {
+//     shifts: Shift[];
+//     summary: ScheduleSummary;
+//   };
+//   validation: {
+//     ok: boolean;
+//   };
+// }
 
 interface EmployeePreference {
   employee_id: string;
@@ -55,14 +56,14 @@ export const llamaService = {
             prompt,
             model: 'llama3.1:8b-instruct-q6_K',
             stream: false,
-            validate: true, // Proxy validates JSON schema
+            validate: false, // Temporarily disable to debug AI output
             options: {
               temperature: 0.5,
               num_ctx: 16384,
               num_predict: 3000,
             },
           }),
-          signal: AbortSignal.timeout(30000), // 30s timeout
+          signal: AbortSignal.timeout(90000), // 90s timeout for AI generation
         }
       );
 
@@ -70,17 +71,35 @@ export const llamaService = {
         throw new Error(`RunPod API error: ${response.status}`);
       }
 
-      const data = await response.json() as LlamaResponse;
+      const data = await response.json() as any;
 
-      // Check validation (proxy validates against schema)
-      if (!data.validation?.ok) {
-        throw new Error('Schedule validation failed');
+      // DEBUG: Log the AI response structure
+      console.log('=== AI RESPONSE STRUCTURE ===');
+      console.log('Keys:', Object.keys(data));
+      console.log('Has validation:', !!data.validation);
+      console.log('Has parsed:', !!data.parsed);
+      console.log('Has response:', !!data.response);
+
+      let scheduleData;
+
+      // Handle different response structures
+      if (data.parsed) {
+        // Validation was enabled, response is pre-parsed
+        scheduleData = data.parsed;
+      } else if (data.response) {
+        // Validation was disabled, response is a JSON string
+        console.log('Parsing response string...');
+        scheduleData = JSON.parse(data.response);
+      } else {
+        throw new Error('Unknown response structure from RunPod');
       }
 
-      // Return parsed JSON (proxy already parsed it)
+      console.log('Parsed schedule data:', JSON.stringify(scheduleData, null, 2));
+
+      // Return schedule data
       return {
-        shifts: data.parsed.shifts,
-        summary: data.parsed.summary,
+        shifts: scheduleData.shifts,
+        summary: scheduleData.summary,
       };
     } catch (error) {
       console.error('Llama schedule generation error:', error);

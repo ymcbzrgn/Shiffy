@@ -1,0 +1,186 @@
+==========================================
+RUNPOD AUTO-RESTART DEPLOYMENT COMMANDS
+==========================================
+
+Copy and paste these commands IN YOUR RUNPOD TERMINAL:
+
+-------------------------------------------
+STEP 1: Create start_services.sh
+-------------------------------------------
+
+cat > /root/start_services.sh << 'EOF'
+#!/bin/bash
+LOG_FILE="/root/startup.log"
+echo "=== Service Startup: $(date) ===" >> "$LOG_FILE"
+
+is_running() {
+    ps aux | grep -v grep | grep "$1" > /dev/null 2>&1
+    return $?
+}
+
+echo "[$(date)] Starting Ollama..." >> "$LOG_FILE"
+if is_running "ollama serve"; then
+    echo "[$(date)] Ollama already running" >> "$LOG_FILE"
+else
+    nohup ollama serve > /root/ollama.log 2>&1 &
+    echo "[$(date)] Ollama started (PID: $!)" >> "$LOG_FILE"
+    for i in {1..30}; do
+        if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+            echo "[$(date)] Ollama is ready" >> "$LOG_FILE"
+            break
+        fi
+        sleep 1
+    done
+fi
+
+echo "[$(date)] Starting Proxy..." >> "$LOG_FILE"
+if is_running "uvicorn secure_proxy:app"; then
+    echo "[$(date)] Proxy already running" >> "$LOG_FILE"
+else
+    cd /root
+    nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 &
+    echo "[$(date)] Proxy started (PID: $!)" >> "$LOG_FILE"
+    for i in {1..10}; do
+        if curl -s http://localhost:8888/health > /dev/null 2>&1; then
+            echo "[$(date)] Proxy is ready" >> "$LOG_FILE"
+            break
+        fi
+        sleep 1
+    done
+fi
+
+echo "[$(date)] Verifying services..." >> "$LOG_FILE"
+if curl -s http://localhost:8888/health > /dev/null 2>&1; then
+    echo "[$(date)] ✅ All services running successfully" >> "$LOG_FILE"
+else
+    echo "[$(date)] ❌ Service verification failed" >> "$LOG_FILE"
+fi
+
+echo "=== Startup Complete: $(date) ===" >> "$LOG_FILE"
+EOF
+
+chmod +x /root/start_services.sh
+
+-------------------------------------------
+STEP 2: Create watchdog.sh
+-------------------------------------------
+
+cat > /root/watchdog.sh << 'EOF'
+#!/bin/bash
+LOG_FILE="/root/watchdog.log"
+
+is_running() {
+    ps aux | grep -v grep | grep "$1" > /dev/null 2>&1
+    return $?
+}
+
+restart_service() {
+    local service_name=$1
+    local restart_command=$2
+    echo "[$(date)] ⚠️  $service_name is down, restarting..." >> "$LOG_FILE"
+    eval "$restart_command"
+    echo "[$(date)] ✅ $service_name restarted" >> "$LOG_FILE"
+}
+
+if ! is_running "ollama serve"; then
+    restart_service "Ollama" "nohup ollama serve > /root/ollama.log 2>&1 &"
+    sleep 5
+fi
+
+if ! is_running "uvicorn secure_proxy:app"; then
+    restart_service "Proxy" "cd /root && nohup uvicorn secure_proxy:app --host 0.0.0.0 --port 8888 --log-level info > /root/proxy.log 2>&1 &"
+    sleep 3
+fi
+
+if ! curl -s http://localhost:8888/health > /dev/null 2>&1; then
+    echo "[$(date)] ❌ Health check failed - services may be unhealthy" >> "$LOG_FILE"
+fi
+EOF
+
+chmod +x /root/watchdog.sh
+
+-------------------------------------------
+STEP 3: Set Up Cron Jobs
+-------------------------------------------
+
+(crontab -l 2>/dev/null; echo "@reboot /root/start_services.sh >> /root/startup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "*/1 * * * * /root/watchdog.sh >> /root/watchdog.log 2>&1") | crontab -
+
+-------------------------------------------
+STEP 4: Verify Cron Setup
+-------------------------------------------
+
+crontab -l
+
+# You should see:
+# @reboot /root/start_services.sh >> /root/startup.log 2>&1
+# */1 * * * * /root/watchdog.sh >> /root/watchdog.log 2>&1
+
+-------------------------------------------
+STEP 5: Test Startup Script
+-------------------------------------------
+
+/root/start_services.sh
+sleep 5
+cat /root/startup.log
+
+-------------------------------------------
+STEP 6: Verify Services Running
+-------------------------------------------
+
+curl http://localhost:8888/health
+curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health
+
+# Both should return:
+# {"status":"ok","service":"shiffy-ollama-proxy"}
+
+-------------------------------------------
+STEP 7: Test Watchdog (Optional)
+-------------------------------------------
+
+# Stop Ollama
+pkill -f "ollama serve"
+
+# Wait 65 seconds for watchdog to run
+sleep 65
+
+# Check if Ollama restarted
+ps aux | grep ollama
+
+# Check watchdog log
+cat /root/watchdog.log
+
+==========================================
+SUCCESS INDICATORS:
+==========================================
+
+✅ Both scripts created and executable
+✅ Cron jobs configured (check with: crontab -l)
+✅ Services running (check with: ps aux | grep -E "ollama|uvicorn")
+✅ Health endpoint responding (check with: curl http://localhost:8888/health)
+✅ External endpoint accessible (check with: curl https://ymgoqyxl58jzfo-8888.proxy.runpod.net/health)
+
+==========================================
+MONITORING COMMANDS:
+==========================================
+
+# View startup log
+tail -f /root/startup.log
+
+# View watchdog log
+tail -f /root/watchdog.log
+
+# View Ollama log
+tail -f /root/ollama.log
+
+# View Proxy log
+tail -f /root/proxy.log
+
+# Check running processes
+ps aux | grep -E "ollama|uvicorn"
+
+# Quick health check
+curl http://localhost:8888/health
+curl http://localhost:8888/api/queue-stats
+
+==========================================
