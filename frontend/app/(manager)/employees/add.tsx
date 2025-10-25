@@ -24,6 +24,7 @@ export default function AddEmployeeScreen() {
     fullName: '',
     username: '',
     jobDescription: '',
+    maxWeeklyHours: '',
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,10 +37,22 @@ export default function AddEmployeeScreen() {
     const fullNameError = validateRequired(form.fullName, 'Ad Soyad');
     const usernameError = validateRequired(form.username, 'Kullanıcı adı');
     
-    if (fullNameError || usernameError) {
+    // Max weekly hours validation (REQUIRED)
+    let maxWeeklyHoursError = '';
+    if (!form.maxWeeklyHours) {
+      maxWeeklyHoursError = 'Maksimum haftalık saat gereklidir';
+    } else {
+      const hours = parseInt(form.maxWeeklyHours);
+      if (isNaN(hours) || hours < 0 || hours > 150) {
+        maxWeeklyHoursError = 'Maksimum haftalık saat 0 ile 150 arasında olmalıdır';
+      }
+    }
+    
+    if (fullNameError || usernameError || maxWeeklyHoursError) {
       setErrors({
         fullName: fullNameError || '',
         username: usernameError || '',
+        maxWeeklyHours: maxWeeklyHoursError || '',
       });
       return;
     }
@@ -184,6 +197,45 @@ export default function AddEmployeeScreen() {
             <Text style={styles.hintText}>
               İpucu: Birden fazla rolü virgülle ayırarak yazabilirsiniz (Örn: "Kasiyer, Garson, Aşçı")
             </Text>
+          </View>
+
+          {/* Max Weekly Hours Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Maksimum Haftalık Saat</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, errors.maxWeeklyHours && styles.inputError]}
+                value={form.maxWeeklyHours}
+                onChangeText={(text) => {
+                  // Only allow numbers
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  setForm({ ...form, maxWeeklyHours: numericValue });
+                  if (errors.maxWeeklyHours) setErrors({ ...errors, maxWeeklyHours: '' });
+                }}
+                placeholder="Örn: 40"
+                placeholderTextColor="#9ca3af"
+                keyboardType="numeric"
+                editable={!loading}
+              />
+              <MaterialIcons
+                name="schedule"
+                size={20}
+                color="#617c89"
+                style={styles.inputIcon}
+              />
+            </View>
+            {errors.maxWeeklyHours ? <Text style={styles.errorText}>{errors.maxWeeklyHours}</Text> : null}
+            <Text style={styles.hintText}>
+              Çalışanın haftada maksimum çalışabileceği saat (0-150 arası)
+            </Text>
+            {form.maxWeeklyHours === '0' && (
+              <View style={styles.warningBox}>
+                <MaterialIcons name="warning" size={16} color="#F0AD4E" />
+                <Text style={styles.warningText}>
+                  0 girilirse bu çalışan çizelgeye dahil edilmeyecek
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Info Box */}
@@ -352,6 +404,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: '#1193d4',
+    marginLeft: 8,
+    lineHeight: 18,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240, 173, 78, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#F0AD4E',
     marginLeft: 8,
     lineHeight: 18,
   },
