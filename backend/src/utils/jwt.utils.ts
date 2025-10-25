@@ -16,7 +16,7 @@ const JWT_EXPIRY: StringValue = (process.env.JWT_EXPIRY as StringValue) || '7d';
  */
 export interface JWTPayload {
   user_id: string;
-  user_type: 'employee';
+  user_type: 'employee' | 'manager';
   manager_id: string;
   username: string;
   iat?: number;
