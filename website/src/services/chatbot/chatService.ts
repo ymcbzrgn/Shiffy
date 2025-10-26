@@ -18,8 +18,21 @@ class ChatService {
    * Configure the chat service with API credentials
    */
   configure(apiUrl: string, apiKey: string = '') {
-    this.apiUrl = apiUrl;
+    // Production fix: If using Vite proxy path but not in dev mode, use direct URL
+    if (apiUrl.startsWith('/api/runpod') && import.meta.env.PROD) {
+      console.log('🔧 Production detected: Using direct RunPod URL instead of proxy');
+      this.apiUrl = 'https://3fg3p55cngmmn1-8888.proxy.runpod.net/api/chatbot';
+    } else {
+      this.apiUrl = apiUrl;
+    }
     this.apiKey = apiKey;
+    
+    console.log('⚙️ ChatService configured:', {
+      originalUrl: apiUrl,
+      finalUrl: this.apiUrl,
+      isProduction: import.meta.env.PROD,
+      mode: import.meta.env.MODE
+    });
   }
 
   /**
@@ -58,30 +71,10 @@ class ChatService {
   }
 
   /**
-   * Check if the question is related to Shiffy
+   * REMOVED: isShiffyRelated() check
+   * Reason: AI backend has system prompt to handle out-of-scope questions
+   * All messages should be sent to AI for proper context understanding
    */
-  private isShiffyRelated(question: string): boolean {
-    const shiffyKeywords = [
-      'shiffy', 'shift', 'schedule', 'vardiya', 'planlama',
-      'çalışan', 'employee', 'manager', 'yönetici',
-      'availability', 'müsaitlik', 'app', 'uygulama',
-      'ai', 'yapay zeka', 'llama', 'meta',
-      'how', 'nasıl', 'what', 'nedir', 'why', 'neden',
-      'feature', 'özellik', 'benefit', 'avantaj',
-      'time', 'zaman', 'save', 'tasarruf',
-    ];
-
-    const lowerQuestion = question.toLowerCase();
-    return shiffyKeywords.some(keyword => lowerQuestion.includes(keyword));
-  }
-
-  /**
-   * Get out of scope response
-   */
-  private getOutOfScopeResponse(language: 'en' | 'tr' = 'en'): string {
-    const responses = OUT_OF_SCOPE_RESPONSES[language];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }
 
   /**
    * Send message to Shiffy Chatbot API
@@ -108,13 +101,14 @@ class ChatService {
         apiUrl: this.apiUrl,
         hasApiKey: !!this.apiKey,
         message: userMessage,
-        historyLength: conversationHistory.length
+        historyLength: conversationHistory.length,
+        language: language
       });
 
-      // Don't filter messages - let AI handle all questions
-      // AI backend has system prompt to guide responses
-
-      // Prepare history in the format expected by Shiffy API
+      // CRITICAL: Send ALL messages to AI
+      // No client-side filtering - AI has system prompt to handle scope
+      
+      // Prepare history in the format expected by RunPod API
       // Only include user/assistant messages (no system prompt in history)
       const history = conversationHistory
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -123,12 +117,20 @@ class ChatService {
           content: msg.content
         }));
 
+      // RunPod API Request Format:
+      // POST /api/chatbot
+      // Body: { query: string }
+      // Note: History is not explicitly documented but we can try including it
       const requestBody = {
-        query: userMessage, // RunPod API expects 'query' not 'message'
-        history: history.length > 0 ? history : undefined,
+        query: userMessage,
+        language: language, // Help AI understand which language to respond in
       };
 
-      console.log('📤 API Request:', requestBody);
+      console.log('📤 API Request:', {
+        url: this.apiUrl,
+        body: requestBody,
+        historyLength: history.length
+      });
 
       // Call RunPod Chatbot API via Vite proxy
       // Development: /api/runpod/api/chatbot (proxied by Vite)
