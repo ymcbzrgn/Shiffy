@@ -629,7 +629,7 @@ export default function ShiftReviewScreen() {
               <View style={styles.employeeHoursContainer}>
                 <Text style={styles.employeeHoursTitle}>👥 Çalışan Saat Dağılımı</Text>
                 <Text style={styles.employeeHoursSubtitle}>
-                  Her çalışanın bu haftaki çalışma saati ÷ max haftalık çalışma saati oranı
+                  AI'nın atadığı haftalık çalışma saati / Maksimum haftalık çalışma hakkı
                 </Text>
                 {Object.entries(schedule.summary.hours_per_employee)
                   .sort(([, a], [, b]) => (b as number) - (a as number))
@@ -668,7 +668,7 @@ export default function ShiftReviewScreen() {
                             {getStatusIcon()} {employeeName}
                           </Text>
                           <Text style={styles.employeeHourLimit}>
-                            {hoursNum}h / {maxWeeklyHours}h
+                            Bu hafta: {hoursNum.toFixed(1)}h / Max: {maxWeeklyHours}h
                           </Text>
                         </View>
                         <View style={styles.employeeHourBarContainer}>
@@ -697,66 +697,77 @@ export default function ShiftReviewScreen() {
           <View style={styles.calendarCard}>
             <View style={styles.calendarHeader}>
               <Text style={styles.calendarTitle}>📅 Haftalık Takvim</Text>
+              <Text style={styles.calendarSubtitle}>Kaydırarak tüm günleri görüntüleyin →</Text>
             </View>
             
-            {/* Day Headers */}
-            <View style={styles.calendarDayHeaders}>
-              {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day, idx) => {
-                const dayCount = currentShifts.filter(s => s.day.toLowerCase() === 
-                  ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][idx]
-                ).length;
-                
-                return (
-                  <View key={idx} style={styles.calendarDayHeader}>
-                    <Text style={styles.calendarDayHeaderText}>{day}</Text>
-                    <View style={styles.calendarDayHeaderBadge}>
-                      <Text style={styles.calendarDayHeaderCount}>{dayCount}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Shifts Grid by Day */}
-            <View style={styles.calendarGrid}>
-              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, dayIndex) => {
-                const dayShifts = currentShifts.filter(s => s.day.toLowerCase() === day).sort((a, b) => {
-                  // Sort by start time
-                  return a.start_time.localeCompare(b.start_time);
-                });
-                
-                return (
-                  <View key={day} style={styles.calendarDayColumn}>
-                    {dayShifts.length > 0 ? (
-                      dayShifts.map((shift, idx) => {
-                        // Assign colors based on employee
-                        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444'];
-                        const colorIndex = currentShifts.findIndex(s => s.employee_id === shift.employee_id) % colors.length;
-                        const shiftColor = colors[colorIndex];
-                        
-                        return (
-                          <View key={idx} style={[styles.calendarShiftItem, { backgroundColor: shiftColor + '15', borderLeftColor: shiftColor }]}>
-                            <Text style={[styles.calendarShiftTime, { color: shiftColor }]}>
-                              {shift.start_time} • {shift.hours || calculateHours(shift.start_time, shift.end_time)}h
-                            </Text>
-                            <Text style={styles.calendarShiftEmployee} numberOfLines={1}>
-                              {shift.employee_name}
-                            </Text>
-                            <Text style={styles.calendarShiftJob} numberOfLines={1}>
-                              {shift.job_description}
-                            </Text>
-                          </View>
-                        );
-                      })
-                    ) : (
-                      <View style={styles.calendarEmptyDay}>
-                        <Text style={styles.calendarEmptyText}>—</Text>
+            {/* Single Scrollable Container for Headers and Grid */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={true}
+              style={styles.calendarScrollContainer}
+              contentContainerStyle={styles.calendarScrollContent}
+            >
+              <View>
+                {/* Day Headers */}
+                <View style={styles.calendarDayHeaders}>
+                  {['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].map((day, idx) => {
+                    const dayCount = currentShifts.filter(s => s.day.toLowerCase() === 
+                      ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][idx]
+                    ).length;
+                    
+                    return (
+                      <View key={idx} style={styles.calendarDayHeader}>
+                        <Text style={styles.calendarDayHeaderText}>{day}</Text>
+                        <View style={styles.calendarDayHeaderBadge}>
+                          <Text style={styles.calendarDayHeaderCount}>{dayCount}</Text>
+                        </View>
                       </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
+                    );
+                  })}
+                </View>
+
+                {/* Shifts Grid by Day */}
+                <View style={styles.calendarGrid}>
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, dayIndex) => {
+                    const dayShifts = currentShifts.filter(s => s.day.toLowerCase() === day).sort((a, b) => {
+                      // Sort by start time
+                      return a.start_time.localeCompare(b.start_time);
+                    });
+                    
+                    return (
+                      <View key={day} style={styles.calendarDayColumn}>
+                        {dayShifts.length > 0 ? (
+                          dayShifts.map((shift, idx) => {
+                            // Assign colors based on employee
+                            const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444'];
+                            const colorIndex = currentShifts.findIndex(s => s.employee_id === shift.employee_id) % colors.length;
+                            const shiftColor = colors[colorIndex];
+                            
+                            return (
+                              <View key={idx} style={[styles.calendarShiftItem, { backgroundColor: shiftColor + '15', borderLeftColor: shiftColor }]}>
+                                <Text style={[styles.calendarShiftTime, { color: shiftColor }]}>
+                                  {shift.start_time} • {shift.hours || calculateHours(shift.start_time, shift.end_time)}h
+                                </Text>
+                                <Text style={styles.calendarShiftEmployee} numberOfLines={2}>
+                                  {shift.employee_name}
+                                </Text>
+                                <Text style={styles.calendarShiftJob} numberOfLines={2}>
+                                  {shift.job_description}
+                                </Text>
+                              </View>
+                            );
+                          })
+                        ) : (
+                          <View style={styles.calendarEmptyDay}>
+                            <Text style={styles.calendarEmptyText}>—</Text>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            </ScrollView>
           </View>
         )}
 
@@ -1309,7 +1320,7 @@ const styles = StyleSheet.create({
   calendarCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1320,59 +1331,71 @@ const styles = StyleSheet.create({
   calendarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 20,
     gap: 10,
   },
   calendarTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#111618',
-    flex: 1,
+  },
+  calendarSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  calendarScrollContainer: {
+    marginBottom: 0,
+  },
+  calendarScrollContent: {
+    paddingRight: 20,
   },
   calendarDayHeaders: {
     flexDirection: 'row',
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
+    paddingBottom: 12,
+    marginBottom: 16,
+    borderBottomWidth: 2,
     borderBottomColor: '#e5e7eb',
-    gap: 4,
+    gap: 12,
   },
   calendarDayHeader: {
-    flex: 1,
+    width: 140,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   calendarDayHeaderText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
     color: '#374151',
     textTransform: 'uppercase',
   },
   calendarDayHeaderBadge: {
     backgroundColor: '#1193d4',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    minWidth: 20,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    minWidth: 24,
     alignItems: 'center',
   },
   calendarDayHeaderCount: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   calendarGrid: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 12,
   },
   calendarDayColumn: {
-    flex: 1,
-    gap: 6,
+    width: 140,
+    gap: 10,
   },
   calendarShiftItem: {
-    borderLeftWidth: 3,
-    borderRadius: 6,
-    padding: 8,
+    borderLeftWidth: 4,
+    borderRadius: 8,
+    padding: 14,
+    minHeight: 85,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -1380,19 +1403,21 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   calendarShiftTime: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   calendarShiftEmployee: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '600',
     color: '#111618',
-    marginBottom: 2,
+    marginBottom: 4,
+    lineHeight: 18,
   },
   calendarShiftJob: {
-    fontSize: 9,
+    fontSize: 12,
     color: '#6b7280',
+    lineHeight: 16,
   },
   calendarEmptyDay: {
     alignItems: 'center',

@@ -162,14 +162,14 @@ export default function ManagerDashboardScreen() {
                   onPress={() => router.push('/(manager)/shift-review' as any)}
                 />
                 <QuickActionButton
+                  title="Satış Raporu"
+                  icon="assessment"
+                  onPress={() => router.push('/(manager)/reports' as any)}
+                />
+                <QuickActionButton
                   title="Ayarlar"
                   icon="settings"
                   onPress={() => router.push('/(manager)/settings' as any)}
-                />
-                <QuickActionButton
-                  title="Raporlar"
-                  icon="analytics"
-                  onPress={() => Alert.alert('Raporlar', 'Gelecek versiyonda')}
                 />
                 <QuickActionButton
                   title="Yardım"

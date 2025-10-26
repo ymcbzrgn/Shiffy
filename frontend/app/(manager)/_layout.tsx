@@ -38,6 +38,12 @@ export default function ManagerLayout() {
         }} 
       />
       <Stack.Screen 
+        name="reports" 
+        options={{ 
+          title: 'Satış Raporları',
+        }} 
+      />
+      <Stack.Screen 
         name="settings" 
         options={{ 
           title: 'Ayarlar',

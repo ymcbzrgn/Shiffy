@@ -10,10 +10,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { saveSalesReport, getWeeklySalesReports, type WeeklySalesData } from '@/services/sales-reports';
 import { getWeekStart, formatWeekRange, formatDateISO } from '@/utils/shift-grid-helpers';
 
 export default function SalesReportsScreen() {
+  const router = useRouter();
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklySalesData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -97,11 +100,21 @@ export default function SalesReportsScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <MaterialIcons name="assessment" size={28} color="#004dd6" />
-        <Text style={styles.headerTitle}>Satış Raporları</Text>
-      </View>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialIcons name="chevron-left" size={28} color="#ffffff" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <MaterialIcons name="assessment" size={28} color="#ffffff" />
+          <Text style={styles.headerTitle}>Satış Raporları</Text>
+        </View>
+      </LinearGradient>
 
       {/* Today's Entry Form */}
       <View style={styles.entryCard}>
@@ -147,18 +160,25 @@ export default function SalesReportsScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          style={[styles.saveButtonWrapper, saving && styles.saveButtonDisabled]}
           onPress={handleSaveToday}
           disabled={saving}
         >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <>
-              <MaterialIcons name="save" size={20} color="#ffffff" />
-              <Text style={styles.saveButtonText}>Kaydet</Text>
-            </>
-          )}
+          <LinearGradient
+            colors={saving ? ['#9ca3af', '#9ca3af'] : ['#10b981', '#059669']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveButton}
+          >
+            {saving ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <>
+                <MaterialIcons name="save" size={20} color="#ffffff" />
+                <Text style={styles.saveButtonText}>Kaydet</Text>
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -277,12 +297,25 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: '#ffffff',
   },
   entryCard: {
     backgroundColor: '#ffffff',
@@ -333,18 +366,20 @@ const styles = StyleSheet.create({
     height: 80,
     textAlignVertical: 'top',
   },
+  saveButtonWrapper: {
+    marginTop: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   saveButton: {
-    backgroundColor: '#10b981',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     padding: 14,
-    borderRadius: 8,
-    marginTop: 8,
   },
   saveButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    opacity: 0.6,
   },
   saveButtonText: {
     fontSize: 16,
