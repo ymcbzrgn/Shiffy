@@ -18,8 +18,21 @@ class ChatService {
    * Configure the chat service with API credentials
    */
   configure(apiUrl: string, apiKey: string = '') {
-    this.apiUrl = apiUrl;
+    // Production fix: If using Vite proxy path but not in dev mode, use direct URL
+    if (apiUrl.startsWith('/api/runpod') && import.meta.env.PROD) {
+      console.log('🔧 Production detected: Using direct RunPod URL instead of proxy');
+      this.apiUrl = 'https://3fg3p55cngmmn1-8888.proxy.runpod.net/api/chatbot';
+    } else {
+      this.apiUrl = apiUrl;
+    }
     this.apiKey = apiKey;
+    
+    console.log('⚙️ ChatService configured:', {
+      originalUrl: apiUrl,
+      finalUrl: this.apiUrl,
+      isProduction: import.meta.env.PROD,
+      mode: import.meta.env.MODE
+    });
   }
 
   /**
