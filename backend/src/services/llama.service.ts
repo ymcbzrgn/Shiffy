@@ -38,38 +38,34 @@ export const llamaService = {
    * Generate schedule using RunPod Llama API
    */
   async generateSchedule(
-    _storeName: string,
-    _weekStart: string,
+    storeName: string,
+    weekStart: string,
     employees: EmployeePreference[]
   ): Promise<{ shifts: Shift[]; summary: ScheduleSummary }> {
     try {
-      // Note: storeName and weekStart not used in new API format
+      // Build prompt for shift scheduling
+      const prompt = this.buildSchedulePrompt(storeName, weekStart, employees);
+
+      console.log('=== GENERATING SCHEDULE ===');
+      console.log('API URL:', config.runpod.apiUrl);
+      console.log('Model: llama3.1:8b-instruct-q4_K_M');
+      console.log('Employees:', employees.length);
+
       const response = await fetch(
-        `${config.runpod.apiUrl}/api/generate-schedule`,
+        `${config.runpod.apiUrl}/api/generate-with-system`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // No API key needed - CORS is open
+            'x-api-key': config.runpod.apiKey,
           },
           body: JSON.stringify({
-            store_hours: { start: '08:00', end: '22:00' },
-            employees: employees.map(emp => ({
-              id: emp.employee_id,
-              name: emp.full_name,
-              job_description: emp.job_description,
-              availability: this.convertSlotsToAvailability(emp.slots),
-              preferences: {
-                max_hours_per_week: emp.max_weekly_hours || 40,
-                notes: emp.notes,
-              },
-            })),
-            requirements: {
-              min_employees_per_shift: 1,
-              shift_duration_hours: 8,
-            },
+            prompt: prompt,
+            system_prompt_key: 'shift_scheduler',
+            model: 'llama3.1:8b-instruct-q4_K_M',
+            stream: false,
           }),
-          signal: AbortSignal.timeout(90000), // 90s timeout for AI generation
+          signal: AbortSignal.timeout(180000), // 3 minute timeout
         }
       );
 
@@ -80,56 +76,57 @@ export const llamaService = {
       const data = await response.json() as any;
 
       console.log('=== AI RESPONSE ===');
-      console.log('Response keys:', Object.keys(data));
-      console.log('Success:', data.success);
+      console.log('Model:', data.model);
+      console.log('Done:', data.done);
 
-      // New API format: { success: true, schedule: {...} }
-      if (data.success && data.schedule) {
-        const scheduleData = data.schedule.schedule?.store || data.schedule;
-        console.log('Schedule data:', JSON.stringify(scheduleData, null, 2));
-
-        // Convert new format to old format (shifts array)
-        const shifts: Shift[] = [];
-        const hoursPerEmployee: Record<string, number> = {};
-
-        // Parse schedule from new format
-        for (const [_date, daySchedule] of Object.entries(scheduleData)) {
-          for (const [day, dayShifts] of Object.entries(daySchedule as any)) {
-            for (const shift of (dayShifts as any[])) {
-              // Calculate hours
-              const [startHour, startMin] = shift.start_time.split(':').map(Number);
-              const [endHour, endMin] = shift.end_time.split(':').map(Number);
-              const hours = (endHour * 60 + endMin - (startHour * 60 + startMin)) / 60;
-
-              const employee = employees.find(e => e.employee_id === shift.employee_id);
-
-              shifts.push({
-                employee_id: shift.employee_id,
-                employee_name: employee?.full_name || 'Unknown',
-                job_description: employee?.job_description || 'Çalışan',
-                day: day,
-                start_time: shift.start_time,
-                end_time: shift.end_time,
-                hours: hours,
-              });
-
-              hoursPerEmployee[shift.employee_id] = (hoursPerEmployee[shift.employee_id] || 0) + hours;
-            }
-          }
-        }
-
-        return {
-          shifts,
-          summary: {
-            total_shifts: shifts.length,
-            total_employees: Object.keys(hoursPerEmployee).length,
-            hours_per_employee: hoursPerEmployee,
-            warnings: [],
-          },
-        };
+      // Response contains STRING JSON in "response" field
+      let responseText = data.response;
+      if (!responseText) {
+        throw new Error('No response text from RunPod API');
       }
 
-      throw new Error('Invalid response format from RunPod API');
+      // Clean markdown formatting if present
+      responseText = responseText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+
+      // Parse the JSON response
+      const scheduleData = JSON.parse(responseText);
+      console.log('Parsed schedule:', JSON.stringify(scheduleData, null, 2));
+
+      // Convert to expected format
+      const shifts: Shift[] = [];
+      const hoursPerEmployee: Record<string, number> = {};
+
+      if (scheduleData.shifts && Array.isArray(scheduleData.shifts)) {
+        for (const shift of scheduleData.shifts) {
+          const employee = employees.find(e => e.employee_id === shift.employee_id);
+
+          shifts.push({
+            employee_id: shift.employee_id,
+            employee_name: employee?.full_name || shift.employee_name || 'Unknown',
+            job_description: employee?.job_description || 'Çalışan',
+            day: shift.day,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+            hours: shift.hours || 8,
+          });
+
+          hoursPerEmployee[shift.employee_id] =
+            (hoursPerEmployee[shift.employee_id] || 0) + (shift.hours || 8);
+        }
+      }
+
+      return {
+        shifts,
+        summary: scheduleData.summary || {
+          total_shifts: shifts.length,
+          total_employees: Object.keys(hoursPerEmployee).length,
+          hours_per_employee: hoursPerEmployee,
+          warnings: [],
+        },
+      };
     } catch (error) {
       console.error('Llama schedule generation error:', error);
       throw new Error(

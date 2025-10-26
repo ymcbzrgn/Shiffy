@@ -490,6 +490,34 @@ shiffy/
 
 ---
 
+## 📸 Demo Screenshots
+
+### 👔 Manager Panel
+
+| Screenshot | Description |
+|------------|-------------|
+| ![Dashboard](./website/src/assets/screenshots/manager/1.png.jpg) | **Dashboard** - İstatistikler, aktif çalışanlar, bekleyen tercihler genel bakış |
+| ![Employee Management](./website/src/assets/screenshots/manager/2.png.jpg) | **Çalışan Yönetimi** - Çalışan listesi, ekleme, düzenleme, notlar |
+| ![Shift Review](./website/src/assets/screenshots/manager/3.png.jpg) | **Vardiya İnceleme** - Tüm çalışanların tercihlerini grid görünümünde inceleme |
+| ![AI Schedule](./website/src/assets/screenshots/manager/4.png.jpg) | **AI Takvim Oluşturma** - Llama 3.2 70B ile otomatik vardiya planı |
+| ![Manual Edit](./website/src/assets/screenshots/manager/5.png.jpg) | **Manuel Düzenleme** - AI'nin oluşturduğu takvimleri düzenleme |
+| ![Sales Reports](./website/src/assets/screenshots/manager/6.png.jpg) | **Satış Raporları** - Günlük/haftalık ciro ve satış takibi |
+| ![Settings](./website/src/assets/screenshots/manager/7.png.jpg) | **Ayarlar** - Deadline, çalışma günleri, vardiya süreleri |
+
+### 👤 Employee Interface
+
+| Screenshot | Description |
+|------------|-------------|
+| ![Home Screen](./website/src/assets/screenshots/employee/1.png.jpg) | **Ana Ekran** - Hoşgeldin mesajı, next shift, quick actions |
+| ![Preferences](./website/src/assets/screenshots/employee/2.png.jpg) | **Tercih Girişi** - 30dk slot bazlı interaktif vardiya tercihleri grid |
+| ![Calendar](./website/src/assets/screenshots/employee/3.png.jpg) | **Takvim Görüntüleme** - Onaylanan vardiya takvimini görüntüleme |
+| ![My Shifts](./website/src/assets/screenshots/employee/4.png.jpg) | **Vardiyalarım** - Haftalık vardiya programı detaylı görünüm |
+| ![Profile](./website/src/assets/screenshots/employee/5.png.jpg) | **Profil** - Hesap bilgileri, şifre değiştirme, ayarlar |
+
+**Note:** Tüm screenshot'lar gerçek mobil uygulamadan alınmıştır. Daha detaylı UI/UX analizi için [Frontend UI/UX Documentation](./frontend/docs/UI_UX_ANALYSIS_AND_ROADMAP.md) dosyasına bakabilirsiniz.
+
+---
+
 ## � Kurulum
 
 ---
@@ -832,10 +860,17 @@ Dual Auth Middleware:
 
 **Team Golden Head**
 
-- **Backend Developer:** [Bartin Tahab Akici](https://github.com/ymcbzrgn)
-- **AI/ML Integration:** Llama 3.2 70B on RunPod
-- **Frontend Developer:** React Native + Expo
-- **UI/UX Designer:** NativeWind + Custom Components
+### Team Members
+- **Yamaç Bezirgan** - Project Lead & Full Stack Development
+- **Bekir Çakır** - Backend Development & AI Integration
+- **Bartın Taha Bakıcı** - Frontend Development & Mobile
+- **Ertuğrul Likos** - UI/UX Design & Quality Assurance
+
+### Technologies
+- **AI Model:** Meta Llama 3.2 70B on RunPod
+- **Backend:** Node.js + Express + TypeScript
+- **Frontend:** React Native + Expo + NativeWind
+- **Database:** PostgreSQL (Supabase)
 
 ---
 
@@ -1006,16 +1041,17 @@ eas build --platform android
 **Team Name:** Golden Head
 
 ### Team Members
-- **[Your Name]** - Full Stack Developer
-- **[Team Member 2]** - Frontend Developer
-- **[Team Member 3]** - Backend Developer
-- **[Team Member 4]** - UI/UX Designer
+- **Yamaç Bezirgan** ([@ymcbzrgn](https://github.com/ymcbzrgn)) - Project Lead & Full Stack Developer
+- **Bekir Çakır** - Backend Developer & AI Integration Specialist
+- **Bartın Taha Bakıcı** - Frontend Developer & Mobile Engineer
+- **Ertuğrul Likos** - UI/UX Designer & Quality Assurance
 
 ### Roles & Responsibilities
-- **Frontend Team:** Expo mobile app, UI components, state management
-- **Backend Team:** Node.js API, Llama integration, database design
-- **DevOps:** Oracle Cloud deployment, CI/CD pipeline
-- **Documentation:** Technical docs, API specifications, README
+- **Backend Team:** Node.js API development, Llama AI integration, database schema design, RunPod deployment
+- **Frontend Team:** Expo mobile app, React Native UI components, state management, API integration
+- **AI Integration:** Prompt engineering, fine-tuning, RAG system implementation
+- **UI/UX Design:** User interface design, user experience optimization, accessibility
+- **Documentation:** Technical documentation, API specifications, README files, deployment guides
 
 ---
 
@@ -1046,21 +1082,25 @@ eas build --platform android
 
 ## 📊 Demo Credentials
 
-### Manager Account
+### Manager Account (Test)
 ```
-Email:    demo@shiffy.com
-Password: Demo123!
-Store:    Demo Cafe
-```
-
-### Employee Accounts
-```
-Username: employee1    Password: Employee1!
-Username: employee2    Password: Employee2!
-Username: employee3    Password: Employee3!
+Email:    demo.manager@shiffy.com
+Password: ShiffyDemo2025!
+Store:    Golden Head Cafe (Demo)
 ```
 
-**Note:** These are test accounts. Please create your own for actual use.
+### Employee Accounts (Test)
+```
+Username: demo_employee1    Password: Employee123!
+Username: demo_employee2    Password: Employee123!
+Username: demo_employee3    Password: Employee123!
+```
+
+**⚠️ Important:**
+- These are **test accounts** for demonstration purposes only
+- For production use, create your own secure accounts
+- Default employee passwords must be changed on first login
+- Manager accounts use Supabase Auth with email verification
 
 ---
 
@@ -1124,20 +1164,21 @@ SOFTWARE.
 ## 📞 Contact & Support
 
 ### Project Links
-- **GitHub Repository:** https://github.com/your-org/shiffy
-- **Live Demo:** https://shiffy.com (if deployed)
-- **API Documentation:** https://api.shiffy.com/docs
+- **GitHub Repository:** [github.com/ymcbzrgn/Shiffy](https://github.com/ymcbzrgn/Shiffy)
+- **Team Lead:** Yamaç Bezirgan ([@ymcbzrgn](https://github.com/ymcbzrgn))
+- **Hackathon:** Meta & YTU Llama Hackathon 2025 (October 24-26, 2025)
 
 ### Get in Touch
-- **Email:** team@shiffy.com
-- **Discord:** [Join our server](#)
-- **Twitter:** [@ShiffyApp](#)
+- **Project Email:** yamac.bezirgan@gmail.com
+- **Team:** Team Golden Head
+- **Event:** YTU Tarihi Hamam, İstanbul
 
 ### Support
 For issues and questions:
-1. Check [Documentation](#-documentation)
-2. Search [GitHub Issues](https://github.com/your-org/shiffy/issues)
-3. Create new issue with detailed description
+1. Check [Documentation](#-dökümantasyon) for detailed guides
+2. Search [GitHub Issues](https://github.com/ymcbzrgn/Shiffy/issues) for similar problems
+3. Create new issue with detailed description and reproduction steps
+4. Contact team lead for urgent matters
 
 ---
 
