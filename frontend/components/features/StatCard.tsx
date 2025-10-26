@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS, BORDER_RADIUS, SHADOWS } from '@/constants/design-tokens';
 
 interface Props {
   title: string;
@@ -28,15 +29,11 @@ export function StatCard({ title, value, icon, color, bgColor }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+    ...SHADOWS.sm,
   },
   content: {
     flexDirection: 'row',
@@ -44,16 +41,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 12,
-    color: '#617c89',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.sm,
   },
   value: {
-    fontSize: 36,
-    fontWeight: 'bold',
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: FONT_WEIGHTS.bold,
   },
   iconContainer: {
-    padding: 16,
-    borderRadius: 12,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
   },
 });

@@ -11,12 +11,11 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { GradientHeader } from '@/components/ui/GradientHeader';
 import { saveSalesReport, getWeeklySalesReports, type WeeklySalesData } from '@/services/sales-reports';
 import { getWeekStart, formatWeekRange, formatDateISO } from '@/utils/shift-grid-helpers';
 
 export default function SalesReportsScreen() {
-  const router = useRouter();
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklySalesData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -101,20 +100,13 @@ export default function SalesReportsScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#00cd81', '#004dd6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <MaterialIcons name="chevron-left" size={28} color="#ffffff" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
+      <GradientHeader 
+        title="Satış Raporları"
+        showBackButton={true}
+        rightAction={
           <MaterialIcons name="assessment" size={28} color="#ffffff" />
-          <Text style={styles.headerTitle}>Satış Raporları</Text>
-        </View>
-      </LinearGradient>
+        }
+      />
 
       {/* Today's Entry Form */}
       <View style={styles.entryCard}>
