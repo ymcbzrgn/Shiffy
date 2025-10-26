@@ -14,22 +14,38 @@ export interface APIResponse<T> {
  * Priority: AsyncStorage (for employee JWT) > Supabase session (for manager)
  */
 async function getFreshToken(): Promise<string | null> {
-  // First, try AsyncStorage (for employee tokens - custom JWT)
-  const storedToken = await AsyncStorage.getItem('auth_token');
+  // CRITICAL: Use multiGet to bypass iOS AsyncStorage cache
+  // getItem() can return stale cached values on iOS
+  const [[, storedToken]] = await AsyncStorage.multiGet(['auth_token']);
+  
+  // DEBUG: Log all AsyncStorage keys to verify token is actually removed
+  const allKeys = await AsyncStorage.getAllKeys();
+  console.log('[API] All AsyncStorage keys:', allKeys);
+  console.log('[API] auth_token value:', storedToken);
   
   if (storedToken) {
+    console.log('[API] Using employee token from AsyncStorage');
     // Employee token exists, use it
     return storedToken;
   }
 
   // Fallback to Supabase session (for manager tokens)
-  const { data: { session }, error } = await supabase.auth.getSession();
+  // Use refreshSession() to ensure fresh token (not cached/expired)
+  console.log('[API] No AsyncStorage token, trying Supabase refresh...');
+  const { data: { session }, error } = await supabase.auth.refreshSession();
 
-  if (!error && session?.access_token) {
+  if (error) {
+    console.error('[API] Supabase refresh error:', error.message);
+    return null;
+  }
+
+  if (session?.access_token) {
+    console.log('[API] ✅ Got fresh Supabase token');
     // Manager session exists, use Supabase token
     return session.access_token;
   }
 
+  console.warn('[API] ⚠️ No token available - user not logged in?');
   // No token found
   return null;
 }
@@ -54,6 +70,9 @@ export async function apiClient<T>(
     // Get fresh token (auto-refreshes if needed)
     const token = await getFreshToken();
 
+    console.log(`[API] Request: ${options.method || 'GET'} ${endpoint}`);
+    console.log(`[API] Token present: ${token ? 'YES' : 'NO'}`);
+
     // Build headers
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -62,9 +81,13 @@ export async function apiClient<T>(
     // Add Authorization header if token exists
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+      console.log(`[API] Auth header: Bearer ${token.substring(0, 20)}...`);
+    } else {
+      console.warn('[API] ⚠️ No token - request will fail if protected');
     }
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
+    console.log(`[API] Full URL: ${fullUrl}`);
 
     // Make request
     const response = await fetch(fullUrl, {
@@ -72,8 +95,15 @@ export async function apiClient<T>(
       headers,
     });
 
+    console.log(`[API] Response status: ${response.status} ${response.statusText}`);
+
     // Parse JSON response
     const data = await response.json();
+
+    console.log(`[API] Response success: ${data.success}`);
+    if (!data.success) {
+      console.error(`[API] Response error: ${data.error}`);
+    }
 
     // Return response (backend already uses { success, data, error } format)
     return data;
@@ -99,9 +129,27 @@ export async function saveToken(token: string): Promise<void> {
 
 /**
  * Clear authentication token (logout)
+ * Also flushes AsyncStorage cache to prevent stale reads
  */
 export async function clearToken(): Promise<void> {
+  // DEBUG: Check what's in AsyncStorage BEFORE removal
+  const beforeKeys = await AsyncStorage.getAllKeys();
+  const beforeToken = await AsyncStorage.getItem('auth_token');
+  console.log('[clearToken] BEFORE - Keys:', beforeKeys);
+  console.log('[clearToken] BEFORE - Token exists:', !!beforeToken);
+  
   await AsyncStorage.removeItem('auth_token');
+  
+  // DEBUG: Verify it's actually removed
+  const afterKeys = await AsyncStorage.getAllKeys();
+  const afterToken = await AsyncStorage.getItem('auth_token');
+  console.log('[clearToken] AFTER - Keys:', afterKeys);
+  console.log('[clearToken] AFTER - Token exists:', !!afterToken);
+  
+  // CRITICAL: Flush AsyncStorage cache to prevent getFreshToken() from reading stale values
+  // Without this, iOS may return cached value even after removeItem()
+  await AsyncStorage.getAllKeys(); // Force cache refresh
+  console.log('[clearToken] ✅ Token removed and cache flushed');
 }
 
 /**

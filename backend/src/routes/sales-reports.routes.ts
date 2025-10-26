@@ -16,7 +16,7 @@ router.use(authMiddleware);
  */
 router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.manager_id || req.user?.user_id;
     const { report_date, total_revenue, total_transactions, notes } = req.body;
 
     if (!userId) {
@@ -75,7 +75,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
  */
 router.get('/daily/:date', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.manager_id || req.user?.user_id;
     const { date } = req.params;
 
     if (!userId) {
@@ -109,7 +109,7 @@ router.get('/daily/:date', async (req: Request, res: Response): Promise<void> =>
  */
 router.get('/weekly/:weekStart', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.manager_id || req.user?.user_id;
     const { weekStart } = req.params;
 
     if (!userId) {
@@ -164,7 +164,7 @@ router.get('/weekly/:weekStart', async (req: Request, res: Response): Promise<vo
  */
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.manager_id || req.user?.user_id;
     const { id } = req.params;
 
     if (!userId) {

@@ -45,9 +45,17 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
 export function verifyToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    console.log(`[JWT] ✅ Token verified successfully`);
+    console.log(`[JWT] User: ${decoded.user_id}, Type: ${decoded.user_type}, Exp: ${decoded.exp ? new Date(decoded.exp * 1000).toISOString() : 'N/A'}`);
     return decoded;
   } catch (error) {
-    // Token is invalid or expired
+    if (error instanceof jwt.TokenExpiredError) {
+      console.error(`[JWT] ❌ Token expired at: ${error.expiredAt}`);
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.error(`[JWT] ❌ Invalid token: ${error.message}`);
+    } else {
+      console.error('[JWT] ❌ Token verification failed:', error);
+    }
     return null;
   }
 }

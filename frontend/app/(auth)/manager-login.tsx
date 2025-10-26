@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { validateEmail, validatePassword } from '../../utils/validation';
 import { loginManager } from '../../services/auth';
 import { saveUserSession } from '../../utils/storage';
+import { clearToken } from '../../services/api-client';
 
 const { width, height } = Dimensions.get('window');
 const isSmallDevice = width < 375;
@@ -67,6 +68,12 @@ export default function ManagerLoginScreen() {
     setLoading(true);
     
     try {
+      // CRITICAL: Clear employee token BEFORE any API calls
+      // This prevents stale employee tokens from being used
+      console.log('[Manager Login] Clearing any existing employee tokens...');
+      await clearToken();
+      console.log('[Manager Login] ✅ Tokens cleared, proceeding with Supabase login');
+
       const { manager, token } = await loginManager(form.email, form.password);
 
       // Store user session in AsyncStorage

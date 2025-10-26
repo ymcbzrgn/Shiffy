@@ -7,6 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, type JWTPayload } from '../utils/jwt.utils';
+import { supabase } from '../config/supabase.config';
 
 // Extend Express Request type to include user
 declare global {
@@ -26,16 +27,20 @@ declare global {
  * @example
  * router.post('/protected', authMiddleware, handler);
  */
-export function authMiddleware(
+export async function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   try {
     // Extract Authorization header
     const authHeader = req.headers.authorization;
 
+    console.log(`[Auth] ${req.method} ${req.path}`);
+    console.log(`[Auth] Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
+
     if (!authHeader) {
+      console.warn('[Auth] ❌ No authorization header provided');
       res.status(401).json({
         success: false,
         error: 'No authorization header provided',
@@ -45,6 +50,7 @@ export function authMiddleware(
 
     // Check Bearer format
     if (!authHeader.startsWith('Bearer ')) {
+      console.warn('[Auth] ❌ Invalid authorization format');
       res.status(401).json({
         success: false,
         error: 'Invalid authorization format. Use: Bearer <token>',
@@ -54,8 +60,10 @@ export function authMiddleware(
 
     // Extract token
     const token = authHeader.substring(7); // Remove "Bearer "
+    console.log(`[Auth] Token: ${token.substring(0, 20)}...`);
 
     if (!token) {
+      console.warn('[Auth] ❌ No token provided');
       res.status(401).json({
         success: false,
         error: 'No token provided',
@@ -64,14 +72,43 @@ export function authMiddleware(
     }
 
     // Verify token
-    const decoded = verifyToken(token);
+    // Try custom JWT first (for employees)
+    let decoded = verifyToken(token);
 
     if (!decoded) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid or expired token',
-      });
-      return;
+      // If custom JWT fails, try Supabase token (for managers)
+      console.log('[Auth] Custom JWT failed, trying Supabase token...');
+      
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (error || !user) {
+          console.error('[Auth] ❌ Supabase token verification failed:', error?.message);
+          res.status(401).json({
+            success: false,
+            error: 'Invalid or expired token',
+          });
+          return;
+        }
+        
+        // Supabase token valid - create JWTPayload format
+        console.log(`[Auth] ✅ Supabase token verified - User: ${user.id} (manager)`);
+        decoded = {
+          user_id: user.id,
+          user_type: 'manager',
+          manager_id: user.id, // Same as user_id for managers
+          exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+        } as JWTPayload;
+      } catch (supabaseError) {
+        console.error('[Auth] ❌ Token verification failed - invalid or expired');
+        res.status(401).json({
+          success: false,
+          error: 'Invalid or expired token',
+        });
+        return;
+      }
+    } else {
+      console.log(`[Auth] ✅ Token verified - User: ${decoded.user_id} (${decoded.user_type})`);
     }
 
     // Attach user info to request

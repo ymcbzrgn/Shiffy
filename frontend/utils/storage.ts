@@ -48,12 +48,13 @@ export async function getUserSession(): Promise<UserSession | null> {
 
     if (userType === 'manager') {
       // For managers: Use Supabase session (auto-refreshes if expired)
+      // CRITICAL: Do NOT save to AsyncStorage - that's for employee tokens only!
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (!error && session?.access_token) {
         accessToken = session.access_token;
-        // Update AsyncStorage with fresh token
-        await AsyncStorage.setItem('auth_token', session.access_token);
+        // ❌ REMOVED: Do NOT save Supabase token to AsyncStorage
+        // Manager tokens should ONLY come from Supabase session
       }
     } else {
       // For employees: Get from AsyncStorage (custom JWT)
@@ -74,7 +75,13 @@ export async function getUserSession(): Promise<UserSession | null> {
 
 export async function clearUserSession(): Promise<void> {
   try {
-    await AsyncStorage.multiRemove([KEYS.USER_SESSION, KEYS.USER_TYPE]);
+    // Clear all auth-related keys
+    await AsyncStorage.multiRemove([
+      KEYS.USER_SESSION, 
+      KEYS.USER_TYPE,
+      'auth_token', // ✅ Employee JWT token (critical!)
+    ]);
+    console.log('✅ User session cleared (including auth_token)');
   } catch (error) {
     console.error('Failed to clear user session:', error);
     throw error;

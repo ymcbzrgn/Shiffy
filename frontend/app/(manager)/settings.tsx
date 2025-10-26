@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert,
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { logoutManager } from '@/services/auth';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Çıkış Yap',
       'Çıkış yapmak istediğinize emin misiniz?',
@@ -32,8 +33,16 @@ export default function SettingsScreen() {
         {
           text: 'Çıkış Yap',
           style: 'destructive',
-          onPress: () => {
-            router.replace('/(auth)/user-select' as any);
+          onPress: async () => {
+            try {
+              // Logout from Supabase and clear AsyncStorage
+              await logoutManager();
+              console.log('✅ Logout successful - both Supabase and AsyncStorage cleared');
+              router.replace('/(auth)/user-select' as any);
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu');
+            }
           },
         },
       ]

@@ -9,6 +9,10 @@ export async function loginManager(
   email: string,
   password: string
 ): Promise<{ manager: Manager; token: string }> {
+  // CRITICAL: Clear employee token FIRST, before any API calls
+  // This prevents getFreshToken() from using stale employee tokens
+  await clearToken();
+
   // Sign in with Supabase
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -23,8 +27,9 @@ export async function loginManager(
     throw new Error('Login failed');
   }
 
-  // Save token for API requests
-  await saveToken(data.session.access_token);
+  // IMPORTANT: Do NOT save Supabase token to AsyncStorage
+  // AsyncStorage is for employee tokens only (custom JWT)
+  // Manager tokens come from Supabase session directly
 
   // Fetch manager profile from database
   const { data: managerData, error: profileError } = await supabase
@@ -51,6 +56,9 @@ export async function registerManager(
   email: string,
   password: string
 ): Promise<{ manager: Manager; token: string }> {
+  // CRITICAL: Clear employee token FIRST, before any API calls
+  await clearToken();
+
   // Create auth user
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -82,8 +90,9 @@ export async function registerManager(
     throw new Error('Failed to create manager profile');
   }
 
-  // Save token
-  await saveToken(data.session.access_token);
+  // IMPORTANT: Do NOT save Supabase token to AsyncStorage
+  // AsyncStorage is for employee tokens only (custom JWT)
+  // Manager tokens come from Supabase session directly
 
   return {
     manager: managerData as Manager,
@@ -95,6 +104,8 @@ export async function registerManager(
  * Logout (clear session)
  */
 export async function logoutManager(): Promise<void> {
+  // Sign out from Supabase
   await supabase.auth.signOut();
+  // Also clear AsyncStorage (in case there's an employee token)
   await clearToken();
 }
