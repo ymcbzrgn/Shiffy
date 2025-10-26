@@ -46,23 +46,28 @@ export const llamaService = {
       const prompt = this.buildSchedulePrompt(storeName, weekStart, employees);
 
       const response = await fetch(
-        `${config.runpod.apiUrl}/api/generate-with-system`,
+        `${config.runpod.apiUrl}/api/generate-schedule`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': config.runpod.apiKey,
+            // No API key needed - CORS is open
           },
           body: JSON.stringify({
-            system_prompt_key: 'shift_scheduler', // Proxy injects system prompt
-            prompt,
-            model: 'llama3.1:8b-instruct-q6_K',
-            stream: false,
-            validate: false, // Temporarily disable to debug AI output
-            options: {
-              temperature: 0.5,
-              num_ctx: 16384,
-              num_predict: 3000,
+            store_hours: { start: '08:00', end: '22:00' },
+            employees: employees.map(emp => ({
+              id: emp.employee_id,
+              name: emp.full_name,
+              job_description: emp.job_description,
+              availability: this.convertSlotsToAvailability(emp.slots),
+              preferences: {
+                max_hours_per_week: emp.max_weekly_hours || 40,
+                notes: emp.notes,
+              },
+            })),
+            requirements: {
+              min_employees_per_shift: 1,
+              shift_duration_hours: 8,
             },
           }),
           signal: AbortSignal.timeout(90000), // 90s timeout for AI generation
@@ -75,40 +80,87 @@ export const llamaService = {
 
       const data = await response.json() as any;
 
-      // DEBUG: Log the AI response structure
-      console.log('=== AI RESPONSE STRUCTURE ===');
-      console.log('Keys:', Object.keys(data));
-      console.log('Has validation:', !!data.validation);
-      console.log('Has parsed:', !!data.parsed);
-      console.log('Has response:', !!data.response);
+      console.log('=== AI RESPONSE ===');
+      console.log('Response keys:', Object.keys(data));
+      console.log('Success:', data.success);
 
-      let scheduleData;
+      // New API format: { success: true, schedule: {...} }
+      if (data.success && data.schedule) {
+        const scheduleData = data.schedule.schedule?.store || data.schedule;
+        console.log('Schedule data:', JSON.stringify(scheduleData, null, 2));
 
-      // Handle different response structures
-      if (data.parsed) {
-        // Validation was enabled, response is pre-parsed
-        scheduleData = data.parsed;
-      } else if (data.response) {
-        // Validation was disabled, response is a JSON string
-        console.log('Parsing response string...');
-        scheduleData = JSON.parse(data.response);
-      } else {
-        throw new Error('Unknown response structure from RunPod');
+        // Convert new format to old format (shifts array)
+        const shifts: Shift[] = [];
+        const hoursPerEmployee: Record<string, number> = {};
+
+        // Parse schedule from new format
+        for (const [date, daySchedule] of Object.entries(scheduleData)) {
+          for (const [day, dayShifts] of Object.entries(daySchedule as any)) {
+            for (const shift of (dayShifts as any[])) {
+              shifts.push({
+                employee_id: shift.employee_id,
+                employee_name: employees.find(e => e.employee_id === shift.employee_id)?.full_name || 'Unknown',
+                day: day,
+                start_time: shift.start_time,
+                end_time: shift.end_time,
+              });
+
+              // Calculate hours
+              const [startHour, startMin] = shift.start_time.split(':').map(Number);
+              const [endHour, endMin] = shift.end_time.split(':').map(Number);
+              const hours = (endHour * 60 + endMin - (startHour * 60 + startMin)) / 60;
+              hoursPerEmployee[shift.employee_id] = (hoursPerEmployee[shift.employee_id] || 0) + hours;
+            }
+          }
+        }
+
+        return {
+          shifts,
+          summary: {
+            total_shifts: shifts.length,
+            total_employees: Object.keys(hoursPerEmployee).length,
+            hours_per_employee: hoursPerEmployee,
+            warnings: [],
+          },
+        };
       }
 
-      console.log('Parsed schedule data:', JSON.stringify(scheduleData, null, 2));
-
-      // Return schedule data
-      return {
-        shifts: scheduleData.shifts,
-        summary: scheduleData.summary,
-      };
+      throw new Error('Invalid response format from RunPod API');
     } catch (error) {
       console.error('Llama schedule generation error:', error);
       throw new Error(
         `Failed to generate schedule: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  },
+
+  /**
+   * Convert slot-based availability to time-range format
+   */
+  convertSlotsToAvailability(
+    slots: Array<{ day: string; time: string; status: string | null }>
+  ): Record<string, string[]> {
+    const availability: Record<string, string[]> = {};
+    const timeMapping: Record<string, string> = {
+      morning: '08:00-12:00',
+      afternoon: '12:00-17:00',
+      evening: '17:00-22:00',
+    };
+
+    // Group by day and only include available/preferred slots
+    for (const slot of slots) {
+      if (slot.status === 'available' || slot.status === 'preferred') {
+        const day = slot.day.toLowerCase();
+        const timeRange = timeMapping[slot.time] || slot.time;
+
+        if (!availability[day]) {
+          availability[day] = [];
+        }
+        availability[day].push(timeRange);
+      }
+    }
+
+    return availability;
   },
 
   /**

@@ -14,14 +14,14 @@ exports.handler = async (event, context) => {
     const { message, history } = JSON.parse(event.body);
 
     // Call RunPod API
-    const response = await fetch('https://ejwkzjotxfg3i7-8888.proxy.runpod.net/api/chatbot', {
+    const response = await fetch('https://3fg3p55cngmmn1-8888.proxy.runpod.net/api/chatbot', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.RUNPOD_API_KEY,
+        // No API key needed - CORS is open
       },
       body: JSON.stringify({
-        message: message,
+        query: message, // Updated parameter name
         history: history || [],
       }),
     });
