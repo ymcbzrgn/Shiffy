@@ -38,13 +38,12 @@ export const llamaService = {
    * Generate schedule using RunPod Llama API
    */
   async generateSchedule(
-    storeName: string,
-    weekStart: string,
+    _storeName: string,
+    _weekStart: string,
     employees: EmployeePreference[]
   ): Promise<{ shifts: Shift[]; summary: ScheduleSummary }> {
     try {
-      const prompt = this.buildSchedulePrompt(storeName, weekStart, employees);
-
+      // Note: storeName and weekStart not used in new API format
       const response = await fetch(
         `${config.runpod.apiUrl}/api/generate-schedule`,
         {
@@ -94,21 +93,26 @@ export const llamaService = {
         const hoursPerEmployee: Record<string, number> = {};
 
         // Parse schedule from new format
-        for (const [date, daySchedule] of Object.entries(scheduleData)) {
+        for (const [_date, daySchedule] of Object.entries(scheduleData)) {
           for (const [day, dayShifts] of Object.entries(daySchedule as any)) {
             for (const shift of (dayShifts as any[])) {
-              shifts.push({
-                employee_id: shift.employee_id,
-                employee_name: employees.find(e => e.employee_id === shift.employee_id)?.full_name || 'Unknown',
-                day: day,
-                start_time: shift.start_time,
-                end_time: shift.end_time,
-              });
-
               // Calculate hours
               const [startHour, startMin] = shift.start_time.split(':').map(Number);
               const [endHour, endMin] = shift.end_time.split(':').map(Number);
               const hours = (endHour * 60 + endMin - (startHour * 60 + startMin)) / 60;
+
+              const employee = employees.find(e => e.employee_id === shift.employee_id);
+
+              shifts.push({
+                employee_id: shift.employee_id,
+                employee_name: employee?.full_name || 'Unknown',
+                job_description: employee?.job_description || 'Çalışan',
+                day: day,
+                start_time: shift.start_time,
+                end_time: shift.end_time,
+                hours: hours,
+              });
+
               hoursPerEmployee[shift.employee_id] = (hoursPerEmployee[shift.employee_id] || 0) + hours;
             }
           }

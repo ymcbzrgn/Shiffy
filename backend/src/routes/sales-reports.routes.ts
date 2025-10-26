@@ -11,7 +11,7 @@ const router = Router();
 router.use(authMiddleware);
 
 /**
- * POST /api/sales
+ * POST /api/sales-reports
  * Create or update a daily sales report
  */
 router.post('/', async (req: Request, res: Response): Promise<void> => {
