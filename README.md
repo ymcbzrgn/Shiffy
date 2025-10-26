@@ -1,375 +1,874 @@
-# Shiffy - AI-Powered Shift Management System
+# 🚀 Shiffy - AI-Powered Shift Management System
 
 **Smart shift scheduling for part-time employees powered by Meta's Llama AI**
 
 <p align="center">
   <img src="https://img.shields.io/badge/Hackathon-Meta%20%26%20YTU%20Llama-blue?style=for-the-badge" alt="Hackathon" />
   <img src="https://img.shields.io/badge/Theme-Productivity%20Tools-green?style=for-the-badge" alt="Theme" />
-  <img src="https://img.shields.io/badge/Status-MVP-orange?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Platform-Mobile%20%2B%20Web-blueviolet?style=for-the-badge" alt="Platform" />
 </p>
 
 ---
 
-## 📋 Table of Contents
+## 📋 İçindekiler
 
-- [About](#-about)
-- [The Problem](#-the-problem)
-- [Our Solution](#-our-solution)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [Documentation](#-documentation)
+- [Proje Hakkında](#-proje-hakkında)
+- [Problem](#-problem)
+- [Çözümümüz](#-çözümümüz)
+- [Özellikler](#-özellikler)
+- [Teknoloji Stack](#-teknoloji-stack)
+- [Proje Yapısı](#-proje-yapısı)
+- [Kurulum](#-kurulum)
+- [Dökümantasyon](#-dökümantasyon)
 - [Deployment](#-deployment)
-- [Team](#-team)
-- [License](#-license)
+- [Mimari](#-mimari)
+- [Ekip](#-ekip)
+- [Lisans](#-lisans)
 
 ---
 
-## 🎯 About
+## 🎯 Proje Hakkında
 
-**Shiffy** is a mobile-first B2B2C platform that revolutionizes shift management for businesses with part-time employees. Built during the **Meta & YTU Llama Hackathon 2025**, Shiffy leverages Meta's Llama AI models to automatically generate optimal shift schedules based on employee preferences and manager insights.
+**Shiffy**, yarı zamanlı çalışanları olan işletmeler için vardiya yönetimini devrimleştiren mobil-öncelikli bir **B2B2C platformudur**. **Meta & YTU Llama Hackathon 2025** kapsamında geliştirilen Shiffy, Meta'nın Llama AI modellerini kullanarak çalışan tercihlerine ve yönetici notlarına dayalı optimal vardiya takvimleri otomatik olarak oluşturur.
 
-### Hackathon Details
-- **Event:** Meta & YTU Llama Hackathon 2025
-- **Dates:** October 24-26, 2025
-- **Location:** YTU Historic Hamam, Istanbul
-- **Theme:** Productivity Tools
-- **Team:** Golden Head
-
----
-
-## 🔴 The Problem
-
-Part-time workforce management faces critical challenges:
-
-1. **Manual Process:** Managers spend hours manually creating shift schedules
-2. **Preference Collection:** Employees submit preferences via WhatsApp/paper, leading to miscommunication
-3. **Unfair Distribution:** Without proper tools, shift distribution becomes subjective and unbalanced
-4. **Time-Consuming:** The entire process takes 2-3 days per week
-5. **Low Satisfaction:** Both managers and employees are frustrated with the current system
-
-**Real-World Impact:**
-- Small businesses (cafes, retail stores) waste **10+ hours/week** on scheduling
-- Employee turnover increases due to unfair shift distribution
-- Managers struggle to balance preferences with business needs
+### 🏆 Hackathon Detayları
+- **Etkinlik:** Meta & YTU Llama Hackathon 2025
+- **Tarihler:** 24-26 Ekim 2025
+- **Konum:** YTU Tarihi Hamam, İstanbul
+- **Tema:** Verimlilik Araçları
+- **Takım:** Golden Head
+- **AI Model:** Meta Llama 3.2 70B Instruct (RunPod üzerinde barındırılan)
 
 ---
 
-## ✅ Our Solution
+## 🔴 Problem
 
-**Shiffy** automates the entire shift management workflow:
+Yarı zamanlı işgücü yönetimi kritik zorluklarla karşı karşıya:
 
-### For Managers (B2B)
-- 📱 Self-service registration and store setup
-- 👥 Easy employee account creation and management
-- 📝 Add contextual notes about employee preferences/strengths
-- 🤖 AI-generated shift schedules in seconds (powered by Llama)
-- ✏️ Manual editing capabilities for final adjustments
-- ✅ One-click approval and distribution
+1. **Manuel Süreç:** Yöneticiler, vardiya takvimlerini manuel olarak oluşturmak için saatler harcıyor
+2. **Tercih Toplama:** Çalışanlar tercihlerini WhatsApp/kağıt üzerinden gönderiyor, bu da iletişim hatalarına yol açıyor
+3. **Adaletsiz Dağılım:** Uygun araçlar olmadan, vardiya dağılımı subjektif ve dengesiz hale geliyor
+4. **Zaman Kaybı:** Tüm süreç hafta başına 2-3 gün alıyor
+5. **Düşük Memnuniyet:** Hem yöneticiler hem de çalışanlar mevcut sistemden rahatsız
 
-### For Employees (B2C)
-- 🔐 Secure username-based login (no email required)
-- 📅 Interactive 30-minute slot-based preference selection
-- 🎨 Color-coded availability system (Available/Unavailable/Off Request)
-- 📊 View approved schedules and shift history
-- ⏰ Deadline reminders
-
-### AI-Powered Intelligence
-- 🧠 **Meta Llama 3.2 70B** model for complex scheduling
-- ⚖️ Fair distribution algorithm considering:
-  - Employee availability preferences
-  - Manager notes and insights
-  - Work hour balance across all employees
-  - Rest period requirements (minimum 8 hours between shifts)
-  - Weekend shift rotation
+### 💼 Gerçek Dünya Etkisi
+- Küçük işletmeler (kafeler, perakende mağazaları) **haftada 10+ saat** planlama ile harcıyor
+- Adaletsiz vardiya dağılımı nedeniyle çalışan değişim oranı artıyor
+- Yöneticiler, tercihleri iş gereksinimleriyle dengelemekte zorlanıyor
+- İletişim kopukluğu ve yanlış anlamalar sık yaşanıyor
 
 ---
 
-## 🚀 Features
+## ✅ Çözümümüz
 
-### MVP Features (Hackathon)
+**Shiffy**, tüm vardiya yönetim iş akışını otomatikleştirir:
 
-**Manager Dashboard:**
-- [x] Employee management (CRUD operations)
-- [x] Shift preference review
-- [x] AI schedule generation
-- [x] Manual schedule editing
-- [x] Schedule approval and distribution
-- [x] Configurable deadline settings
+### 📱 Yöneticiler İçin (B2B)
+- ✨ Self-servis kayıt ve işletme kurulumu
+- 👥 Kolay çalışan hesabı oluşturma ve yönetimi
+- 📝 Çalışan tercihleri/güçlü yönleri hakkında bağlamsal notlar ekleme
+- 🤖 Llama AI destekli saniyeler içinde vardiya takvimi oluşturma
+- ✏️ Son ayarlamalar için manuel düzenleme yetenekleri
+- ✅ Tek tıkla onay ve dağıtım
+- 📊 Satış raporları takibi (günlük/haftalık)
+- ⚙️ Esnek ayarlar (deadline, çalışma günleri, vardiya süreleri)
 
-**Employee Interface:**
-- [x] First-login password change (security)
-- [x] Interactive shift grid (30-minute slots)
-- [x] Color-coded preference selection
-- [x] Draft auto-save (offline capability)
-- [x] View approved schedules
-- [x] Shift history tracking
+### 👤 Çalışanlar İçin (B2C)
+- 🔐 Kullanıcı adı tabanlı güvenli giriş (e-posta gerekmiyor)
+- 📅 30 dakikalık slot bazlı etkileşimli tercih seçimi
+- 🎨 Renk kodlu müsaitlik sistemi (Müsait/Müsait Değil/İzin Talebi)
+- 📊 Onaylanan takvimleri ve vardiya geçmişini görüntüleme
+- ⏰ Deadline hatırlatıcıları
+- 🔄 Otomatik taslak kaydetme (çevrimdışı destek)
+- 🔒 İlk girişte güvenli şifre değiştirme
 
-**Backend & AI:**
-- [x] Dual authentication system (Manager: Supabase, Employee: Custom JWT)
-- [x] RunPod-hosted Llama API integration
-- [x] Automated cron job for deadline-based generation
-- [x] RESTful API with 20+ endpoints
-- [x] Row-level security (RLS) in Supabase
-
-### Future Enhancements (Post-MVP)
-- [ ] Push notifications (shift approved, deadline reminder)
-- [ ] Chat-based shift requests
-- [ ] Employee shift swapping
-- [ ] Analytics dashboard (work hours, patterns)
-- [ ] Multi-store support
-- [ ] Manager-employee messaging
-- [ ] Export schedules (PDF, Calendar)
+### 🧠 AI Destekli Zeka
+- **Meta Llama 3.2 70B** modeli karmaşık planlama için
+- ⚖️ Şunları dikkate alan adil dağıtım algoritması:
+  - Çalışan müsaitlik tercihleri
+  - Yönetici notları ve içgörüleri
+  - Tüm çalışanlar arasında çalışma saati dengesi
+  - Dinlenme süresi gereksinimleri (vardiyalar arası min. 8 saat)
+  - Hafta sonu vardiya rotasyonu
+  - Çalışma günü limitlerini dikkate alma
 
 ---
 
-## 🛠 Tech Stack
+## 🚀 Özellikler
 
-### Frontend (Mobile App)
-```
-Framework:     Expo SDK 54 (React Native 0.76)
-Language:      TypeScript (strict mode)
-Routing:       Expo Router (file-based)
-Auth:          Supabase Auth + Custom JWT
-State:         React Hooks (no Redux/Zustand)
-Storage:       Expo SecureStore
-Testing:       Jest + React Native Testing Library
+### ✅ Production-Ready Özellikler
+
+#### 🎯 Yönetici Dashboard (Manager Panel)
+- [x] **Çalışan Yönetimi:** CRUD operasyonları, çalışan notları, profil detayları
+- [x] **Vardiya Tercih İncelemesi:** Tüm çalışanların tercihlerini grid görünümünde inceleme
+- [x] **AI Takvim Oluşturma:** Llama 3.2 70B ile otomatik optimal takvim
+- [x] **Manuel Düzenleme:** Drag-drop ile vardiya düzenleme, çalışan atama/çıkarma
+- [x] **Takvim Onaylama:** Tek tıkla onaylama ve tüm çalışanlara dağıtım
+- [x] **Satış Raporları:** Günlük/haftalık ciro ve satış sayısı takibi
+- [x] **Ayarlar Yönetimi:** Deadline, çalışma günleri, vardiya süreleri ayarları
+- [x] **İstatistikler:** Toplam çalışan, aktif çalışan, bekleyen tercihler
+
+#### 👤 Çalışan Arayüzü (Employee Interface)
+- [x] **Güvenli Giriş:** İlk girişte zorunlu şifre değiştirme
+- [x] **Etkileşimli Vardiya Grid:** 30 dakikalık slotlar, haftalık görünüm
+- [x] **Renk Kodlu Seçim:** Müsait (Yeşil) / Müsait Değil (Kırmızı) / İzin Talebi (Mavi)
+- [x] **Otomatik Taslak:** Çevrimdışı çalışma desteği, otomatik kaydetme
+- [x] **Takvim Görüntüleme:** Onaylanan vardiyaları görüntüleme
+- [x] **Vardiya Geçmişi:** Geçmiş vardiyaları takip etme
+- [x] **Profil Yönetimi:** Şifre değiştirme, hesap bilgileri
+
+#### 🔧 Backend & AI
+- [x] **Dual Authentication:** Yöneticiler için Supabase Auth, Çalışanlar için Custom JWT
+- [x] **RunPod Llama Entegrasyonu:** Self-hosted GPU instance üzerinde Llama 3.2 70B
+- [x] **Otomatik Cron Job:** Deadline gününde otomatik takvim oluşturma
+- [x] **RESTful API:** 30+ endpoint (auth, employees, shifts, schedules, reports)
+- [x] **Row-Level Security (RLS):** Supabase üzerinde veri izolasyonu
+- [x] **Token Yönetimi:** Cache-busting, token refresh, AsyncStorage cleanup
+- [x] **Error Handling:** Global error middleware, validation, logging
+
+#### 🌐 Website (Landing Page)
+- [x] **Modern Tasarım:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui
+- [x] **AI Chatbot:** Shiffy hakkında bilgi veren akıllı asistan
+- [x] **Çoklu Dil:** Türkçe/İngilizce dil desteği
+- [x] **Responsive:** Mobil, tablet, desktop uyumlu
+- [x] **Özellik Showcase:** Manager ve Employee panellerinin screenshot'ları
+
+### 🔮 Gelecek Geliştirmeler (Post-MVP)
+- [ ] **Push Notifications:** Vardiya onaylandı, deadline hatırlatıcısı
+- [ ] **Chat Tabanlı İstekler:** Çalışanlar arasında anlık mesajlaşma
+- [ ] **Vardiya Değişimi:** Çalışanlar arası shift swap
+- [ ] **Analitik Dashboard:** Çalışma saatleri, pattern analizi
+- [ ] **Çoklu Mağaza Desteği:** Tek yöneticiden birden fazla işletme yönetimi
+- [ ] **Yönetici-Çalışan Mesajlaşma:** Direkt iletişim kanalı
+- [ ] **Export İşlemleri:** PDF, iCal formatında takvim dışa aktarma
+- [ ] **Dark Mode:** Karanlık tema desteği
+- [ ] **Design System:** Tutarlı UI component library
+- [ ] **Performance Optimization:** Code splitting, lazy loading
+
+---
+
+## 🛠 Teknoloji Stack
+
+### 📱 Frontend (Mobile App)
+```yaml
+Framework:          Expo SDK 54 (React Native 0.81.5)
+Language:           TypeScript (strict mode)
+Routing:            Expo Router (file-based routing)
+Authentication:     Supabase Auth (Managers) + Custom JWT (Employees)
+State Management:   React Hooks (useState, useEffect, useContext)
+Storage:            AsyncStorage (@react-native-async-storage)
+Styling:            NativeWind 4.2 (Tailwind CSS for React Native)
+UI Components:      Custom components + expo-linear-gradient
+Navigation:         @react-navigation/native + bottom-tabs
+Icons:              @expo/vector-icons
+Testing:            Jest + React Native Testing Library (TBD)
 ```
 
-### Backend (API Server)
-```
-Runtime:       Node.js 20.x
-Framework:     Express.js
-Language:      TypeScript
-Database:      PostgreSQL (via Supabase)
-Auth:          Supabase Auth + Custom JWT (bcrypt)
-ORM:           Direct Supabase client (no ORM)
-Scheduling:    node-cron (automated tasks)
-Testing:       Jest + Supertest
+**Temel Kütüphaneler:**
+- `@supabase/supabase-js` - Supabase client
+- `expo-router` - File-based navigation
+- `react-native-gesture-handler` - Gesture support
+- `@react-native-picker/picker` - Native picker
+- `expo-linear-gradient` - Gradient backgrounds
+
+---
+
+### ⚙️ Backend (API Server)
+```yaml
+Runtime:            Node.js 20.x
+Framework:          Express.js 4.18
+Language:           TypeScript 5.3
+Database:           PostgreSQL (via Supabase)
+Auth Provider:      Supabase Auth + Custom JWT
+Password Hashing:   bcrypt 5.1.1
+Token Generation:   jsonwebtoken 9.0.2
+Scheduling:         node-cron 4.2.1 (automated tasks)
+CORS:               cors 2.8.5
+Testing:            Jest + Supertest (TBD)
+Process Manager:    PM2 (production)
 ```
 
-### AI & Infrastructure
-```
-AI Model:      Meta Llama 3.2 70B Instruct
-AI Platform:   RunPod (self-hosted GPU instance)
-Deployment:    Oracle Cloud Free Tier (4 vCPU, 24GB RAM)
-Process Mgr:   PM2 (cluster mode)
-Reverse Proxy: Nginx
-SSL:           Let's Encrypt (Certbot)
-CI/CD:         GitHub Actions
-```
+**Mimari Katmanlar:**
+- **Routes:** HTTP endpoint handlers (auth, manager, employee, shift, schedule)
+- **Services:** Business logic (auth, shift, auto-schedule, llama)
+- **Repositories:** Database queries (direct Supabase client)
+- **Middleware:** Authentication (JWT + Supabase), error handling
+- **Utils:** JWT utilities, password hashing, validators
 
-### Database Schema
+**API Endpoint'leri (30+):**
 ```
-Tables:        managers, employees, shift_preferences, 
-               schedules, audit_logs (optional)
-Features:      JSONB columns, Row-Level Security (RLS),
-               UUID primary keys, Indexes
+Authentication:
+  POST   /api/employee/login
+  POST   /api/employee/change-password
+
+Manager:
+  GET    /api/manager/employees
+  POST   /api/manager/employees
+  GET    /api/manager/employees/:id
+  PATCH  /api/manager/employees/:id/notes
+  PATCH  /api/manager/employees/:id/toggle-status
+
+Shifts:
+  POST   /api/shifts/preferences
+  GET    /api/shifts/my-preferences
+  GET    /api/shifts/requests
+
+Schedules:
+  POST   /api/schedules/generate
+  POST   /api/schedules/:id/approve
+  PATCH  /api/schedules/:id/shifts
+  GET    /api/schedules
+  GET    /api/schedules/my-schedule
+
+Auto-Schedule:
+  POST   /api/auto-schedule/trigger-all
+  POST   /api/auto-schedule/trigger-me
+  GET    /api/auto-schedule/status
+
+Sales Reports:
+  POST   /api/sales-reports
+  GET    /api/sales-reports/daily/:date
+  GET    /api/sales-reports/weekly/:weekStart
+  DELETE /api/sales-reports/:id
+
+Settings:
+  GET    /api/manager/settings
+  PATCH  /api/manager/settings
 ```
 
 ---
 
-## 📁 Project Structure
+### 🧠 AI & Infrastructure
+```yaml
+AI Model:           Meta Llama 3.2 70B Instruct
+AI Platform:        RunPod (self-hosted GPU instance)
+API Protocol:       HTTP/REST
+Prompt Engineering: Structured JSON prompts with context
+Deployment:         Oracle Cloud Free Tier (4 vCPU, 24GB RAM)
+Process Manager:    PM2 (cluster mode, auto-restart)
+Reverse Proxy:      Nginx
+SSL/TLS:            Let's Encrypt (Certbot)
+CI/CD:              GitHub Actions (planned)
+Monitoring:         PM2 logs, Supabase logs
+```
+
+**RunPod Kurulum:**
+- GPU: NVIDIA A40 (48GB VRAM)
+- Container: Ollama + Llama 3.2 70B
+- Uptime: 24/7 with watchdog script
+- Health Check: `/health` endpoint
+
+---
+
+### 🗄️ Database Schema (PostgreSQL via Supabase)
+```sql
+-- Tablolar
+managers              # Yönetici hesapları (Supabase Auth ile entegre)
+employees             # Çalışan hesapları (username + hashed password)
+shift_preferences     # Çalışan vardiya tercihleri (30dk slot bazlı)
+schedules             # AI tarafından oluşturulan takvimler
+sales_reports         # Günlük/haftalık satış verileri
+manager_settings      # İşletme ayarları (deadline, çalışma günleri)
+
+-- Özellikler
+- UUID primary keys
+- JSONB columns (shifts, preferences)
+- Row-Level Security (RLS) policies
+- Indexes on foreign keys
+- created_at / updated_at timestamps
+- Soft delete with is_active flag
+```
+
+**RLS Politikaları:**
+- Managers can only access their own employees
+- Employees can only view/edit their own data
+- Schedules are readable by all employees but editable only by manager
+
+---
+
+### 🌐 Website (Landing Page)
+```yaml
+Framework:          React 19 + Vite
+Language:           TypeScript
+UI Library:         shadcn/ui (Radix UI primitives)
+Styling:            Tailwind CSS 3.4
+State:              @tanstack/react-query
+Routing:            React Router (implicit via Vite)
+Icons:              lucide-react
+Chatbot:            Custom AI assistant (future: RunPod Llama)
+Deployment:         Lovable.dev (auto-deploy from git)
+```
+
+**Özellikler:**
+- Responsive design (mobile-first)
+- Multi-language support (TR/EN)
+- AI chatbot assistant
+- Screenshot carousel
+- Feature showcase
+- Contact form
+
+---
+
+## 📁 Proje Yapısı
 
 ```
 shiffy/
-├── README.md                      # This file
-├── LICENSE
+├── README.md                           # Ana README (bu dosya)
+├── LICENSE                             # MIT License
+├── .gitignore
 │
-├── docs/                          # Project-wide documentation
-│   ├── API.md                    # Backend API contract
-│   ├── DATABASE_SCHEMA.md        # Supabase table definitions
-│   └── DEPLOYMENT.md             # Deployment guides
+├── docs/                               # Proje-geneli dökümantasyon
+│   ├── HACKATHON_FRONTEND_BACKEND_INTEGRATION.md
+│   ├── MIGRATION_ROADMAP.md
+│   └── AUTO_SCHEDULE_README.md
 │
-├── frontend/                      # Mobile app (Expo)
+├── backend/                            # Node.js + Express API
 │   ├── src/
-│   │   ├── app/                  # Screens (Expo Router)
-│   │   │   ├── (auth)/          # Public auth screens
-│   │   │   ├── (manager)/       # Manager protected routes
-│   │   │   └── (employee)/      # Employee protected routes
-│   │   ├── components/           # Reusable UI components
-│   │   ├── services/             # API clients (Supabase, Backend)
-│   │   ├── hooks/                # Custom React hooks
-│   │   ├── types/                # TypeScript definitions
-│   │   └── utils/                # Helper functions
-│   ├── test/                     # Unit & integration tests
-│   ├── docs/                     # Frontend-specific docs
+│   │   ├── server.ts                  # Express server entry point
+│   │   ├── config/                    # Konfigürasyon dosyaları
+│   │   │   ├── env.config.ts         # Environment variables
+│   │   │   ├── supabase.config.ts    # Supabase client
+│   │   │   └── cors.config.ts        # CORS ayarları
+│   │   │
+│   │   ├── routes/                    # API route handlers
+│   │   │   ├── index.ts              # Main router
+│   │   │   ├── employee.routes.ts    # /api/employee/*
+│   │   │   ├── manager.routes.ts     # /api/manager/*
+│   │   │   ├── shift.routes.ts       # /api/shifts/*
+│   │   │   ├── schedule.routes.ts    # /api/schedules/*
+│   │   │   ├── sales-reports.routes.ts  # /api/sales-reports/*
+│   │   │   ├── manager-settings.routes.ts
+│   │   │   └── auto-schedule.routes.ts
+│   │   │
+│   │   ├── services/                  # Business logic
+│   │   │   ├── auto-schedule.service.ts
+│   │   │   ├── llama.service.ts      # RunPod Llama integration
+│   │   │   └── schedule-validation.service.ts
+│   │   │
+│   │   ├── middleware/                # Express middleware
+│   │   │   ├── auth.middleware.ts    # JWT + Supabase auth
+│   │   │   └── error.middleware.ts   # Global error handler
+│   │   │
+│   │   ├── utils/                     # Utility functions
+│   │   │   ├── jwt.utils.ts          # JWT generation/verification
+│   │   │   └── password.utils.ts     # bcrypt helpers
+│   │   │
+│   │   └── types/                     # TypeScript type definitions
+│   │       └── express.d.ts
+│   │
+│   ├── runpod-scripts/                # RunPod deployment scripts
+│   │   ├── start_services.sh
+│   │   ├── watchdog.sh
+│   │   └── DEPLOY.md
+│   │
+│   ├── scripts/                       # Development scripts
+│   │   ├── test-*.ts                 # Test scripts
+│   │   └── setup-test-data-for-ai.ts
+│   │
+│   ├── docs/                          # Backend documentation
+│   │   ├── SHIFFY_BACKEND_DOCS.md    # Kapsamlı API docs
+│   │   ├── ROADMAP.md                # Development roadmap
+│   │   ├── CHANGELOG.md              # Version history
+│   │   ├── CLAUDE.md                 # AI development guide
+│   │   └── RUNPOD_*.md               # RunPod setup guides
+│   │
 │   ├── package.json
-│   └── README.md
+│   ├── tsconfig.json
+│   └── .env.example
 │
-└── backend/                       # API server (Node.js)
+├── frontend/                           # React Native Mobile App
+│   ├── app/                           # Expo Router screens
+│   │   ├── _layout.tsx               # Root layout
+│   │   ├── index.tsx                 # Splash screen
+│   │   │
+│   │   ├── (auth)/                   # Public auth screens
+│   │   │   ├── _layout.tsx
+│   │   │   ├── user-select.tsx      # Manager/Employee seçimi
+│   │   │   ├── manager-login.tsx
+│   │   │   ├── manager-register.tsx
+│   │   │   ├── employee-login.tsx
+│   │   │   └── employee-password-reset.tsx
+│   │   │
+│   │   ├── (manager)/                # Protected manager routes
+│   │   │   ├── _layout.tsx
+│   │   │   ├── dashboard.tsx        # Ana dashboard
+│   │   │   ├── employees/           # Çalışan yönetimi
+│   │   │   │   ├── index.tsx        # Liste
+│   │   │   │   ├── add.tsx          # Yeni ekle
+│   │   │   │   └── [id].tsx         # Detay/düzenle
+│   │   │   ├── shift-review.tsx     # Tercih inceleme (1876 satır!)
+│   │   │   ├── reports.tsx          # Satış raporları
+│   │   │   └── settings.tsx         # Ayarlar
+│   │   │
+│   │   └── (employee)/               # Protected employee routes
+│   │       ├── _layout.tsx
+│   │       ├── home.tsx             # Ana ekran
+│   │       ├── preferences.tsx      # Vardiya tercihleri
+│   │       ├── my-shifts.tsx        # Takvim görüntüleme
+│   │       └── profile.tsx          # Profil/şifre değiştirme
+│   │
+│   ├── components/                    # Reusable components
+│   │   ├── ui/                       # Basic UI components
+│   │   │   ├── Loading.tsx
+│   │   │   ├── Button.tsx
+│   │   │   └── Card/                # Card component
+│   │   │
+│   │   └── features/                 # Feature components
+│   │       ├── StatCard.tsx         # Dashboard stats
+│   │       ├── EmployeeCard.tsx
+│   │       └── ShiftGrid/           # Shift selection grid
+│   │
+│   ├── services/                      # API clients
+│   │   ├── api-client.ts            # Base HTTP client
+│   │   ├── auth.ts                  # Manager auth (Supabase)
+│   │   ├── employee-auth.ts         # Employee auth (JWT)
+│   │   ├── employee.ts              # Employee CRUD
+│   │   ├── shift.ts                 # Shift preferences
+│   │   └── schedule.ts              # Schedule operations
+│   │
+│   ├── config/
+│   │   └── supabase.config.ts       # Supabase client config
+│   │
+│   ├── constants/
+│   │   └── theme.ts                 # Theme constants (needs design tokens!)
+│   │
+│   ├── hooks/                         # Custom React hooks
+│   │   ├── use-color-scheme.ts
+│   │   └── use-theme-color.ts
+│   │
+│   ├── types/
+│   │   └── index.ts                 # TypeScript type definitions
+│   │
+│   ├── utils/
+│   │   └── storage.ts               # AsyncStorage helpers
+│   │
+│   ├── docs/                          # Frontend documentation
+│   │   ├── SHIFFY_FRONTEND_DOCS.md
+│   │   ├── ROADMAP.md
+│   │   ├── UI_UX_ANALYSIS_AND_ROADMAP.md  # UI/UX iyileştirme planı
+│   │   ├── FRONTEND_CLEANUP_ROADMAP.md    # Code cleanup roadmap
+│   │   ├── QUICK_WINS_PROGRESS.md         # Completed quick wins
+│   │   └── README.md                # Frontend README
+│   │
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   ├── metro.config.js
+│   └── app.json
+│
+└── website/                            # React + Vite Landing Page
     ├── src/
-    │   ├── routes/               # API route handlers
-    │   ├── services/             # Business logic layer
-    │   ├── repositories/         # Data access layer
-    │   ├── middleware/           # Auth, logging, errors
-    │   ├── utils/                # Utilities (JWT, bcrypt)
-    │   ├── types/                # TypeScript definitions
-    │   ├── config/               # Configuration files
-    │   ├── cron/                 # Scheduled jobs
-    │   └── server.ts             # Entry point
-    ├── test/                     # Unit, integration, E2E tests
-    ├── docs/                     # Backend-specific docs
+    │   ├── components/               # UI components
+    │   │   └── ui/                  # shadcn/ui components
+    │   ├── services/
+    │   │   └── chatbot/             # AI chatbot service
+    │   ├── contexts/
+    │   │   └── LanguageContext.tsx  # Multi-language support
+    │   ├── assets/
+    │   │   └── screenshots.ts       # App screenshots
+    │   ├── hooks/
+    │   └── types/
+    │
+    ├── public/                        # Static assets
+    ├── docs/
+    │   ├── CHATBOT_README.md
+    │   └── SCREENSHOT_GUIDE.md
+    │
     ├── package.json
-    └── README.md
+    ├── vite.config.ts
+    ├── tailwind.config.ts
+    └── components.json              # shadcn/ui config
 ```
+
+### 📊 Proje İstatistikleri
+- **Toplam Dosya Sayısı:** 200+ TypeScript/TSX dosyaları
+- **Backend API Endpoints:** 30+
+- **Frontend Screens:** 15+ (Manager: 7, Employee: 5, Auth: 4)
+- **Component Library:** 20+ reusable components
+- **Lines of Code:** ~20,000+ (backend + frontend + website)
 
 ---
 
-## 🚦 Getting Started
-
-### Prerequisites
-
-**Required:**
-- Node.js 20.x or higher
-- npm or yarn
-- Git
-- Expo CLI: `npm install -g expo-cli`
-- Supabase account (free tier)
-- RunPod account (for Llama API)
-- Oracle Cloud account (free tier, for backend deployment)
-
-**Recommended:**
-- iOS Simulator (Mac) or Android Emulator
-- VS Code with extensions:
-  - ESLint
-  - Prettier
-  - TypeScript and JavaScript Language Features
+## � Kurulum
 
 ---
 
-### Quick Start (Development)
+## 📚 Dökümantasyon
 
-#### 1. Clone Repository
-```bash
-git clone https://github.com/your-org/shiffy.git
-cd shiffy
-```
+### 🎯 Ana Dökümantasyon
+- **[Backend Teknik Dökümanlar](./backend/SHIFFY_BACKEND_DOCS.md)** - API server, database, Llama entegrasyonu, deployment
+- **[Frontend Teknik Dökümanlar](./frontend/SHIFFY_FRONTEND_DOCS.md)** - Mobile app mimarisi, ekranlar, component'ler
+- **[Frontend Roadmap](./frontend/docs/ROADMAP.md)** - Development roadmap ve feature planning
+- **[UI/UX Analysis](./frontend/docs/UI_UX_ANALYSIS_AND_ROADMAP.md)** - Tasarım sistemi ve iyileştirme planı
 
-#### 2. Setup Backend
-```bash
-cd backend
+### 🔧 Backend Dökümanları
+- **[Backend Changelog](./backend/CHANGELOG.md)** - Detaylı development log
+- **[Backend Roadmap](./backend/ROADMAP.md)** - Phase-by-phase development plan
+- **[RunPod Setup](./backend/RUNPOD_OLLAMA_SETUP.md)** - Llama 3.2 70B deployment guide
+- **[RunPod Production](./backend/RUNPOD_PRODUCTION.md)** - Production deployment
+- **[Claude Development Guide](./backend/CLAUDE.md)** - AI-assisted development patterns
 
-# Install dependencies
-npm install
+### 📱 Frontend Dökümanları
+- **[Frontend Cleanup Roadmap](./frontend/docs/FRONTEND_CLEANUP_ROADMAP.md)** - Code quality improvements
+- **[Quick Wins Progress](./frontend/docs/QUICK_WINS_PROGRESS.md)** - Completed improvements
+- **[Clear Token Instructions](./frontend/docs/CLEAR_TOKEN_INSTRUCTIONS.md)** - Authentication debugging
+- **[Debug Token Analysis](./frontend/docs/DEBUG_TOKEN_ANALYSIS.md)** - Token management deep dive
 
-# Copy environment template
-cp .env.example .env
+### 🌐 Website Dökümanları
+- **[Chatbot README](./website/CHATBOT_README.md)** - AI chatbot implementation
+- **[Chatbot API Guide](./website/CHATBOT_API_GUIDE.md)** - API integration guide
+- **[Screenshot Guide](./website/SCREENSHOT_GUIDE.md)** - App screenshot specifications
 
-# Edit .env with your credentials
-nano .env
-
-# Run database migrations (see docs/DATABASE_SCHEMA.md)
-# Create tables in Supabase dashboard
-
-# Start development server
-npm run dev
-```
-
-**Backend will run on:** `http://localhost:3000`
-
-#### 3. Setup Frontend
-```bash
-cd ../frontend
-
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with backend URL
-nano .env
-
-# Start Expo development server
-npx expo start
-```
-
-**Expo will provide QR codes for:**
-- iOS (Camera app or Expo Go)
-- Android (Expo Go app)
-- Web (browser)
+### 🔄 Integration & Migration
+- **[Frontend-Backend Integration](./HACKATHON_FRONTEND_BACKEND_INTEGRATION.md)** - Integration roadmap
+- **[Migration Roadmap](./MIGRATION_ROADMAP.md)** - Migration planning
+- **[Auto Schedule README](./AUTO_SCHEDULE_README.md)** - Automated scheduling system
 
 ---
 
-### Environment Variables
+## 🚢 Deployment
 
-#### Backend (.env)
-```env
-NODE_ENV=development
-PORT=3000
+### 📱 Mobile App (Frontend)
 
-# Supabase
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_KEY=your_service_role_key
-
-# JWT (Employee Auth)
-JWT_SECRET=your_256_bit_random_secret
-JWT_EXPIRY=7d
-
-# RunPod Llama API
-RUNPOD_API_URL=https://your-pod-id.runpod.net
-RUNPOD_API_KEY=your_custom_api_key
-
-# CORS
-CORS_ORIGIN=*  # Set to specific domains in production
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-#### Frontend (.env)
-```env
-EXPO_PUBLIC_API_URL=http://localhost:3000
-EXPO_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
-
----
-
-### Running Tests
-
-#### Backend Tests
-```bash
-cd backend
-
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Run specific test suite
-npm test -- auth.test.ts
-
-# Run in watch mode
-npm run test:watch
-```
-
-#### Frontend Tests
+#### Expo EAS Build (Recommended)
 ```bash
 cd frontend
 
-# Run all tests
-npm test
+# Install EAS CLI
+npm install -g eas-cli
 
-# Run with coverage
-npm run test:coverage
+# Login to Expo
+eas login
 
-# Run specific test
-npm test -- Button.test.tsx
+# Configure build
+eas build:configure
+
+# Build for Android
+eas build --platform android --profile production
+
+# Build for iOS
+eas build --platform ios --profile production
+
+# Submit to stores
+eas submit --platform android
+eas submit --platform ios
+```
+
+#### Manual Build
+```bash
+# Android APK
+npx expo build:android -t apk
+
+# iOS IPA (requires Apple Developer account)
+npx expo build:ios -t archive
+```
+
+**Environment Variables (Production):**
+- Update `EXPO_PUBLIC_API_URL` to production backend URL
+- Update Supabase keys to production credentials
+
+---
+
+### ⚙️ Backend (API Server)
+
+#### Oracle Cloud Free Tier Deployment
+
+**Spec:**
+- VM.Standard.E2.1.Micro (4 vCPU, 24GB RAM)
+- Ubuntu 22.04 LTS
+- Always Free eligible
+
+**Adım Adım:**
+```bash
+# 1. SSH ile bağlan
+ssh ubuntu@your-instance-ip
+
+# 2. Node.js 20 kur
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 3. PM2 kur (process manager)
+sudo npm install -g pm2
+
+# 4. Repository klonla
+git clone https://github.com/ymcbzrgn/Shiffy.git
+cd Shiffy/backend
+
+# 5. Dependencies yükle
+npm install
+
+# 6. .env dosyası oluştur
+nano .env
+# Production credentials'ları gir
+
+# 7. TypeScript compile
+npm run build
+
+# 8. PM2 ile başlat
+pm2 start dist/server.js --name shiffy-backend -i max
+
+# 9. Startup script oluştur (reboot sonrası otomatik başlat)
+pm2 startup
+pm2 save
+
+# 10. Nginx reverse proxy (opsiyonel ama önerilir)
+sudo apt install nginx
+sudo nano /etc/nginx/sites-available/shiffy
+```
+
+**Nginx Config (`/etc/nginx/sites-available/shiffy`):**
+```nginx
+server {
+    listen 80;
+    server_name api.shiffy.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+```bash
+# Nginx enable ve restart
+sudo ln -s /etc/nginx/sites-available/shiffy /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+# SSL kurulum (Let's Encrypt)
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d api.shiffy.com
+```
+
+**PM2 Monitoring:**
+```bash
+pm2 status           # Process durumu
+pm2 logs shiffy-backend  # Logs
+pm2 monit            # Real-time monitoring
+pm2 restart shiffy-backend  # Restart
 ```
 
 ---
 
-## 📚 Documentation
+### 🧠 RunPod Llama Deployment
 
-### Core Documentation
-- **[Frontend Technical Docs](./frontend/docs/FRONTEND_DOCS.md)** - Mobile app architecture, screens, components
-- **[Backend Technical Docs](./backend/docs/BACKEND_DOCS.md)** - API server, database, Llama integration
-- **[API Reference](./docs/API.md)** - Complete API endpoint specifications
+**Detaylı Guide:** `backend/RUNPOD_OLLAMA_SETUP.md`
+
+**Özet:**
+1. RunPod hesabı oluştur
+2. NVIDIA A40 (48GB) GPU instance başlat
+3. Ollama container deploy et
+4. Llama 3.2 70B modelini yükle
+5. Health check ve watchdog script'leri kur
+6. API endpoint'i backend `.env`'ye ekle
+
+**Test:**
+```bash
+# Health check
+curl https://your-runpod.runpod.io/health
+
+# Llama test
+curl -X POST https://your-runpod.runpod.io/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama3.2:70b",
+    "prompt": "Test prompt",
+    "stream": false
+  }'
+```
+
+---
+
+### 🌐 Website Deployment
+
+**Lovable.dev (Current):**
+- Auto-deploy from GitHub push
+- Custom domain support
+- HTTPS by default
+
+**Alternative: Vercel/Netlify:**
+```bash
+cd website
+
+# Build
+npm run build
+
+# Output: dist/
+
+# Deploy to Vercel
+npm install -g vercel
+vercel --prod
+
+# Deploy to Netlify
+npm install -g netlify-cli
+netlify deploy --prod --dir=dist
+```
+
+---
+
+## 🏗️ Mimari
+
+### Sistem Mimarisi
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Mobile App (Expo)                         │
+│  ┌─────────────────┐           ┌──────────────────┐         │
+│  │  Manager Panel  │           │  Employee Panel  │         │
+│  │  - Dashboard    │           │  - Preferences   │         │
+│  │  - Shift Review │           │  - My Shifts     │         │
+│  │  - Reports      │           │  - Profile       │         │
+│  └─────────────────┘           └──────────────────┘         │
+└───────────────┬─────────────────────────┬───────────────────┘
+                │                         │
+                │    HTTPS/REST API       │
+                ▼                         ▼
+┌───────────────────────────────────────────────────────────────┐
+│              Express Backend (Node.js 20)                      │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │  Route Layer                                             │ │
+│  │  /api/employee  /api/manager  /api/shifts  /api/schedules│ │
+│  └────────────────────┬─────────────────────────────────────┘ │
+│                       │                                        │
+│  ┌────────────────────▼─────────────────────────────────────┐ │
+│  │  Middleware Layer                                        │ │
+│  │  - authMiddleware (JWT + Supabase)                       │ │
+│  │  - errorHandler                                          │ │
+│  │  - CORS                                                  │ │
+│  └────────────────────┬─────────────────────────────────────┘ │
+│                       │                                        │
+│  ┌────────────────────▼─────────────────────────────────────┐ │
+│  │  Service Layer                                           │ │
+│  │  - autoScheduleService (Cron + AI)                       │ │
+│  │  - llamaService (RunPod API)                             │ │
+│  │  - scheduleValidationService                             │ │
+│  └────────────────────┬─────────────────────────────────────┘ │
+│                       │                                        │
+│  ┌────────────────────▼─────────────────────────────────────┐ │
+│  │  Database Layer (Direct Supabase Client)                 │ │
+│  │  - No ORM (KISS principle)                               │ │
+│  │  - Row-Level Security (RLS)                              │ │
+│  └──────────────────────────────────────────────────────────┘ │
+└─────────────┬─────────────────────────┬───────────────────────┘
+              │                         │
+              ▼                         ▼
+┌──────────────────────┐    ┌──────────────────────────┐
+│   Supabase (PG)      │    │  RunPod (Llama 3.2 70B)  │
+│   - managers         │    │  - GPU: NVIDIA A40       │
+│   - employees        │    │  - Ollama container      │
+│   - shift_preferences│    │  - Watchdog script       │
+│   - schedules        │    │  - Health monitoring     │
+│   - sales_reports    │    └──────────────────────────┘
+│   - manager_settings │
+└──────────────────────┘
+              ▲
+              │ Cron Trigger (node-cron)
+  ┌───────────┴──────────┐
+  │  Automated Scheduler │
+  │  - Deadline-based    │
+  │  - Weekly trigger    │
+  └──────────────────────┘
+```
+
+### Authentication Flow
+
+```
+Manager Authentication (Supabase):
+1. User enters email + password
+2. Supabase Auth validates credentials
+3. Returns session token
+4. Token stored in Supabase client (NOT AsyncStorage)
+5. Backend verifies via supabase.auth.getUser(token)
+
+Employee Authentication (Custom JWT):
+1. User enters username + password
+2. Backend validates via bcrypt
+3. Generates JWT with 7-day expiry
+4. Token stored in AsyncStorage ('auth_token')
+5. Backend verifies via jwt.verify()
+
+Dual Auth Middleware:
+1. Extract Bearer token from header
+2. Try custom JWT verification (employees)
+3. If fails, try Supabase auth (managers)
+4. Attach user info to req.user
+5. Proceed to route handler
+```
+
+### Data Flow (Shift Creation Example)
+
+```
+1. Manager creates employees via /api/manager/employees
+   ↓
+2. Employees login and submit shift preferences
+   ↓ POST /api/shifts/preferences
+3. Preferences stored in shift_preferences table (JSONB)
+   ↓
+4. Deadline day arrives → Cron job triggers
+   ↓ autoScheduleService.runForAllManagers()
+5. For each manager:
+   a. Fetch all employees + preferences
+   b. Fetch manager notes and settings
+   c. Build Llama prompt with context
+   d. Send to RunPod Llama API
+   e. Parse AI response (shift assignments)
+   f. Validate + save to schedules table
+   ↓
+6. Manager reviews schedule via /api/schedules
+   ↓ Manual edits if needed
+7. Manager approves via /api/schedules/:id/approve
+   ↓
+8. Employees view via /api/schedules/my-schedule
+```
+
+---
+
+## 👥 Ekip
+
+**Team Golden Head**
+
+- **Backend Developer:** [Bartin Tahab Akici](https://github.com/ymcbzrgn)
+- **AI/ML Integration:** Llama 3.2 70B on RunPod
+- **Frontend Developer:** React Native + Expo
+- **UI/UX Designer:** NativeWind + Custom Components
+
+---
+
+## 📄 Lisans
+
+Bu proje **MIT License** ile lisanslanmıştır. Detaylar için [LICENSE](./LICENSE) dosyasına bakın.
+
+---
+
+## 🙏 Teşekkürler
+
+- **Meta** - Llama 3.2 70B modelini açık kaynak olarak sağladığı için
+- **YTU** - Hackathon'u düzenlediği için
+- **RunPod** - GPU infrastructure için
+- **Supabase** - Backend-as-a-Service için
+- **Expo** - React Native development platform için
+
+---
+
+## 📞 İletişim
+
+- **GitHub:** [github.com/ymcbzrgn/Shiffy](https://github.com/ymcbzrgn/Shiffy)
+- **Website:** [shiffy.com](https://shiffy.com) (coming soon)
+- **Email:** support@shiffy.com
+
+---
+
+<p align="center">
+  Made with ❤️ during Meta & YTU Llama Hackathon 2025
+</p>
+<p align="center">
+  🚀 Powered by Meta Llama 3.2 70B
+</p>
 - **[Database Schema](./docs/DATABASE_SCHEMA.md)** - Supabase table definitions and RLS policies
 
 ### Setup Guides

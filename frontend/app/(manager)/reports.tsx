@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GradientHeader } from '@/components/ui/GradientHeader';
+import { useRouter } from 'expo-router';
 import { saveSalesReport, getWeeklySalesReports, type WeeklySalesData } from '@/services/sales-reports';
 import { getWeekStart, formatWeekRange, formatDateISO } from '@/utils/shift-grid-helpers';
 
 export default function SalesReportsScreen() {
+  const router = useRouter();
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklySalesData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,12 @@ export default function SalesReportsScreen() {
       setSaving(true);
       const today = formatDateISO(new Date());
       await saveSalesReport(today, revenue, transactions, notes || undefined);
+      
+      // Clear form after successful save
+      setTodayRevenue('');
+      setTodayTransactions('');
+      setNotes('');
+      
       Alert.alert('Başarılı', 'Günlük rapor kaydedildi');
       await loadWeeklyData(); // Reload to show updated data
     } catch (error) {
@@ -98,20 +105,30 @@ export default function SalesReportsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Header with Gradient */}
-      <GradientHeader 
-        title="Satış Raporları"
-        showBackButton={true}
-        rightAction={
-          <MaterialIcons name="assessment" size={28} color="#ffffff" />
-        }
-      />
+      <LinearGradient
+        colors={['#00cd81', '#004dd6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Satış Raporları</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <MaterialIcons name="assessment" size={24} color="#ffffff" />
+        </View>
+      </LinearGradient>
 
-      {/* Today's Entry Form */}
-      <View style={styles.entryCard}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Today's Entry Form */}
+        <View style={styles.entryCard}>
         <View style={styles.entryHeader}>
-          <MaterialIcons name="edit" size={20} color="#10b981" />
+          <MaterialIcons name="today" size={20} color="#10b981" />
           <Text style={styles.entryTitle}>Bugünün Raporu</Text>
         </View>
 
@@ -123,6 +140,7 @@ export default function SalesReportsScreen() {
               value={todayRevenue}
               onChangeText={setTodayRevenue}
               placeholder="0.00"
+              placeholderTextColor="#9ca3af"
               keyboardType="decimal-pad"
             />
           </View>
@@ -134,6 +152,7 @@ export default function SalesReportsScreen() {
               value={todayTransactions}
               onChangeText={setTodayTransactions}
               placeholder="0"
+              placeholderTextColor="#9ca3af"
               keyboardType="number-pad"
             />
           </View>
@@ -146,6 +165,7 @@ export default function SalesReportsScreen() {
             value={notes}
             onChangeText={setNotes}
             placeholder="Bugün hakkında notlar..."
+            placeholderTextColor="#9ca3af"
             multiline
             numberOfLines={3}
           />
@@ -157,9 +177,9 @@ export default function SalesReportsScreen() {
           disabled={saving}
         >
           <LinearGradient
-            colors={saving ? ['#9ca3af', '#9ca3af'] : ['#10b981', '#059669']}
+            colors={saving ? ['#9ca3af', '#6b7280'] : ['#10b981', '#059669']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.saveButton}
           >
             {saving ? (
@@ -273,58 +293,65 @@ export default function SalesReportsScreen() {
           <Text style={styles.emptyText}>Bu hafta için henüz veri yok</Text>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#f6f7f8',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   backButton: {
     padding: 4,
   },
-  headerContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  headerRight: {
+    width: 32,
+    alignItems: 'flex-end',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   entryCard: {
     backgroundColor: '#ffffff',
     margin: 16,
-    padding: 16,
+    marginTop: 20,
+    padding: 20,
     borderRadius: 12,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
   entryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   entryTitle: {
     fontSize: 18,
@@ -348,7 +375,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#f9fafb',
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#e5e7eb',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -359,8 +386,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   saveButtonWrapper: {
-    marginTop: 8,
-    borderRadius: 8,
+    marginTop: 4,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   saveButton: {
@@ -368,14 +395,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    padding: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
   },
   saveButtonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#ffffff',
   },
   weekNav: {
