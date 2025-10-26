@@ -124,9 +124,8 @@ class ChatService {
         }));
 
       const requestBody = {
-        message: userMessage,
+        query: userMessage, // RunPod API expects 'query' not 'message'
         history: history.length > 0 ? history : undefined,
-        system_prompt: SYSTEM_PROMPT, // Send custom system prompt
       };
 
       console.log('📤 API Request:', requestBody);
@@ -161,13 +160,18 @@ class ChatService {
       console.log('✅ API Response Data:', data);
 
       // Handle RunPod API response format
-      // Response: { success: true, message: "AI response", model: "...", done: true }
-      if (data.success && data.message) {
+      // Response: { success: true, response: "AI response", sources: [...] }
+      if (data.success && data.response) {
         return {
-          message: data.message
+          message: data.response
+        };
+      } else if (data.response) {
+        // Some responses might not have success field
+        return {
+          message: data.response
         };
       } else if (data.message) {
-        // Some responses might not have success field
+        // Fallback to 'message' field
         return {
           message: data.message
         };

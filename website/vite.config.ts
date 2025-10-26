@@ -14,7 +14,12 @@ export default defineConfig(({ mode }) => ({
         target: 'https://3fg3p55cngmmn1-8888.proxy.runpod.net',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/runpod/, ''),
-        // No API key needed - CORS is open
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add API key to all requests (optional for public endpoints)
+            // proxyReq.setHeader('x-api-key', 'YOUR_API_KEY_HERE');
+          });
+        },
       },
     },
   },

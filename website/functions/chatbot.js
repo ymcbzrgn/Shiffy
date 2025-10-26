@@ -13,15 +13,14 @@ exports.handler = async (event, context) => {
   try {
     const { message, history } = JSON.parse(event.body);
 
-    // Call RunPod API
+    // Call RunPod API - Updated endpoint
     const response = await fetch('https://3fg3p55cngmmn1-8888.proxy.runpod.net/api/chatbot', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // No API key needed - CORS is open
       },
       body: JSON.stringify({
-        query: message, // Updated parameter name
+        query: message, // API expects 'query' field based on documentation
         history: history || [],
       }),
     });
@@ -33,6 +32,7 @@ exports.handler = async (event, context) => {
 
     const data = await response.json();
 
+    // Response format: { success: true, response: "AI response", sources: [...] }
     return {
       statusCode: 200,
       headers: {
@@ -41,7 +41,8 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        message: data.message,
+        message: data.response || data.message, // Support both response formats
+        sources: data.sources || [],
       }),
     };
 
