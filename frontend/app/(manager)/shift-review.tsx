@@ -8,7 +8,8 @@ import { getShiftRequests, type ShiftRequest } from '@/services/shift';
 import { generateSchedule, approveSchedule, getManagerSchedule, type ScheduleResponse } from '@/services/schedule';
 import { getWeekStart, formatWeekRange, formatDateISO } from '@/utils/shift-grid-helpers';
 import { getUserSession } from '@/utils/storage';
-import { getEmployees, type Employee } from '@/services/employee';
+import { getEmployees } from '@/services/employee';
+import type { Employee } from '@/types';
 
 // Time slots for pickers
 const TIME_SLOTS = [
@@ -75,7 +76,7 @@ export default function ShiftReviewScreen() {
       // Load preferences and schedule in parallel
       const [prefsData, scheduleData] = await Promise.all([
         getShiftRequests(weekStartStr),
-        getManagerSchedule(weekStartStr)
+        getManagerSchedule(weekStartStr),
       ]);
 
       setPreferences(prefsData);
@@ -349,41 +350,41 @@ export default function ShiftReviewScreen() {
   // Calculate current shifts dynamically (edit mode uses edited, view mode uses schedule)
   const currentShifts = editMode ? editedShifts : (schedule?.shifts || []);
   
-  // Calculate REAL total hours from current shifts
-  // If shift.hours exists, use it; otherwise calculate from start_time and end_time
+  // 1. Toplam Shift: Kaç kişinin shifti var
+  const uniqueEmployeesWithShifts = new Set(currentShifts.map(s => s.employee_id));
+  const employeesWithShiftsCount = uniqueEmployeesWithShifts.size;
+  
+  // 2. Toplam Saat: Bu haftaya özel tüm kişilerin çalışma saatlerinin toplamı
   const calculatedTotalHours = currentShifts.reduce((sum, shift) => {
     const hours = shift.hours || calculateHours(shift.start_time, shift.end_time);
     return sum + hours;
   }, 0);
   
-  // Store operating hours calculation
-  // Assuming store is open 08:00-22:00 (14 hours per day) × 7 days = 98 hours per week
-  // You can make this dynamic from manager settings in the future
-  const STORE_HOURS_PER_DAY = 14; // 08:00-22:00
+  // 3. Mağaza Doluluk: 7/24 çalışan yer - haftanın saatlerine göre doluluk
+  const HOURS_PER_DAY = 24; // 7/24 çalışıyor
   const OPERATING_DAYS = 7; // Monday-Sunday
-  const TOTAL_STORE_HOURS = STORE_HOURS_PER_DAY * OPERATING_DAYS; // 98 hours
+  const TOTAL_WEEK_HOURS = HOURS_PER_DAY * OPERATING_DAYS; // 168 hours (7×24)
   
-  // Store Coverage: How much of the store operating hours are covered by employees
-  const storeCoveragePercent = TOTAL_STORE_HOURS > 0 
-    ? (calculatedTotalHours / TOTAL_STORE_HOURS) * 100 
+  // Mağaza doluluk oranı: Toplam çalışılan saat / 168 saat
+  const storeCoveragePercent = TOTAL_WEEK_HOURS > 0 
+    ? (calculatedTotalHours / TOTAL_WEEK_HOURS) * 100 
     : 0;
   
-  // Employee Coverage: How many employees have at least 1 shift
-  const employeesWithShifts = new Set(currentShifts.map(s => s.employee_id)).size;
+  // 4. Toplam Ekip & Çalışan Katılım: Bu hafta kaç kişi çalıştı
   const totalActiveEmployees = employees.length > 0 ? employees.length : preferences.length;
-  const employeeCoveragePercent = totalActiveEmployees > 0 
-    ? (employeesWithShifts / totalActiveEmployees) * 100
+  const employeeParticipationPercent = totalActiveEmployees > 0 
+    ? (employeesWithShiftsCount / totalActiveEmployees) * 100
     : 0;
 
   // Advanced Metrics
-  // Average hours per employee
-  const avgHoursPerEmployee = employeesWithShifts > 0 
-    ? calculatedTotalHours / employeesWithShifts 
+  // Average hours per employee (who worked)
+  const avgHoursPerEmployee = employeesWithShiftsCount > 0 
+    ? calculatedTotalHours / employeesWithShiftsCount 
     : 0;
   
-  // Average shifts per employee
-  const avgShiftsPerEmployee = employeesWithShifts > 0 
-    ? currentShifts.length / employeesWithShifts 
+  // Average shifts per employee (who worked)
+  const avgShiftsPerEmployee = employeesWithShiftsCount > 0 
+    ? currentShifts.length / employeesWithShiftsCount 
     : 0;
   
   // Daily coverage - how many days have at least 1 shift
@@ -404,7 +405,7 @@ export default function ShiftReviewScreen() {
   const minShiftsPerDay = Math.min(...Object.values(shiftsPerDay).filter(v => v > 0), Infinity);
   const avgShiftsPerDay = currentShifts.length / daysWithShifts || 0;
   
-  // Calculate stats
+  // Calculate stats for preferences
   const totalEmployees = preferences.length; // This would ideally come from employee count
   const submittedCount = preferences.filter(p => p.submitted_at).length;
   const submissionRate = totalEmployees > 0 ? (submittedCount / totalEmployees) * 100 : 0;
@@ -473,10 +474,10 @@ export default function ShiftReviewScreen() {
             />
             <View style={styles.statusTextContainer}>
               <Text style={styles.statusTitle}>
-                {submittedCount === 0 ? 'Tercih Yok' : submissionRate === 100 ? 'Tüm Tercihler Alındı' : 'Bekleyen Tercihler'}
+                {submittedCount === 0 ? 'Tercih Yok' : submissionRate === 100 ? 'Tüm Tercihler Alındı' : 'Tercih Durumu'}
               </Text>
               <Text style={styles.statusSubtitle}>
-                {submittedCount} çalışan tercih bildirdi
+                {submittedCount}/{totalEmployees} çalışan tercih paylaştı
               </Text>
             </View>
           </View>
@@ -552,27 +553,33 @@ export default function ShiftReviewScreen() {
               <View style={styles.summaryStatItem}>
                 <Text style={styles.summaryStatLabel}>Toplam Shift</Text>
                 <Text style={styles.summaryStatValue}>{currentShifts.length}</Text>
+                <Text style={styles.summaryStatSubtext}>
+                  {employeesWithShiftsCount} kişi çalışıyor
+                </Text>
               </View>
               <View style={styles.summaryStatItem}>
                 <Text style={styles.summaryStatLabel}>Toplam Saat</Text>
                 <Text style={styles.summaryStatValue}>{calculatedTotalHours.toFixed(1)}</Text>
+                <Text style={styles.summaryStatSubtext}>
+                  Bu hafta çalışılan saat
+                </Text>
               </View>
               <View style={styles.summaryStatItem}>
                 <Text style={styles.summaryStatLabel}>Mağaza Doluluk</Text>
                 <Text style={styles.summaryStatValue}>
-                  {storeCoveragePercent.toFixed(0)}%
+                  {storeCoveragePercent.toFixed(1)}%
                 </Text>
                 <Text style={styles.summaryStatSubtext}>
-                  {calculatedTotalHours.toFixed(0)}h / {TOTAL_STORE_HOURS}h
+                  {calculatedTotalHours.toFixed(0)}h / {TOTAL_WEEK_HOURS}h (7×24)
                 </Text>
               </View>
               <View style={styles.summaryStatItem}>
-                <Text style={styles.summaryStatLabel}>Çalışan Katılım</Text>
+                <Text style={styles.summaryStatLabel}>Ekip Katılımı</Text>
                 <Text style={styles.summaryStatValue}>
-                  {employeeCoveragePercent.toFixed(0)}%
+                  {employeeParticipationPercent.toFixed(0)}%
                 </Text>
                 <Text style={styles.summaryStatSubtext}>
-                  {employeesWithShifts}/{totalActiveEmployees} çalışan
+                  {employeesWithShiftsCount}/{totalActiveEmployees} çalışan
                 </Text>
               </View>
             </View>
@@ -622,7 +629,7 @@ export default function ShiftReviewScreen() {
               <View style={styles.employeeHoursContainer}>
                 <Text style={styles.employeeHoursTitle}>👥 Çalışan Saat Dağılımı</Text>
                 <Text style={styles.employeeHoursSubtitle}>
-                  Her çalışanın haftalık çalışma saati ve max limite göre doluluk oranı
+                  Her çalışanın bu haftaki çalışma saati ÷ max haftalık çalışma saati oranı
                 </Text>
                 {Object.entries(schedule.summary.hours_per_employee)
                   .sort(([, a], [, b]) => (b as number) - (a as number))

@@ -5,6 +5,8 @@ import shiftRoutes from './shift.routes';
 import scheduleRoutes from './schedule.routes';
 import autoScheduleRoutes from './auto-schedule.routes';
 import managerSettingsRoutes from './manager-settings.routes';
+import salesRoutes from './sales.routes';
+import salesReportsRoutes from './sales-reports.routes';
 
 const router = Router();
 
@@ -31,5 +33,13 @@ router.use('/auto-schedule', autoScheduleRoutes);
 // Manager settings routes
 // Mounted at: /api/manager-settings
 router.use('/manager-settings', managerSettingsRoutes);
+
+// Sales Reports routes (manual entry)
+// Mounted at: /api/sales-reports
+router.use('/sales-reports', salesReportsRoutes);
+
+// Sales & Z-Report routes (dummy data - deprecated)
+// Mounted at: /api/sales
+router.use('/sales', salesRoutes);
 
 export default router;

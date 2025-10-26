@@ -60,10 +60,10 @@ router.post('/employees', managerAuthMiddleware, async (req: Request, res: Respo
 
     // Validate max_weekly_hours (if provided)
     if (max_weekly_hours !== undefined && max_weekly_hours !== null) {
-      if (!Number.isInteger(max_weekly_hours) || max_weekly_hours < 0 || max_weekly_hours > 150) {
+      if (!Number.isInteger(max_weekly_hours) || max_weekly_hours < 0 || max_weekly_hours > 60) {
         return res.status(400).json({
           success: false,
-          error: 'max_weekly_hours 0 ile 150 arasında bir tam sayı olmalıdır',
+          error: 'max_weekly_hours 0 ile 60 arasında bir tam sayı olmalıdır',
         });
       }
     }

@@ -1,20 +1,42 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRef, useState, useCallback, useMemo } from 'react';
 import type { SlotStatus, DayOfWeek } from '@/types';
-import { generateTimeSlots, getDayLabels, getDayKeys, getSlotKey } from '@/utils/shift-grid-helpers';
+import { generateTimeSlots, getDayLabels, getDayKeys, getSlotKey, countHoursByDayAndStatus } from '@/utils/shift-grid-helpers';
 
 interface ShiftGridProps {
   grid: Record<string, SlotStatus>;
   onSlotPress: (day: DayOfWeek, time: string) => void;
+  weekStart?: Date; // Optional: to display dates
+  showHourSummary?: boolean; // Optional: to show hour counter
 }
 
-export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
+export function ShiftGrid({ grid, onSlotPress, weekStart, showHourSummary = false }: ShiftGridProps) {
   const lastTouchedCellRef = useRef<string | null>(null);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const timeSlots = useMemo(() => generateTimeSlots(), []);
   const dayLabels = useMemo(() => getDayLabels(), []);
   const dayKeys = useMemo(() => getDayKeys(), []);
+  
+  // Calculate hours per day if summary is enabled
+  const hoursByDay = useMemo(() => {
+    if (!showHourSummary) return null;
+    return countHoursByDayAndStatus(grid);
+  }, [grid, showHourSummary]);
+  
+  // Format date for each day
+  const getDayDate = useCallback((dayIndex: number): string => {
+    if (!weekStart) return '';
+    
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + dayIndex);
+    
+    const day = date.getDate();
+    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    const month = months[date.getMonth()];
+    
+    return `${day} ${month}`;
+  }, [weekStart]);
   
   // Get cell background color based on status
   const getCellStyle = useCallback((status: SlotStatus) => {
@@ -68,16 +90,35 @@ export function ShiftGrid({ grid, onSlotPress }: ShiftGridProps) {
                 Saat
               </Text>
             </View>
-            {dayLabels.map((label, index) => (
-              <View 
-                key={index} 
-                style={styles.dayHeaderCell}
-              >
-                <Text style={styles.headerText}>
-                  {label}
-                </Text>
-              </View>
-            ))}
+            {dayLabels.map((label, index) => {
+              const dateStr = getDayDate(index);
+              const dayKey = dayKeys[index];
+              const totalHours = hoursByDay ? 
+                hoursByDay[dayKey].available + hoursByDay[dayKey].unavailable + hoursByDay[dayKey].offRequest : 0;
+              
+              return (
+                <View 
+                  key={index} 
+                  style={styles.dayHeaderCell}
+                >
+                  {weekStart && (
+                    <Text style={styles.dateText}>
+                      {dateStr}
+                    </Text>
+                  )}
+                  <Text style={styles.headerText}>
+                    {label}
+                  </Text>
+                  {showHourSummary && totalHours > 0 && (
+                    <View style={styles.hourBadge}>
+                      <Text style={styles.hourBadgeText}>
+                        {totalHours}s
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
           
           {/* Grid Rows */}
@@ -148,11 +189,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
+    gap: 2,
+  },
+  dateText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#9ca3af',
   },
   headerText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#617c89',
+  },
+  hourBadge: {
+    backgroundColor: '#004dd6',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 2,
+  },
+  hourBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   gridRow: {
     flexDirection: 'row',

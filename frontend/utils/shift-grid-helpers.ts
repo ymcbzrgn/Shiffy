@@ -105,6 +105,39 @@ export function countSlotsByStatus(grid: Record<string, SlotStatus>) {
   );
 }
 
+// Count hours by status for each day
+export function countHoursByDayAndStatus(grid: Record<string, SlotStatus>) {
+  const days = getDayKeys();
+  const timeSlots = generateTimeSlots();
+  
+  const result: Record<DayOfWeek, { available: number; unavailable: number; offRequest: number }> = {
+    monday: { available: 0, unavailable: 0, offRequest: 0 },
+    tuesday: { available: 0, unavailable: 0, offRequest: 0 },
+    wednesday: { available: 0, unavailable: 0, offRequest: 0 },
+    thursday: { available: 0, unavailable: 0, offRequest: 0 },
+    friday: { available: 0, unavailable: 0, offRequest: 0 },
+    saturday: { available: 0, unavailable: 0, offRequest: 0 },
+    sunday: { available: 0, unavailable: 0, offRequest: 0 },
+  };
+  
+  days.forEach(day => {
+    timeSlots.forEach(time => {
+      const key = getSlotKey(day, time);
+      const status = grid[key];
+      
+      if (status === 'available') {
+        result[day].available += 0.5; // Each slot is 30 minutes = 0.5 hours
+      } else if (status === 'unavailable') {
+        result[day].unavailable += 0.5;
+      } else if (status === 'off_request') {
+        result[day].offRequest += 0.5;
+      }
+    });
+  });
+  
+  return result;
+}
+
 // ====================================================================
 // BACKEND API CONVERSION HELPERS
 // ====================================================================

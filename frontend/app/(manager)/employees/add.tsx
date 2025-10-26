@@ -45,8 +45,8 @@ export default function AddEmployeeScreen() {
       maxWeeklyHoursError = 'Maksimum haftalık saat gereklidir';
     } else {
       const hours = parseInt(form.maxWeeklyHours);
-      if (isNaN(hours) || hours < 0 || hours > 150) {
-        maxWeeklyHoursError = 'Maksimum haftalık saat 0 ile 150 arasında olmalıdır';
+      if (isNaN(hours) || hours < 0 || hours > 60) {
+        maxWeeklyHoursError = 'Maksimum haftalık saat 0 ile 60 arasında olmalıdır';
       }
     }
     
@@ -240,7 +240,7 @@ export default function AddEmployeeScreen() {
             </View>
             {errors.maxWeeklyHours ? <Text style={styles.errorText}>{errors.maxWeeklyHours}</Text> : null}
             <Text style={styles.hintText}>
-              Çalışanın haftada maksimum çalışabileceği saat (0-150 arası)
+              Çalışanın haftada maksimum çalışabileceği saat (0-60 arası)
             </Text>
             {form.maxWeeklyHours === '0' && (
               <View style={styles.warningBox}>

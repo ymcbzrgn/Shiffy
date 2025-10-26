@@ -390,7 +390,12 @@ export default function PreferencesScreen() {
         
         {/* Grid */}
         <View style={styles.gridContainer}>
-          <ShiftGrid grid={grid} onSlotPress={handleSlotPress} />
+          <ShiftGrid 
+            grid={grid} 
+            onSlotPress={handleSlotPress} 
+            weekStart={currentWeekStart}
+            showHourSummary={true}
+          />
         </View>
         
         {/* Reset Button */}
