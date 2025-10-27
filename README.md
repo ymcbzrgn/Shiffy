@@ -377,7 +377,56 @@ shiffy/
 │   ├── tsconfig.json
 │   └── .env.example
 │
-├── frontend/                           # React Native Mobile App
+
+│   │   └── index.ts                 # TypeScript type definitions
+│   │
+│   ├── utils/
+│   │   └── storage.ts               # AsyncStorage helpers
+│   │
+│   ├── docs/                          # Frontend documentation
+│   │   ├── SHIFFY_FRONTEND_DOCS.md
+│   │   ├── ROADMAP.md
+│   │   ├── UI_UX_ANALYSIS_AND_ROADMAP.md  # UI/UX iyileştirme planı
+│   │   ├── FRONTEND_CLEANUP_ROADMAP.md    # Code cleanup roadmap
+│   │   ├── QUICK_WINS_PROGRESS.md         # Completed quick wins
+│   │   └── README.md                # Frontend README
+│   │
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   ├── metro.config.js
+│   └── app.json
+│
+└── website/                            # React + Vite Landing Page
+    ├── src/
+    │   ├── components/               # UI components
+    │   │   └── ui/                  # shadcn/ui components
+    │   ├── services/
+    │   │   └── chatbot/             # AI chatbot service
+    │   ├── contexts/
+    │   │   └── LanguageContext.tsx  # Multi-language support
+    │   ├── assets/
+    │   │   └── screenshots.ts       # App screenshots
+    │   ├── hooks/
+    │   └── types/
+    │
+    ├── public/                        # Static assets
+    ├── docs/
+    │   ├── CHATBOT_README.md
+    │   └── SCREENSHOT_GUIDE.md
+    │
+    ├── package.json
+    ├── vite.config.ts
+    ├── tailwind.config.ts
+    └── components.json              # shadcn/ui config
+```
+
+### 📊 Proje İstatistikleri
+- **Toplam Dosya Sayısı:** 200+ TypeScript/TSX dosyaları
+- **Backend API Endpoints:** 30+
+- **Frontend Screens:** 15+ (Manager: 7, Employee: 5, Auth: 4)
+- **Component Library:** 20+ reusable components
+- **Lines of Code:** ~20,000+ (backend + fr├── frontend/                           # React Native Mobile App
 │   ├── app/                           # Expo Router screens
 │   │   ├── _layout.tsx               # Root layout
 │   │   ├── index.tsx                 # Splash screen
@@ -437,56 +486,7 @@ shiffy/
 │   │   ├── use-color-scheme.ts
 │   │   └── use-theme-color.ts
 │   │
-│   ├── types/
-│   │   └── index.ts                 # TypeScript type definitions
-│   │
-│   ├── utils/
-│   │   └── storage.ts               # AsyncStorage helpers
-│   │
-│   ├── docs/                          # Frontend documentation
-│   │   ├── SHIFFY_FRONTEND_DOCS.md
-│   │   ├── ROADMAP.md
-│   │   ├── UI_UX_ANALYSIS_AND_ROADMAP.md  # UI/UX iyileştirme planı
-│   │   ├── FRONTEND_CLEANUP_ROADMAP.md    # Code cleanup roadmap
-│   │   ├── QUICK_WINS_PROGRESS.md         # Completed quick wins
-│   │   └── README.md                # Frontend README
-│   │
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tailwind.config.js
-│   ├── metro.config.js
-│   └── app.json
-│
-└── website/                            # React + Vite Landing Page
-    ├── src/
-    │   ├── components/               # UI components
-    │   │   └── ui/                  # shadcn/ui components
-    │   ├── services/
-    │   │   └── chatbot/             # AI chatbot service
-    │   ├── contexts/
-    │   │   └── LanguageContext.tsx  # Multi-language support
-    │   ├── assets/
-    │   │   └── screenshots.ts       # App screenshots
-    │   ├── hooks/
-    │   └── types/
-    │
-    ├── public/                        # Static assets
-    ├── docs/
-    │   ├── CHATBOT_README.md
-    │   └── SCREENSHOT_GUIDE.md
-    │
-    ├── package.json
-    ├── vite.config.ts
-    ├── tailwind.config.ts
-    └── components.json              # shadcn/ui config
-```
-
-### 📊 Proje İstatistikleri
-- **Toplam Dosya Sayısı:** 200+ TypeScript/TSX dosyaları
-- **Backend API Endpoints:** 30+
-- **Frontend Screens:** 15+ (Manager: 7, Employee: 5, Auth: 4)
-- **Component Library:** 20+ reusable components
-- **Lines of Code:** ~20,000+ (backend + frontend + website)
+│   ├── types/ontend + website)
 
 ---
 
