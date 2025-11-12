@@ -17,8 +17,8 @@ const HeroSection = () => {
   const content = {
     en: {
       badge: "Powered by Meta Llama AI",
-      title1: "Smart Shift Scheduling",
-      title2: "That Actually Works",
+      title1: "AI-Powered",
+      title2: "Shift Planning System",
       subtitle: "Transform chaos into order. AI-powered shift management that saves hours, reduces conflicts, and keeps your team happy.",
       demo: "Get Started Free",
       learn: "See How It Works",
@@ -30,8 +30,8 @@ const HeroSection = () => {
     },
     tr: {
       badge: "Meta Llama Yapay Zeka Destekli",
-      title1: "Gerçekten İşe Yarayan",
-      title2: "Akıllı Vardiya Planlaması",
+      title1: "Yapay Zeka Destekli",
+      title2: "Vardiye Planlama Sistemi",
       subtitle: "Kaosu düzene çevirin. Saatler kazandıran, çakışmaları önleyen ve ekibinizi mutlu eden yapay zeka destekli vardiya yönetimi.",
       demo: "Ücretsiz Başla",
       learn: "Nasıl Çalışır?",
@@ -55,7 +55,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container-custom px-4 text-center">
+      <div className="relative z-10 container-custom px-4 text-center"> 
         <div className="animate-fade-in">
           {/* AI Badge */}
           <a 
@@ -74,7 +74,7 @@ const HeroSection = () => {
             alt="Shiffy Logo"
             className="mx-auto mb-6 w-24 h-24 drop-shadow-2xl animate-float"
           />
-          
+           
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
             {t.title1}
