@@ -31,7 +31,7 @@ const HeroSection = () => {
     tr: {
       badge: "Meta Llama Yapay Zeka Destekli",
       title1: "Yapay Zeka Destekli",
-      title2: "Vardiye Planlama Sistemi",
+      title2: "Vardiya Planlama Sistemi",
       subtitle: "Kaosu düzene çevirin. Saatler kazandıran, çakışmaları önleyen ve ekibinizi mutlu eden yapay zeka destekli vardiya yönetimi.",
       demo: "Ücretsiz Başla",
       learn: "Nasıl Çalışır?",
