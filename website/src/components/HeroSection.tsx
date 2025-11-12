@@ -17,8 +17,8 @@ const HeroSection = () => {
   const content = {
     en: {
       badge: "Powered by Meta Llama AI",
-      title1: "AI-powered Shift Planning System",
-      title2: "",
+      title1: "Smart Shift Scheduling",
+      title2: "That Actually Works",
       subtitle: "Transform chaos into order. AI-powered shift management that saves hours, reduces conflicts, and keeps your team happy.",
       demo: "Get Started Free",
       learn: "See How It Works",
@@ -30,8 +30,8 @@ const HeroSection = () => {
     },
     tr: {
       badge: "Meta Llama Yapay Zeka Destekli",
-      title1: "Yapay zeka destekli Vardiya planlama sistemi",
-      title2: "",
+      title1: "Gerçekten İşe Yarayan",
+      title2: "Akıllı Vardiya Planlaması",
       subtitle: "Kaosu düzene çevirin. Saatler kazandıran, çakışmaları önleyen ve ekibinizi mutlu eden yapay zeka destekli vardiya yönetimi.",
       demo: "Ücretsiz Başla",
       learn: "Nasıl Çalışır?",
@@ -69,3 +69,45 @@ const HeroSection = () => {
           </a>
 
           {/* Logo */}
+          <img
+            src={shiffyLogo}
+            alt="Shiffy Logo"
+            className="mx-auto mb-6 w-24 h-24 drop-shadow-2xl animate-float"
+          />
+          
+          {/* Main Heading */}
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            {t.title1}
+            <br />
+            <span className="text-white/95">{t.title2}</span>
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl text-white/85 mb-10 max-w-2xl mx-auto leading-relaxed">
+            {t.subtitle}
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              onClick={() => scrollToSection("contact")}
+              className="bg-white text-primary hover:bg-white/90 btn-hero shadow-xl hover:shadow-2xl hover:scale-105"
+              size="lg"
+            >
+              {t.demo}
+            </Button>
+            <Button
+              onClick={() => scrollToSection("how-it-works")}
+              className="border-2 border-white/80 bg-white/10 text-white hover:bg-white/20 hover:border-white btn-hero backdrop-blur-sm shadow-lg"
+              size="lg"
+            >
+              {t.learn}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;
