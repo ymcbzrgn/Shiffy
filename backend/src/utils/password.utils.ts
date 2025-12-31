@@ -6,27 +6,34 @@
  */
 
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const BCRYPT_ROUNDS = 10; // Cost factor for bcrypt hashing
 
 /**
- * Generate Random Password
+ * Generate Cryptographically Secure Random Password
  *
  * Creates a random alphanumeric password for new employees
+ * Uses crypto.randomBytes for cryptographic security
  *
- * @param length - Length of password (default: 8)
+ * @param length - Length of password (default: 12, minimum: 8)
  * @returns Random password string
  *
  * @example
- * const tempPassword = generateRandomPassword(8);
- * // Output: "aB3dE9fG"
+ * const tempPassword = generateRandomPassword(12);
+ * // Output: "aB3dE9fGhK2m"
  */
-export function generateRandomPassword(length: number = 8): string {
+export function generateRandomPassword(length: number = 12): string {
+  // Enforce minimum length for security
+  const actualLength = Math.max(length, 8);
+
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const randomBytes = crypto.randomBytes(actualLength);
   let password = '';
 
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length);
+  for (let i = 0; i < actualLength; i++) {
+    // Use cryptographically secure random bytes
+    const randomIndex = randomBytes[i] % chars.length;
     password += chars[randomIndex];
   }
 

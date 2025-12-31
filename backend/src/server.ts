@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.middleware';
 import './config/supabase.config'; // Initialize Supabase connection
 import routes from './routes';
 import { autoScheduleService } from './services/auto-schedule.service';
+import { logger } from './utils/logger';
 
 const app = express();
 
@@ -62,26 +63,19 @@ app.use(errorHandler);
 const PORT = config.port;
 const HOST = '0.0.0.0'; // Listen on all network interfaces (for physical device testing)
 app.listen(PORT, HOST, () => {
-  console.log('='.repeat(50));
-  console.log('🚀 Shiffy Backend Server Started');
-  console.log('='.repeat(50));
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`🌍 Host: ${HOST} (accessible from network)`);
-  console.log(`🌍 Environment: ${config.nodeEnv}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Supabase: ${config.supabase.url}`);
+  logger.info('Shiffy Backend Server Started', 'Server');
+  logger.info(`Port: ${PORT}, Host: ${HOST}`, 'Server');
+  logger.info(`Environment: ${config.nodeEnv}`, 'Server');
+  logger.debug(`Health check: http://localhost:${PORT}/health`, 'Server');
+  logger.debug(`Supabase: ${config.supabase.url}`, 'Server');
   const isRunPodConfigured = config.runpod.apiUrl !== 'PLACEHOLDER';
-  console.log(`🤖 RunPod: ${isRunPodConfigured ? 'Configured' : 'Not configured (placeholder)'}`);
-  console.log('='.repeat(50));
-  
+  logger.info(`RunPod: ${isRunPodConfigured ? 'Configured' : 'Not configured'}`, 'Server');
+
   // Initialize and start auto-schedule service
-  console.log('⏰ Initializing Auto-Schedule Service...');
+  logger.info('Initializing Auto-Schedule Service...', 'Scheduler');
   autoScheduleService.initialize();
   autoScheduleService.start();
-  console.log('✅ Auto-Schedule Service Started');
-  console.log('   📅 Runs daily at 23:00 (checks each manager\'s deadline_day setting)');
-  console.log('   🎯 Generates schedules for next week based on manager preferences');
-  console.log('='.repeat(50));
+  logger.info('Auto-Schedule Service Started - Runs daily at 23:00', 'Scheduler');
 });
 
 export default app;

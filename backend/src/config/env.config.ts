@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env.local file
+// Load .env.local file (must be before config export)
 dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 export const config = {
@@ -28,9 +28,10 @@ export const config = {
   },
 
   rateLimit: {
-    enabled: process.env.RATE_LIMIT_ENABLED === 'true',
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
+    // Rate limiting enabled by default in production for security
+    enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10), // 100 requests per window
   },
 
   logging: {
@@ -38,7 +39,7 @@ export const config = {
   },
 };
 
-// Validate critical environment variables
+// Validate critical environment variables at startup
 function validateEnv() {
   const required = [
     'SUPABASE_URL',
@@ -49,10 +50,13 @@ function validateEnv() {
   const missing = required.filter(key => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(`❌ Missing required environment variables: ${missing.join(', ')}`);
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  console.log('✅ Environment variables validated');
+  // Use console directly here since logger may not be initialized yet
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Config] Environment variables validated');
+  }
 }
 
 validateEnv();

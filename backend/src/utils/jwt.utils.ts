@@ -8,6 +8,7 @@
 import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 import { config } from '../config/env.config';
+import { logger } from './logger';
 
 const JWT_SECRET = config.jwt.secret;
 const JWT_EXPIRY: StringValue = (config.jwt.expiry as StringValue);
@@ -45,16 +46,15 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
 export function verifyToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    console.log(`[JWT] ✅ Token verified successfully`);
-    console.log(`[JWT] User: ${decoded.user_id}, Type: ${decoded.user_type}, Exp: ${decoded.exp ? new Date(decoded.exp * 1000).toISOString() : 'N/A'}`);
+    logger.debug(`Token verified - User: ${decoded.user_id}, Type: ${decoded.user_type}`, 'JWT');
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      console.error(`[JWT] ❌ Token expired at: ${error.expiredAt}`);
+      logger.debug(`Token expired at: ${error.expiredAt}`, 'JWT');
     } else if (error instanceof jwt.JsonWebTokenError) {
-      console.error(`[JWT] ❌ Invalid token: ${error.message}`);
+      logger.debug(`Invalid token: ${error.message}`, 'JWT');
     } else {
-      console.error('[JWT] ❌ Token verification failed:', error);
+      logger.debug('Token verification failed', 'JWT');
     }
     return null;
   }
